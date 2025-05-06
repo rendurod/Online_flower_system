@@ -1,0 +1,462 @@
+:root{
+    --pink:#e84393;
+
+
+}
+
+
+*{
+    margin:0; padding:0;
+    box-sizing: border-box;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    outline: none; border: none;
+    text-decoration: none;
+    text-transform: capitalize;
+    transition: 2s linear;
+}
+
+html{
+    font-size: 70.5%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    overflow-x: hidden;
+}
+
+section{
+    padding:2rem 9%;
+}
+
+.heading{
+    text-align: center;
+    font-size: 4rem;
+    color: #333;
+    padding: 1rem;
+    margin: 2rem 0;
+    background: rgba(255,51,153,.05);
+}
+
+.heading span{
+    color: var(--pink);
+}
+
+.btn {
+    display: inline-block;
+    margin-top: 1rem;
+    border-radius: 5rem;
+    background: #333;
+    color: #fff;
+    padding: 2rem 1.5rem;
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: background 0.1s ease; /* ลดเวลา transition */
+}
+
+.btn:hover {
+    background: var(--pink); /* เปลี่ยนเป็นสีชมพูเมื่อ hover */
+}
+
+
+header{
+    position: fixed;
+    top:0; left:0; right:0;
+    background: #fff;
+    padding: 2rem 9%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+    box-shadow: 0.5rem 1rem rgba(2, 1, 1, 0.1);
+}
+
+header .logo{
+    font-size: 3rem;
+    color: #333;
+    font-weight: bolder;
+}
+header .logo span{
+    color: #e84393;
+}
+header .navbar {
+    display: flex;
+    gap: 1.5rem;
+}
+
+header .navbar a {
+    font-size: 1.5rem; /* ปรับขนาดตัวอักษร */
+    color: #333;
+    padding: 0 1.5rem;
+    text-decoration: none;
+ 
+    transition: color 0.3s ease;
+}
+
+header .navbar a:hover {
+    color: var(--pink); /* เปลี่ยนสีเมื่อ hover */
+}
+
+header .icons a {
+    font-size: 2.5rem;
+    text-align: center;
+    color: #333;
+    margin-left: 1.5rem;
+    transition: color 0.1s ease; /* ลดเวลา transition */
+}
+
+header .icons a:hover {
+    color: var(--pink); /* เปลี่ยนเป็นสีชมพูเมื่อ hover */
+}
+
+
+header .nav a{
+    font-size: 40%;
+    padding: 0 1.5rem;
+    color: #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+header .navbar a:hover{
+    color:var(--pink);
+}
+
+header .icons a{
+    font-size: 2.5rem;
+    color: #333;
+    margin-left: 1.5rem;
+}
+
+header .icons a:hover{
+    color: var(--pink);
+}
+
+header #toggler{
+    display: none;
+}
+
+header .fa-bars{
+    font-size: 3rem;
+    color: #333;
+    border-radius: 5rem;
+    padding:.5rem 1.5rem;
+    cursor: pointer;
+    border:.1rem solid rgba(0,0,0,.3);
+    display: none;
+}
+
+
+.home {
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+    background: url(../user/flower5.jpg) no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+
+.home .content{
+    max-width: 50rem;
+}
+
+.home .content h3{
+    font-size: 2.5rem;
+    color: #333;
+}
+
+.home .content span{
+    font-size: 2rem;
+    color: var(--pink);
+    padding:1rem 0;
+    line-height: 1.5;
+}
+
+.home .content p{
+    font-size: 1.5rem;
+    color: #a37a63;
+    padding:1rem 0;
+    line-height: 1.5;
+}
+
+.about .row{
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 2rem 0;
+    padding-bottom: 3rem;
+}
+
+.about .row .video-container{
+    flex: 1 1 40rem;
+    position: relative;
+}
+
+.about .row .video-container video{
+    width:100%;
+    border: 1.5rem solid #fff;
+    border-radius: 5rem;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.1);
+    height: 100;
+    object-fit: cover;
+}
+
+.about .row .video-container h3{
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    font-size: 3rem;
+    background: #fff;
+    width: 100%;
+    padding: 1rem 2rem;
+    text-align: center;
+    mix-blend-mode: screen;
+}
+
+.about .row .content{
+    flex: 1 1 40rem;
+}
+
+.about .row .content h3{
+    font-size: 3rem;
+    color: #333;
+}
+
+.about .row .content p{
+    font-size: 1.5rem;
+    color: #999;
+    padding: 5rem 0;
+    padding-top: 1rem;
+    line-height: 1.5rem;
+}
+
+/* Container for Product Boxes */
+.products .box-container {
+    display: flex;
+    flex-wrap: nowrap; /* ไม่ให้แยกเป็นหลายแถว */
+    gap: 3rem; /* ระยะห่างระหว่างกล่องเพิ่มเป็น 3rem */
+    overflow-x: auto; /* ทำให้สามารถเลื่อนในแนวนอนได้ */
+    padding: 1rem;
+}
+
+.products .box {
+    flex: 0 0 20rem; /* ขนาดของกล่องให้คงที่ (ปรับตามขนาดที่ต้องการ) */
+    max-width: 20rem; /* จำกัดความกว้างให้พอดี */
+    background: #fff;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    border: 0.1rem solid rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: 0.3s;
+    text-align: center;
+}
+
+.products .box:hover {
+    transform: translateY(-5px);
+}
+
+/* Discount Label */
+.products .box .discount {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    font-size: 1.2rem;
+    color: var(--pink);
+    background: rgba(255, 51, 153, 0.1);
+    border-radius: 5px;
+    z-index: 1;
+}
+
+/* Image Styling */
+.products .box .image {
+    position: relative;
+    text-align: center;
+    padding-top: 1rem;
+    overflow: hidden;
+}
+
+.products .box .image img {
+    height: 200px;
+    transition: 0.3s;
+}
+
+.products .box:hover .image img {
+    transform: scale(1.1);
+}
+
+/* Icons (Add to Cart and Favorite) */
+.products .box .image .icons {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    background: #333;
+    opacity: 0.9;
+}
+
+.products .box .image .icons a {
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    font-size: 1.5rem;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.1s ease-in-out;
+}
+
+.products .box .image .icons a:hover {
+    background: var(--pink);
+}
+
+/* Content Section (Product Name and Price) */
+.products .box .content {
+    padding: 1rem;
+    text-align: center;
+}
+
+.products .box .content h3 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.products .box .content .price {
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.products .box .content .price span {
+    text-decoration: line-through;
+    color: #888;
+    font-size: 1rem;
+    margin-left: 0.5rem;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* media queries */
+@media (max-width:991px) {
+    
+    html{
+        font-size: 55%;
+    }
+
+    header{
+        padding: 2rem;
+    }
+
+    section{
+        padding: 2rem;
+    }
+
+    .home{
+        background-position: left;
+    }
+}
+
+/* โค้ด navbar ปกติ (แนวนอนสำหรับหน้าจอใหญ่) */
+header .navbar {
+    display: flex;
+    gap: 1.5rem;
+}
+
+/* ปุ่ม Hamburger ซ่อนเมื่อหน้าจอใหญ่กว่า 768px */
+header .fa-bars {
+    display: none;
+}
+
+/* เมนู navbar เป็นแนวตั้งเมื่อหน้าจอแคบกว่า 768px */
+@media (max-width: 768px) {
+    header .navbar {
+        display: flex;
+        flex-direction: column; /* ตั้งให้ navbar เป็นแนวตั้ง */
+        position: absolute;
+        top: 100%; /* วางใต้ header */
+        left: 0;
+        right: 0;
+        background: #eee;
+        border-top: 0.1rem solid rgba(0,0,0,.1);
+        padding: 1rem;
+        clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+        transition: clip-path 0.5s ease;
+        z-index: 1000; /* ให้ navbar อยู่ด้านหน้า */
+    }
+
+    /* ใช้ clip-path เพื่อแสดง/ซ่อนเมนู navbar */
+    header #toggler:checked ~ .navbar {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    /* ปรับรูปแบบลิงก์ในแนวตั้ง */
+    header .navbar a {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #fff;
+        border-radius: 0.5rem;
+        text-align: center;
+        color: #333;
+    }
+
+    /* แสดงปุ่ม Hamburger เมื่อหน้าจอเล็กลง */
+    header .fa-bars {
+        display: block; /* แสดงปุ่ม Hamburger */
+        cursor: pointer;
+        font-size: 2.5rem; /* เพิ่มขนาดปุ่ม */
+        color: #333;
+    }
+}
+
+
+    .home .contentb h3{
+        font-size: 5rem;
+    }
+
+    .home .contentb span{
+        font-size: 2.5rem;
+    }
+
+
+@media (max-width:450px) {
+    
+    html{
+        font-size: 50%;
+    }
+
+    .heading{
+        font-size: 3rem;
+    }
+
+}
+
+/* Responsive Design */ 
+@media (max-width: 992px) {
+    .products .box {
+        flex: 1 1 calc(50% - 1.5rem); /* 2 boxes per row on medium screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .products .box {
+        flex: 1 1 100%; /* 1 box per row on small screens */
+    }
+}
