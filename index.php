@@ -56,7 +56,7 @@ if (isset($_SESSION['user_login'])) {
 
         <div class="row">
             <div class="video-container">
-                <video src="../user/flower1.mp4" loop autoplay muted></video>
+                <video src="assets/video/flower1.mp4" loop autoplay muted></video>
                 <h3>best flower sellers</h3>
             </div>
 
