@@ -1,22 +1,30 @@
-<?php 
+<?php
 
-    session_start();
-    include('config/db.php');
+session_start();
+include('config/db.php');
 
-    if (isset($_SESSION['user_login'])) {
-        header("location: user.php"); 
-    }
+if (isset($_SESSION['user_login'])) {
+    header("location: user.php");
+}
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flower_PHP</title>
-        <!-- font awesome cde link -->
-        <link rel="stylesheet" href="assets/css/style.css">
+    <!-- LOGO -->
+    <link rel="icon" href="assets/img/LOGO_FlowerShopp.png" type="image/x-icon">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
 
     <!-- header section starts -->
@@ -24,7 +32,7 @@
     <?php include("includes/navbar.php"); ?>
 
     <!-- header section ends -->
-     
+
     <!-- home section starts-->
 
     <section class="home" id="home">
@@ -106,32 +114,11 @@
                 </div>
             </div> -->
         <div class="box-container">
-            <?php
-    $sql = "SELECT ProductName, price, Image FROM product";
-    $result = $conn->query($sql);
 
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            echo '<div class="box">';
-            echo '    <div class="image">';
-            echo '        <img src="../admin/uploads/' . htmlspecialchars($row["Image"]) . '" alt="product image" style="max-width: 100%; max-height: 100%; object-fit: contain;">';
-          
-            echo '        <div class="icons">';
-            // echo '            <a href="add.html" class="fas fa-heart"></a>';
-            echo '            <a href="add.html" class="cart-btn">Add to Cart</a>';
-            echo '        </div>';
-            echo '    </div>';
-            echo '    <div class="content">';
-            echo '        <h3>' . htmlspecialchars($row["ProductName"]) . '</h3>';
-            echo '        <div class="price">฿' . number_format($row["price"], 2) . '</div>';
-            echo '    </div>';
-            echo '</div>'; // ปิด div ของ box
-        }
-    } else {
-        echo "No products found.";
-    }
-    ?>
         </div> <!-- ปิด box-container -->
 
+        <!-- Bootstrap 5 JS Bundle with Popper -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
