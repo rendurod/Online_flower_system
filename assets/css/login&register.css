@@ -1,0 +1,141 @@
+/* เพิ่ม CSS สำหรับหน้าล็อกอิน/สมัครสมาชิก */
+/* คุณสามารถเพิ่มโค้ดส่วนนี้ในไฟล์ style.css หลักของคุณ */
+
+/* กำหนดตัวแปร CSS */
+:root {
+    --pink: #ffcccb; /* เพิ่มตัวแปร --pink เพื่อให้ใช้งานได้ */
+}
+
+/* สไตล์สำหรับคอนเทนเนอร์หลัก */
+.auth-container {
+    max-width: 500px;
+    margin: 150px auto 40px auto; /* เพิ่ม margin-top มากขึ้น */
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* สไตล์สำหรับแท็บการนำทาง */
+.custom-tabs {
+    width: 100%; /* กว้างเต็ม container */
+    display: flex;
+    border: none;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.custom-tabs .nav-link {
+    flex: 1;
+    text-align: center;
+    font-size: 1.3rem;
+    padding: 10px 0;
+    border: 1px solid #8e354a;
+    background-color: white;
+    color: #8e354a;
+    border-radius: 0;
+    transition: all 0.3s ease;
+}
+
+.custom-tabs .nav-link.active {
+    background-color: #8e354a;
+    color: white;
+    border: 1px solid #8e354a;
+    border-radius: 6px 6px 0 0;
+}
+
+.custom-tabs .nav-link:not(.active):hover {
+    background-color: #f5e6ea;
+    color: #8e354a;
+}
+
+/* สไตล์สำหรับการล็อกอินด้วยโซเชียลมีเดีย */
+.social-login {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.social-login a {
+    display: inline-block;
+    margin: 0 10px;
+    font-size: 2rem;
+    color: #333;
+    transition: color 0.1s ease;
+}
+
+.social-login a:hover {
+    color: var(--pink);
+}
+
+.social-login .fa-facebook {
+    color: #3b5998;
+}
+
+.social-login .fa-envelope {
+    color: #d44638;
+}
+
+.social-login .fa-line {
+    color: #00b900;
+}
+
+/* สไตล์สำหรับเส้นคั่น */
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider span {
+    padding: 0 10px;
+    color: #888;
+    font-size: 1.2rem;
+}
+
+/* สไตล์สำหรับฟอร์มอินพุต */
+.form-control {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 1.3rem;
+    width: 100%; /* ตรวจสอบให้ input เต็มความกว้าง */
+}
+
+/* ปรับแต่งปุ่มให้เต็มความกว้างของ auth-container */
+.submit-btn {
+    width: 100%; /* รับรองว่าปุ่มเต็มความกว้าง */
+    padding: 12px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    box-sizing: border-box; /* รวม padding เข้ากับ width */
+}
+
+.submit-btn:hover {
+    background-color: var(--pink);
+}
+
+.register-btn {
+    background-color: #333;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .auth-container {
+        margin-top: 40px;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+}
