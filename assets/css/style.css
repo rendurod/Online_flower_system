@@ -146,6 +146,33 @@ header .fa-bars{
     display: none;
 }
 
+/* เพิ่ม CSS สำหรับปุ่มสมัครสมาชิก/เข้าสู่ระบบ */
+.auth-button {
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    border: 1px solid #dee2e6;
+    text-decoration: none;
+    font-size: 1.5rem;
+    gap: 0.8rem;
+    transition: color 0.1s ease;
+}
+
+.auth-button:hover {
+    color: var(--pink);
+}
+
+.auth-button i {
+    font-size: 2rem;
+}
+
+.auth-button span {
+    font-size: 1.5rem;
+    text-transform: none; /* ยกเว้นการทำ capitalize สำหรับภาษาไทย */
+}
 
 .home {
     display: flex;
@@ -447,6 +474,22 @@ header .fa-bars {
         font-size: 3rem;
     }
 
+}
+
+/* ปรับแต่งสำหรับหน้าจอขนาดเล็ก */
+@media (max-width: 768px) {
+    .auth-button {
+        padding: 0.4rem 0.8rem;
+        font-size: 1.2rem;
+    }
+    
+    .auth-button i {
+        font-size: 1.7rem;
+    }
+    
+    .auth-button span {
+        font-size: 1.2rem;
+    }
 }
 
 /* Responsive Design */ 
