@@ -4,7 +4,6 @@
 
 }
 
-
 *{
     margin:0; padding:0;
     box-sizing: border-box;
@@ -55,7 +54,7 @@ section{
     background: var(--pink); /* เปลี่ยนเป็นสีชมพูเมื่อ hover */
 }
 
-
+/* ---------- NAVBAR START ---------- */
 header{
     position: fixed;
     top:0; left:0; right:0;
@@ -145,6 +144,7 @@ header .fa-bars{
     border:.1rem solid rgba(0,0,0,.3);
     display: none;
 }
+/* ---------- NAVBAR END ---------- */
 
 /* เพิ่ม CSS สำหรับปุ่มสมัครสมาชิก/เข้าสู่ระบบ */
 .auth-button {

@@ -45,7 +45,6 @@ if (isset($_POST['register'])) {
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/login&register.css">
-
 </head>
 
 <body>
@@ -53,100 +52,85 @@ if (isset($_POST['register'])) {
     <!-- include navbar -->
     <?php include("includes/navbar.php"); ?>
 
-    <div class="auth-container">
-        <!-- Tab Navigation -->
-        <ul class="nav nav-tabs custom-tabs" id="authTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link register-tab active" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">สมัครสมาชิก</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link login-tab" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">เข้าสู่ระบบ</button>
-            </li>
-        </ul>
-
-        <!-- Tab Content -->
-        <div class="tab-content" id="authTabsContent">
-            <!-- สมัครสมาชิก Tab -->
-            <div class="tab-pane fade show active" id="register" role="tabpanel">
-                <div class="text-center mt-3 mb-3">
-                    <h5>สมัครสมาชิกฟรีด้วย</h5>
+    <div class="container">
+        <div class="login-container">
+            <div class="nav-tabs">
+                <div class="nav-item">
+                    <a class="nav-link active" href="#register" data-bs-toggle="tab">สมัครสมาชิก</a>
                 </div>
-
-                <!-- Social Login Options -->
-                <div class="social-login">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fas fa-envelope"></i></a>
-                    <a href="#"><i class="fab fa-line"></i></a>
+                <div class="nav-item">
+                    <a class="nav-link" href="#login" data-bs-toggle="tab">เข้าสู่ระบบ</a>
                 </div>
-
-                <div class="divider">
-                    <span>สมัครสมาชิกฟรี</span>
-                </div>
-
-                <!-- Register Form -->
-                <form action="" method="post">
-                    <div class="mb-3">
-                        <input type="text" class="form-control" name="username" placeholder="ชื่อผู้ใช้งาน ภาษาอังกฤษเท่านั้น *" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="email" class="form-control" name="email" placeholder="อีเมล * " required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="password" class="form-control" name="password" placeholder="รหัสผ่าน *" required>
-                    </div>
-                    <div class="mb-3">
-                        <input type="password" class="form-control" name="confirm_password" placeholder="ยืนยันรหัสผ่าน *" required>
-                    </div>
-
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="terms" required>
-                        <label class="form-check-label" for="terms">ยอมรับ เงื่อนไขการใช้บริการ</label>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="privacy">
-                        <label class="form-check-label" for="privacy">ยอมรับ เงื่อนไขความเป็นส่วนตัว</label>
-                    </div>
-
-                    <button type="submit" name="register" class="submit-btn">สมัครสมาชิกฟรี</button>
-                </form>
             </div>
-
-            <!-- เข้าสู่ระบบ Tab -->
-            <div class="tab-pane fade" id="login" role="tabpanel">
-                <div class="text-center mt-3 mb-3">
-                    <h5>เข้าสู่ระบบด้วย</h5>
-                </div>
-
-                <!-- Social Login Options -->
-                <div class="social-login">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fas fa-envelope"></i></a>
-                    <a href="#"><i class="fab fa-line"></i></a>
-                </div>
-
-                <div class="divider">
-                    <span>เข้าสู่ระบบ</span>
-                </div>
-
-                <!-- Login Form -->
-                <form action="" method="post">
-                    <div class="mb-3">
-                        <input type="email" class="form-control" name="email" placeholder="อีเมล" required>
+            
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="register">
+                    
+                    <div class="divider">
+                        <div class="divider-line"></div>
+                        <div class="divider-text">สมัครสมาชิกฟรี</div>
+                        <div class="divider-line"></div>
                     </div>
-                    <div class="mb-3">
-                        <input type="password" class="form-control" name="password" placeholder="รหัสผ่าน" required>
-                    </div>
-                    <div class="mb-3 text-end">
-                        <a href="#" style="color: #666; font-size: 1.2rem;">ลืมรหัสผ่าน?</a>
-                    </div>
-                    <button type="submit" name="login" class="submit-btn">เข้าสู่ระบบ</button>
-                </form>
+                    
+                    <form>
+                        <input type="text" class="form-control" placeholder="ชื่อผู้ใช้งาน ภาษาอังกฤษตัวพิมพ์เล็ก *" required>
+                        
+                        <input type="email" class="form-control" placeholder="อีเมล *" required>
+                        
+                        <div class="password-toggle">
+                            <input type="password" class="form-control" placeholder="รหัสผ่าน *" required>
+                            <i class="toggle-password far fa-eye-slash"></i>
+                        </div>
+                        
+                        <div class="password-toggle">
+                            <input type="password" class="form-control" placeholder="ยืนยันรหัสผ่าน *" required>
+                            <i class="toggle-password far fa-eye-slash"></i>
+                        </div>
+                        
+                        <button type="submit" class="btn-register mt-3">สมัครสมาชิกฟรี</button>
+                    </form>
+                </div>
+                
+                <div class="tab-pane fade" id="login">
+                    <form>
+                        <input type="text" class="form-control" placeholder="ชื่อผู้ใช้งาน" required>
+                        
+                        <div class="password-toggle">
+                            <input type="password" class="form-control" placeholder="รหัสผ่าน" required>
+                            <i class="toggle-password far fa-eye-slash"></i>
+                        </div>
+                        
+                        <div class="text-end mb-3">
+                            <a href="#" class="text-decoration-none text-muted">ลืมรหัสผ่าน?</a>
+                        </div>
+                        
+                        <button type="submit" class="btn-register">เข้าสู่ระบบ</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordToggles = document.querySelectorAll('.toggle-password');
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.previousElementSibling;
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        this.classList.remove('fa-eye-slash');
+                        this.classList.add('fa-eye');
+                    } else {
+                        input.type = 'password';
+                        this.classList.remove('fa-eye');
+                        this.classList.add('fa-eye-slash');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
