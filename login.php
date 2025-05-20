@@ -87,7 +87,7 @@ if (isset($_POST['register'])) {
                             <i class="toggle-password far fa-eye-slash"></i>
                         </div>
                         
-                        <button type="submit" class="btn-register mt-3">สมัครสมาชิกฟรี</button>
+                        <button type="submit" class="btn-register mt-5">สมัครสมาชิกฟรี</button>
                     </form>
                 </div>
                 

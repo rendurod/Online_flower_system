@@ -22,6 +22,7 @@ body {
 }
 
 .nav-tabs .nav-link {
+    font-size: 16px;
     border: none;
     text-align: center;
     font-weight: bold;
@@ -58,7 +59,7 @@ body {
 .divider {
     display: flex;
     align-items: center;
-    margin: 20px 0;
+    margin: 1rem 0;
 }
 
 .divider-line {
@@ -68,15 +69,22 @@ body {
 }
 
 .divider-text {
-    padding: 0 15px;
-    color: #6c757d;
+    font-size: 14px;
+    padding: 10px 15px;
+    color: #8c4356;
 }
 
 .form-control {
+    font-size: 14px;
     margin-bottom: 15px;
+}
+.form-control::placeholder {
+    font-size: 14px;  /* ปรับขนาดตัวอักษร placeholder */
 }
 
 .btn-register {
+    margin-top: 2rem;
+    font-size: 16px;
     background-color: #212529;
     color: white;
     border: none;
@@ -95,10 +103,16 @@ body {
 }
 
 .password-toggle .toggle-password {
+    font-size: 14px;
     position: absolute;
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
     color: #6c757d;
+}
+
+/* ส่วนของ Link ลืมรหัสผ่าน */
+.text-muted {
+    font-size: 14px;  /* ปรับขนาดตัวอักษรของลิงก์ลืมรหัสผ่าน */
 }
