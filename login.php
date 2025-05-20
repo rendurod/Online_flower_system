@@ -47,7 +47,7 @@ if (isset($_POST['register'])) {
     <link rel="stylesheet" href="assets/css/login&register.css">
 </head>
 
-<body>
+<body class="login">
 
     <!-- include navbar -->
     <?php include("includes/navbar.php"); ?>
@@ -56,57 +56,35 @@ if (isset($_POST['register'])) {
         <div class="login-container">
             <div class="nav-tabs">
                 <div class="nav-item">
-                    <a class="nav-link active" href="#register" data-bs-toggle="tab">สมัครสมาชิก</a>
+                    <a class="nav-link active" href="register.php">สมัครสมาชิก</a>
                 </div>
                 <div class="nav-item">
-                    <a class="nav-link" href="#login" data-bs-toggle="tab">เข้าสู่ระบบ</a>
+                    <a class="nav-link" href="login.php">เข้าสู่ระบบ</a>
                 </div>
             </div>
-            
+
             <div class="tab-content">
                 <div class="tab-pane fade show active" id="register">
-                    
+
                     <div class="divider">
                         <div class="divider-line"></div>
-                        <div class="divider-text">สมัครสมาชิกฟรี</div>
+                        <div class="divider-text">เข้าสู่ระบบ</div>
                         <div class="divider-line"></div>
                     </div>
-                    
+
                     <form>
-                        <input type="text" class="form-control" placeholder="ชื่อผู้ใช้งาน ภาษาอังกฤษตัวพิมพ์เล็ก *" required>
-                        
                         <input type="email" class="form-control" placeholder="อีเมล *" required>
-                        
+
                         <div class="password-toggle">
                             <input type="password" class="form-control" placeholder="รหัสผ่าน *" required>
                             <i class="toggle-password far fa-eye-slash"></i>
                         </div>
-                        
-                        <div class="password-toggle">
-                            <input type="password" class="form-control" placeholder="ยืนยันรหัสผ่าน *" required>
-                            <i class="toggle-password far fa-eye-slash"></i>
-                        </div>
-                        
-                        <button type="submit" class="btn-register mt-5">สมัครสมาชิกฟรี</button>
+
+
+                        <button type="submit" class="btn-login mt-5">เข้าสู่ระบบ</button>
                     </form>
                 </div>
-                
-                <div class="tab-pane fade" id="login">
-                    <form>
-                        <input type="text" class="form-control" placeholder="ชื่อผู้ใช้งาน" required>
-                        
-                        <div class="password-toggle">
-                            <input type="password" class="form-control" placeholder="รหัสผ่าน" required>
-                            <i class="toggle-password far fa-eye-slash"></i>
-                        </div>
-                        
-                        <div class="text-end mb-3">
-                            <a href="#" class="text-decoration-none text-muted">ลืมรหัสผ่าน?</a>
-                        </div>
-                        
-                        <button type="submit" class="btn-register">เข้าสู่ระบบ</button>
-                    </form>
-                </div>
+
             </div>
         </div>
     </div>

@@ -14,13 +14,16 @@ body {
 
 .nav-tabs {
     display: flex;
-    border-bottom: none;
+    justify-content: space-around; /* จาก Copilot: ทำให้แท็บกระจายอย่างสมดุล */
+    border-bottom: 2px solid #f0f0f0; /* จาก Copilot: เพิ่มเส้นขอบด้านล่าง */
 }
 
 .nav-tabs .nav-item {
     flex: 1;
+    text-align: center; /* จาก Copilot: จัดกึ่งกลางข้อความ */
 }
 
+/* ส่วนของ nav link ทั่วไป */
 .nav-tabs .nav-link {
     font-size: 16px;
     border: none;
@@ -29,11 +32,56 @@ body {
     padding: 15px;
     color: white;
     background-color: #8c4356;
+    text-decoration: none; 
+    position: relative; 
+    transition: all 0.3s ease;
+    border-radius: 0; /* รีเซ็ตค่าเริ่มต้น */
+    border: 2px solid #8c4356; /* เพิ่ม border และสี */
+    border-bottom: 2px solid 6b3241; /* ทำให้ดูเหมือนแท็บถูกเลือก */
+}
+
+/* สำหรับหน้า register.php */
+body.register .nav-tabs .nav-item:first-child .nav-link {
+    border-top-left-radius: 10px;
+}
+
+body.register .nav-tabs .nav-item:last-child .nav-link {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 0;
+}
+
+/* สำหรับหน้า login.php */
+body.login .nav-tabs .nav-item:first-child .nav-link {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 0;
+}
+
+body.login .nav-tabs .nav-item:last-child .nav-link {
+    border-top-right-radius: 10px;
+}
+
+.nav-tabs .nav-link:hover {
+    color: white;
+    background-color: #8c4356;
+    text-decoration: none;
+    border-color: #8c4356; /* สีขอบเมื่อ hover */
 }
 
 .nav-tabs .nav-link.active {
     background-color: white;
     color: #8c4356;
+    border-color: #8c4356; /* สีขอบเมื่อ active */
+    border-bottom: 2px solid 6b3241; /* ทำให้ดูเหมือนแท็บถูกเลือก */
+}
+
+.nav-tabs .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    transition: all 0.3s ease; /* จาก Copilot: การเปลี่ยนแปลงที่นุ่มนวล */
 }
 
 .nav-tabs .nav-link:not(.active) {
@@ -78,10 +126,32 @@ body {
     font-size: 14px;
     margin-bottom: 15px;
 }
+
 .form-control::placeholder {
-    font-size: 14px;  /* ปรับขนาดตัวอักษร placeholder */
+    font-size: 14px;
 }
 
+/* ปุ่มสำหรับหน้า login */
+.btn-login {
+    margin-top: 2rem;
+    font-size: 16px;
+    background-color: #212529;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    width: 100%;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    background-color: #494949;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* ปุ่มสำหรับหน้า register */
 .btn-register {
     margin-top: 2rem;
     font-size: 16px;
@@ -92,6 +162,13 @@ body {
     border-radius: 5px;
     width: 100%;
     font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-register:hover {
+    background-color: #494949;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .form-check {
@@ -112,7 +189,6 @@ body {
     color: #6c757d;
 }
 
-/* ส่วนของ Link ลืมรหัสผ่าน */
 .text-muted {
-    font-size: 14px;  /* ปรับขนาดตัวอักษรของลิงก์ลืมรหัสผ่าน */
+    font-size: 14px;
 }
