@@ -40,6 +40,8 @@ if (isset($_POST['register'])) {
     <link rel="icon" href="assets/img/LOGO_FlowerShopp.png" type="image/x-icon">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
@@ -73,7 +75,8 @@ if (isset($_POST['register'])) {
                     </div>
 
                     <form>
-                        <input type="text" class="form-control" placeholder="ชื่อผู้ใช้งาน ภาษาอังกฤษตัวพิมพ์เล็ก *" required>
+                        <input type="text" class="form-control" placeholder="ชื่อจริง ภาษาอังกฤษตัวพิมพ์เล็ก *" required>
+                        <input type="text" class="form-control" placeholder="นามสกุล ภาษาอังกฤษตัวพิมพ์เล็ก *" required>
 
                         <input type="email" class="form-control" placeholder="อีเมล *" required>
 
@@ -111,6 +114,8 @@ if (isset($_POST['register'])) {
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
