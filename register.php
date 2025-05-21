@@ -36,10 +36,10 @@ if (isset($_SESSION['user_login'])) {
         <div class="login-container">
             <div class="nav-tabs">
                 <div class="nav-item">
-                    <a class="nav-link active" href="register.php">สมัครสมาชิก</a>
+                    <a class="nav-link" href="register.php">สมัครสมาชิก</a>
                 </div>
                 <div class="nav-item">
-                    <a class="nav-link" href="login.php">เข้าสู่ระบบ</a>
+                    <a class="nav-link active" href="login.php">เข้าสู่ระบบ</a>
                 </div>
             </div>
 
