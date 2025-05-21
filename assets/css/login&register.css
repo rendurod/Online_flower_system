@@ -6,14 +6,27 @@ body {
     background: url(../img/tuilps1.jpg) no-repeat;
     background-size: cover;
     background-position: center;
+    padding-top: 50px; /* ปรับตามความสูงของ navbar */
 }
 
+/* จัดการ container หลัก */
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+/* ปรับแต่งกล่อง login-container */
 .login-container {
-    max-width: 450px;
-    margin: 50px auto;
-    background-color: white;
+    width: 100%;
+    max-width: 500px;
+    background: white;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin: 2rem auto;
 }
 
 .nav-tabs {
@@ -195,4 +208,99 @@ body.login .nav-tabs .nav-item:last-child .nav-link {
 
 .text-muted {
     font-size: 14px;
+}
+
+.password-requirements {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 1.4rem;
+}
+
+.requirements-title {
+    color: #495057;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.requirements-title i {
+    color: #6c757d;
+}
+
+.requirements-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.requirements-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6c757d;
+    margin: 5px 0;
+    font-size: 1.3rem;
+}
+
+.requirements-list i {
+    color: #28a745;
+    font-size: 1.2rem;
+}
+
+/* Hover effect */
+.password-requirements:hover {
+    border-color: #ced4da;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.password-info-wrapper {
+    position: relative;
+}
+
+.btn-show-requirements {
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1.3rem;
+    padding: 5px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.btn-show-requirements:hover {
+    color: #8c4356;
+}
+
+.btn-show-requirements i {
+    font-size: 1.4rem;
+}
+
+.password-requirements {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.password-requirements.show {
+    opacity: 1;
+    transform: translateY(0);
 }

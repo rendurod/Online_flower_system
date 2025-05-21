@@ -1,51 +1,61 @@
 <?php
 session_start();
 require 'config/db.php';
-$minLength = 8;
 
-// Retrieve and validate user input
-$firstname = $_POST['firstname'];
-$lastname = $_POST['lastname'];
-$email = $_POST['email'];
-$password = $_POST['password'];
-$confirm_password = $_POST['confirm_password']; // รับ confirm password จากฟอร์ม
+header('Content-Type: application/json');
 
-// Validation checks
-if (!$firstname) {
-    echo json_encode(array("status" => "error", "msg" => "กรุณากรอกชื่อจริง"));
-} else if (!$lastname) {
-    echo json_encode(array("status" => "error", "msg" => "กรุณากรอกนามสกุล"));
-} else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(array("status" => "error", "msg" => "กรุณากรอกอีเมล"));
-} else if (strlen($password) < $minLength) {
-    echo json_encode(array("status" => "error", "msg" => "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"));
-} else if ($password !== $confirm_password) {  // ตรวจสอบ confirm password
-    echo json_encode(array("status" => "error", "msg" => "รหัสผ่านไม่ตรงกัน"));
-} else if (!preg_match('/[A-Z]/', $password)) {
-    echo json_encode(array("status" => "error", "msg" => "รหัสผ่านต้องมีอักษรตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว"));
-} else if (!preg_match('/[a-z]/', $password)) {
-    echo json_encode(array("status" => "error", "msg" => "รหัสผ่านจะต้องมีตัวอักษรพิมพ์เล็กอย่างน้อยหนึ่งตัว"));
-} else if (!preg_match('/\d/', $password)) {
-    echo json_encode(array("status" => "error", "msg" => "รหัสผ่านต้องมีตัวเลขอย่างน้อยหนึ่งตัว"));
-} else {
-    $stmt = $conn->prepare('SELECT COUNT(*) FROM tblusers WHERE EmailId = ?');
-    $stmt->execute([$email]);
-    $userExists = $stmt->fetchColumn();
+// เก็บ output ใด ๆ ที่อาจเกิดจาก warning/error
+ob_start();
 
-    if ($userExists) {
-        echo json_encode(array("status" => "error", "msg" => "มีอีเมลนี้ในระบบแล้ว"));
+$response = [];
+
+try {
+    $minLength = 8;
+
+    $firstname = $_POST['firstname'] ?? '';
+    $lastname = $_POST['lastname'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
+
+    if (!$firstname) {
+        $response = ["status" => "error", "msg" => "กรุณากรอกชื่อจริง"];
+    } elseif (!$lastname) {
+        $response = ["status" => "error", "msg" => "กรุณากรอกนามสกุล"];
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $response = ["status" => "error", "msg" => "กรุณากรอกอีเมลให้ถูกต้อง"];
+    } elseif (strlen($password) < $minLength) {
+        $response = ["status" => "error", "msg" => "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร"];
+    } elseif ($password !== $confirm_password) {
+        $response = ["status" => "error", "msg" => "รหัสผ่านไม่ตรงกัน"];
+    } elseif (!preg_match('/[A-Z]/', $password)) {
+        $response = ["status" => "error", "msg" => "รหัสผ่านต้องมีอักษรพิมพ์ใหญ่อย่างน้อยหนึ่งตัว"];
+    } elseif (!preg_match('/[a-z]/', $password)) {
+        $response = ["status" => "error", "msg" => "รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว"];
+    } elseif (!preg_match('/\d/', $password)) {
+        $response = ["status" => "error", "msg" => "รหัสผ่านต้องมีตัวเลขอย่างน้อยหนึ่งตัว"];
     } else {
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare('SELECT COUNT(*) FROM tbl_members WHERE EmailId = ?');
+        $stmt->execute([$email]);
+        $userExists = $stmt->fetchColumn();
 
-        try {
-            $stmt = $conn->prepare("INSERT INTO tblusers (FirstName, LastName, EmailId, Password) VALUES (?, ?, ?, ?)");
+        if ($userExists) {
+            $response = ["status" => "error", "msg" => "มีอีเมลนี้ในระบบแล้ว"];
+        } else {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("INSERT INTO tbl_members (FirstName, LastName, EmailId, Password) VALUES (?, ?, ?, ?)");
             $stmt->execute([$firstname, $lastname, $email, $hashedPassword]);
-            echo json_encode(array("status" => "success", "msg" => "สมัครสมาชิกสำเร็จ!"));
-        } catch (PDOException $e) {
-            echo json_encode(array("status" => "error", "msg" => "มีข้อผิดพลาดเกิดขึ้น โปรดลองอีกครั้ง!"));
+            $response = ["status" => "success", "msg" => "สมัครสมาชิกสำเร็จ!"];
         }
     }
+} catch (Exception $e) {
+    $response = ["status" => "error", "msg" => "เกิดข้อผิดพลาดจากระบบ: " . $e->getMessage()];
 }
 
-?>
+// ลบ output อื่น ๆ ที่อาจเกิดจาก warning หรือ error
+ob_clean();
 
+// ส่งเฉพาะ JSON อย่างเดียว
+echo json_encode($response);
+exit;
+?>

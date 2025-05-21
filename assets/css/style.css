@@ -11,7 +11,7 @@
     outline: none; border: none;
     text-decoration: none;
     text-transform: capitalize;
-    transition: 2s linear;
+    /* transition: 2s linear; */
 }
 
 html{
@@ -364,23 +364,35 @@ header .fa-bars{
     margin-left: 0.5rem;
 }
 
+/* SweetAlert2 Custom Styles */
+.swal2-popup {
+    font-size: 1.4rem !important;
+    padding: 1.5rem !important;
+    width: 32em !important; /* ปรับความกว้างให้เล็กลง */
+}
 
+.swal2-title {
+    font-size: 2rem !important;
+    margin: 0.8rem 0 !important;
+}
 
+.swal2-html-container {
+    font-size: 1.4rem !important;
+    margin: 0.8rem 0 !important;
+}
 
+.swal2-confirm,
+.swal2-cancel {
+    font-size: 1.4rem !important;
+    padding: 0.8rem 1.6rem !important;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* ปรับขนาด icon */
+.swal2-icon {
+    width: 5em !important;
+    height: 5em !important;
+    margin: 1rem auto !important;
+}
 
 /* media queries */
 @media (max-width:991px) {
