@@ -52,8 +52,8 @@ if (isset($_SESSION['user_login'])) {
                     </div>
 
                     <form id="registerForm" method="POST" action="register_db.php">
-                        <input type="text" class="form-control mb-2" name="firstname" placeholder="ชื่อจริง ภาษาอังกฤษตัวพิมพ์เล็ก *" required>
-                        <input type="text" class="form-control mb-2" name="lastname" placeholder="นามสกุล ภาษาอังกฤษตัวพิมพ์เล็ก *" required>
+                        <input type="text" class="form-control mb-2" name="firstname" placeholder="ชื่อจริง ภาษาอังกฤษ *" required>
+                        <input type="text" class="form-control mb-2" name="lastname" placeholder="นามสกุล ภาษาอังกฤษ *" required>
                         <input type="email" class="form-control mb-2" name="email" placeholder="อีเมล *" required>
 
                         <div class="password-toggle mb-2 position-relative">

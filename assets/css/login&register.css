@@ -60,21 +60,23 @@ body {
 /* สำหรับหน้า register.php */
 body.register .nav-tabs .nav-item:first-child .nav-link {
     border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
 }
 
 body.register .nav-tabs .nav-item:last-child .nav-link {
     border-top-right-radius: 10px;
-    border-bottom-right-radius: 0;
+    border-bottom-right-radius: 10px;
 }
 
 /* สำหรับหน้า login.php */
 body.login .nav-tabs .nav-item:first-child .nav-link {
     border-top-left-radius: 10px;
-    border-bottom-left-radius: 0;
+    border-bottom-left-radius: 10px;
 }
 
 body.login .nav-tabs .nav-item:last-child .nav-link {
     border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
 }
 
 .nav-tabs .nav-link:hover {

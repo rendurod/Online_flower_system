@@ -1,7 +1,5 @@
 :root{
     --pink:#e84393;
-
-
 }
 
 *{
@@ -86,7 +84,6 @@ header .navbar a {
     color: #333;
     padding: 0 1.5rem;
     text-decoration: none;
- 
     transition: color 0.3s ease;
 }
 
@@ -106,7 +103,6 @@ header .icons a:hover {
     color: var(--pink); /* เปลี่ยนเป็นสีชมพูเมื่อ hover */
 }
 
-
 header .nav a{
     font-size: 40%;
     padding: 0 1.5rem;
@@ -114,7 +110,6 @@ header .nav a{
     display: flex;
     justify-content: center;
     align-items: center;
-
 }
 
 header .navbar a:hover{
@@ -173,6 +168,60 @@ header .fa-bars{
     font-size: 1.5rem;
     text-transform: none; /* ยกเว้นการทำ capitalize สำหรับภาษาไทย */
 }
+
+/* เพิ่ม CSS สำหรับโปรไฟล์ผู้ใช้ */
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.profile-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+.profile-img img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.profile-dropdown-list {
+    display: none;
+    position: absolute;
+    top: 120%;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+    list-style: none;
+    padding: 1rem;
+    min-width: 200px;
+    z-index: 1001;
+}
+.profile-dropdown-list li {
+    margin: 0.5rem 0;
+}
+.profile-dropdown-list a {
+    text-decoration: none;
+    color: #333;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.profile-dropdown-list a:hover {
+    color: var(--pink);
+}
+
+
+
+/* -------------------------------------------------------------- */
 
 .home {
     display: flex;
