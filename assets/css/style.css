@@ -1,163 +1,109 @@
-:root{
-    --pink:#e84393;
+/* 1. Imports */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;700&display=swap');
+
+/* 2. Variables */
+:root {
+    --pink: #e84393;
+    --primary-pink: #e84393;
+    --secondary-pink: #fd79a8;
+    --light-pink: rgba(232, 67, 147, 0.1);
+    --dark-pink: #c44569;
+    --gradient-pink: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+    --gradient-purple: linear-gradient(135deg, #667eea, #764ba2);
+    --text-dark: #2d3436;
+    --text-light: #636e72;
+    --bg-light: #f8f9fa;
+    --white: #ffffff;
+    --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 10px 25px rgba(0, 0, 0, 0.15);
+    --shadow-heavy: 0 20px 40px rgba(0, 0, 0, 0.2);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-*{
-    margin:0; padding:0;
+/* 3. Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    outline: none; border: none;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    border: none;
     text-decoration: none;
     text-transform: capitalize;
-    /* transition: 2s linear; */
+    transition: var(--transition);
 }
 
-html{
-    font-size: 70.5%;
+html {
+    font-size: 62.5%;
     scroll-behavior: smooth;
     scroll-padding-top: 6rem;
     overflow-x: hidden;
 }
 
-section{
-    padding:2rem 9%;
+body {
+    padding-top: 80px; /* ป้องกัน navbar ทับเนื้อหา */
 }
 
-.heading{
+section {
+    padding: 2rem 9%;
+}
+
+/* 4. Common Components */
+.heading {
     text-align: center;
     font-size: 4rem;
-    color: #333;
+    color: var(--text-dark);
     padding: 1rem;
     margin: 2rem 0;
-    background: rgba(255,51,153,.05);
+    background: var(--light-pink);
 }
 
-.heading span{
-    color: var(--pink);
+.heading span {
+    color: var(--primary-pink);
 }
 
 .btn {
     display: inline-block;
     margin-top: 1rem;
     border-radius: 5rem;
-    background: #333;
-    color: #fff;
-    padding: 2rem 1.5rem;
+    background: var(--text-dark);
+    color: var(--white);
+    padding: 1rem 1.5rem;
     cursor: pointer;
     font-size: 1.5rem;
-    transition: background 0.1s ease; /* ลดเวลา transition */
+    transition: var(--transition);
+    box-shadow: var(--shadow-light);
 }
 
 .btn:hover {
-    background: var(--pink); /* เปลี่ยนเป็นสีชมพูเมื่อ hover */
+    background: var(--primary-pink);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
 }
 
-/* ---------- NAVBAR START ---------- */
-header{
-    position: fixed;
-    top:0; left:0; right:0;
-    background: #fff;
-    padding: 2rem 9%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 1000;
-    box-shadow: 0.5rem 1rem rgba(2, 1, 1, 0.1);
-}
-
-header .logo{
-    font-size: 3rem;
-    color: #333;
-    font-weight: bolder;
-    text-decoration: none;
-}
-header .logo span{
-    color: #e84393;
-}
-header .navbar {
-    display: flex;
-    gap: 1.5rem;
-}
-
-header .navbar a {
-    font-size: 1.5rem; /* ปรับขนาดตัวอักษร */
-    color: #333;
-    padding: 0 1.5rem;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-header .navbar a:hover {
-    color: var(--pink); /* เปลี่ยนสีเมื่อ hover */
-}
-
-header .icons a {
-    font-size: 2.5rem;
-    text-align: center;
-    color: #333;
-    margin-left: 1.5rem;
-    transition: color 0.1s ease; /* ลดเวลา transition */
-}
-
-header .icons a:hover {
-    color: var(--pink); /* เปลี่ยนเป็นสีชมพูเมื่อ hover */
-}
-
-header .nav a{
-    font-size: 40%;
-    padding: 0 1.5rem;
-    color: #666;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-header .navbar a:hover{
-    color:var(--pink);
-}
-
-header .icons a{
-    font-size: 2.5rem;
-    color: #333;
-    margin-left: 1.5rem;
-}
-
-header .icons a:hover{
-    color: var(--pink);
-}
-
-header #toggler{
-    display: none;
-}
-
-header .fa-bars{
-    font-size: 3rem;
-    color: #333;
-    border-radius: 5rem;
-    padding:.5rem 1.5rem;
-    cursor: pointer;
-    border:.1rem solid rgba(0,0,0,.3);
-    display: none;
-}
-/* ---------- NAVBAR END ---------- */
-
-/* เพิ่ม CSS สำหรับปุ่มสมัครสมาชิก/เข้าสู่ระบบ */
+/* Auth Button (คืนค่าจากโค้ดเดิมและปรับให้เข้ากับโค้ดใหม่) */
 .auth-button {
     display: flex;
     align-items: center;
-    background-color: #f8f9fa;
-    color: #333;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
     padding: 0.5rem 1rem;
     border-radius: 2rem;
     border: 1px solid #dee2e6;
     text-decoration: none;
     font-size: 1.5rem;
     gap: 0.8rem;
-    transition: color 0.1s ease;
+    transition: var(--transition);
+    box-shadow: var(--shadow-light);
 }
 
 .auth-button:hover {
-    color: var(--pink);
+    color: var(--primary-pink);
+    transform: translateY(-1px);
+    background-color: #f1f3f5;
+    box-shadow: var(--shadow-medium);
 }
 
 .auth-button i {
@@ -169,60 +115,409 @@ header .fa-bars{
     text-transform: none; /* ยกเว้นการทำ capitalize สำหรับภาษาไทย */
 }
 
-/* เพิ่ม CSS สำหรับโปรไฟล์ผู้ใช้ */
+/* 5. Navbar */
+.modern-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 2rem 9%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-light);
+    transition: var(--transition);
+}
+
+.modern-navbar.scrolled {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: var(--shadow-medium);
+    padding: 1rem 9%;
+}
+
+.modern-navbar .logo {
+    font-size: 3rem;
+    color: var(--text-dark);
+    font-weight: bolder;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    font-family: 'Dancing Script', cursive;
+    transition: var(--transition);
+}
+
+.modern-navbar .logo span {
+    color: var(--primary-pink);
+    font-size: 4rem;
+    animation: pulse 2s infinite;
+}
+
+.logo-flower {
+    margin-left: 1rem;
+    font-size: 2.4rem;
+    animation: rotate 4s linear infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.modern-navbar .logo:hover {
+    transform: scale(1.05);
+}
+
+.modern-navbar .navbar {
+    display: flex;
+    gap: 2rem;
+}
+
+.navbar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-icon {
+    font-size: 1.6rem;
+    opacity: 0.8;
+    transition: var(--transition);
+}
+
+.nav-underline {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--gradient-pink);
+    transform: translateX(-50%);
+    transition: var(--transition);
+    border-radius: 2px;
+}
+
+.navbar .nav-link:hover {
+    color: var(--primary-pink);
+    background: var(--light-pink);
+    transform: translateY(-2px);
+}
+
+.navbar .nav-link:hover .nav-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.navbar .nav-link:hover .nav-underline {
+    width: 80%;
+}
+
+.modern-navbar #toggler {
+    display: none;
+}
+
+.navbar-toggler-custom {
+    font-size: 3rem;
+    color: var(--text-dark);
+    border-radius: 5rem;
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    border: 0.1rem solid rgba(0, 0, 0, 0.3);
+    display: none;
+    transition: var(--transition);
+}
+
+.navbar-toggler-custom:hover {
+    color: var(--primary-pink);
+    border-color: var(--primary-pink);
+}
+
+.navbar-toggler-icon {
+    display: flex;
+    flex-direction: column;
+    width: 24px;
+    height: 18px;
+    position: relative;
+}
+
+.navbar-toggler-icon span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--text-dark);
+    margin: 2px 0;
+    transition: var(--transition);
+    border-radius: 1px;
+}
+
+.navbar-toggler.active .navbar-toggler-icon span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.navbar-toggler.active .navbar-toggler-icon span:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-toggler.active .navbar-toggler-icon span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* 6. Auth Button (Modern) */
+.auth-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 1.2rem 2.4rem;
+    background: var(--gradient-pink);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 1.4rem;
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: var(--shadow-light);
+}
+
+.auth-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    position: relative;
+    z-index: 2;
+}
+
+.auth-btn-bg {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-purple);
+    transition: var(--transition);
+    z-index: 1;
+}
+
+.auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+    color: var(--white);
+}
+
+.auth-btn:hover .auth-btn-bg {
+    left: 0;
+}
+
+/* 7. Profile Dropdown */
 .profile-dropdown {
     position: relative;
     display: inline-block;
 }
-.profile-dropdown-btn {
+
+.profile-btn {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 1.2rem;
+    padding: 0.8rem 1.6rem;
+    background: var(--white);
+    border: 2px solid rgba(232, 67, 147, 0.2);
+    border-radius: 50px;
     cursor: pointer;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    border: 1px solid #dee2e6;
-    background-color: #f8f9fa;
+    transition: var(--transition);
+    box-shadow: var(--shadow-light);
 }
-.profile-img img {
-    width: 35px;
-    height: 35px;
+
+.profile-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+    border-color: var(--primary-pink);
+}
+
+.profile-avatar {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
+    border: 2px solid var(--primary-pink);
 }
-.profile-dropdown-list {
-    display: none;
+
+.online-indicator {
     position: absolute;
-    top: 120%;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-    list-style: none;
-    padding: 1rem;
-    min-width: 200px;
-    z-index: 1001;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #00b894;
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    animation: pulse-green 2s infinite;
 }
-.profile-dropdown-list li {
-    margin: 0.5rem 0;
+
+@keyframes pulse-green {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
 }
-.profile-dropdown-list a {
-    text-decoration: none;
-    color: #333;
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.profile-name {
+    font-weight: 600;
     font-size: 1.4rem;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.profile-status {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+.dropdown-arrow {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.dropdown-arrow.rotated {
+    transform: rotate(180deg);
+}
+
+.profile-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 1rem);
+    right: 0;
+    min-width: 320px;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-heavy);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.95);
+    transition: var(--transition);
+    z-index: 1001;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.profile-dropdown.active .profile-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.dropdown-header {
+    padding: 2rem;
+    background: var(--gradient-pink);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    color: var(--white);
+}
+
+.user-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-}
-.profile-dropdown-list a:hover {
-    color: var(--pink);
+    gap: 1.5rem;
 }
 
+.user-info img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
 
+.user-name {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
 
-/* -------------------------------------------------------------- */
+.user-email {
+    font-size: 1.3rem;
+    opacity: 0.9;
+}
 
+.dropdown-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    margin: 0;
+}
+
+.dropdown-list {
+    list-style: none;
+    padding: 1rem 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1.2rem 2rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-size: 1.4rem;
+    transition: var(--transition);
+}
+
+.dropdown-item:hover {
+    background: var(--light-pink);
+    color: var(--primary-pink);
+    padding-left: 2.5rem;
+}
+
+.dropdown-item i {
+    width: 18px;
+    font-size: 1.5rem;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.dropdown-item:hover i {
+    color: var(--primary-pink);
+    transform: scale(1.1);
+}
+
+.logout-item {
+    color: #e17055;
+}
+
+.logout-item:hover {
+    background: rgba(225, 112, 85, 0.1);
+    color: #e17055;
+}
+
+.logout-item i {
+    color: #e17055;
+}
+
+/* 8. Home Section */
 .home {
     display: flex;
     align-items: center;
@@ -232,31 +527,31 @@ header .fa-bars{
     background-position: center;
 }
 
-
-.home .content{
+.home .content {
     max-width: 50rem;
 }
 
-.home .content h3{
+.home .content h3 {
     font-size: 2.5rem;
-    color: #333;
+    color: var(--text-dark);
 }
 
-.home .content span{
+.home .content span {
     font-size: 2rem;
-    color: var(--pink);
-    padding:1rem 0;
+    color: var(--primary-pink);
+    padding: 1rem 0;
     line-height: 1.5;
 }
 
-.home .content p{
+.home .content p {
     font-size: 1.5rem;
     color: #a37a63;
-    padding:1rem 0;
+    padding: 1rem 0;
     line-height: 1.5;
 }
 
-.about .row{
+/* 9. About Section */
+.about .row {
     display: flex;
     align-items: center;
     gap: 2rem;
@@ -265,87 +560,86 @@ header .fa-bars{
     padding-bottom: 3rem;
 }
 
-.about .row .video-container{
+.about .row .video-container {
     flex: 1 1 40rem;
     position: relative;
 }
 
-.about .row .video-container video{
-    width:100%;
-    border: 1.5rem solid #fff;
-    border-radius: 5rem;
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.1);
-    height: 100;
+.about .row .video-container video {
+    width: 100%;
+    border: 1.5rem solid var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    height: 100%;
     object-fit: cover;
 }
 
-.about .row .video-container h3{
+.about .row .video-container h3 {
     position: absolute;
-    top: 50%; transform: translateY(-50%);
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 3rem;
-    background: #fff;
+    background: var(--white);
     width: 100%;
     padding: 1rem 2rem;
     text-align: center;
     mix-blend-mode: screen;
 }
 
-.about .row .content{
+.about .row .content {
     flex: 1 1 40rem;
 }
 
-.about .row .content h3{
+.about .row .content h3 {
     font-size: 3rem;
-    color: #333;
+    color: var(--text-dark);
 }
 
-.about .row .content p{
+.about .row .content p {
     font-size: 1.5rem;
-    color: #999;
-    padding: 5rem 0;
-    padding-top: 1rem;
-    line-height: 1.5rem;
+    color: var(--text-light);
+    padding: 1rem 0;
+    line-height: 1.5;
 }
 
-/* Container for Product Boxes */
+/* 10. Products Section */
 .products .box-container {
     display: flex;
-    flex-wrap: nowrap; /* ไม่ให้แยกเป็นหลายแถว */
-    gap: 3rem; /* ระยะห่างระหว่างกล่องเพิ่มเป็น 3rem */
-    overflow-x: auto; /* ทำให้สามารถเลื่อนในแนวนอนได้ */
+    flex-wrap: nowrap;
+    gap: 3rem;
+    overflow-x: auto;
     padding: 1rem;
 }
 
 .products .box {
-    flex: 0 0 20rem; /* ขนาดของกล่องให้คงที่ (ปรับตามขนาดที่ต้องการ) */
-    max-width: 20rem; /* จำกัดความกว้างให้พอดี */
-    background: #fff;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
+    flex: 0 0 20rem;
+    max-width: 20rem;
+    background: var(--white);
+    box-shadow: var(--shadow-light);
+    border-radius: var(--border-radius);
     border: 0.1rem solid rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    transition: 0.3s;
+    transition: var(--transition);
     text-align: center;
 }
 
 .products .box:hover {
     transform: translateY(-5px);
+    box-shadow: var(--shadow-medium);
 }
 
-/* Discount Label */
 .products .box .discount {
     position: absolute;
     top: 10px;
     left: 10px;
     padding: 5px 10px;
     font-size: 1.2rem;
-    color: var(--pink);
-    background: rgba(255, 51, 153, 0.1);
+    color: var(--primary-pink);
+    background: var(--light-pink);
     border-radius: 5px;
     z-index: 1;
 }
 
-/* Image Styling */
 .products .box .image {
     position: relative;
     text-align: center;
@@ -355,14 +649,13 @@ header .fa-bars{
 
 .products .box .image img {
     height: 200px;
-    transition: 0.3s;
+    transition: var(--transition);
 }
 
 .products .box:hover .image img {
     transform: scale(1.1);
 }
 
-/* Icons (Add to Cart and Favorite) */
 .products .box .image .icons {
     position: absolute;
     bottom: 0;
@@ -370,7 +663,7 @@ header .fa-bars{
     right: 0;
     display: flex;
     justify-content: space-between;
-    background: #333;
+    background: var(--text-dark);
     opacity: 0.9;
 }
 
@@ -379,17 +672,16 @@ header .fa-bars{
     height: 40px;
     line-height: 40px;
     font-size: 1.5rem;
-    color: #fff;
+    color: var(--white);
     text-align: center;
     text-decoration: none;
-    transition: background 0.1s ease-in-out;
+    transition: var(--transition);
 }
 
 .products .box .image .icons a:hover {
-    background: var(--pink);
+    background: var(--primary-pink);
 }
 
-/* Content Section (Product Name and Price) */
 .products .box .content {
     padding: 1rem;
     text-align: center;
@@ -397,27 +689,27 @@ header .fa-bars{
 
 .products .box .content h3 {
     font-size: 1.5rem;
-    color: #333;
+    color: var(--text-dark);
     margin-bottom: 0.5rem;
 }
 
 .products .box .content .price {
     font-size: 1.2rem;
-    color: #333;
+    color: var(--text-dark);
 }
 
 .products .box .content .price span {
     text-decoration: line-through;
-    color: #888;
+    color: var(--text-light);
     font-size: 1rem;
     margin-left: 0.5rem;
 }
 
-/* SweetAlert2 Custom Styles */
+/* 11. SweetAlert2 Custom Styles */
 .swal2-popup {
     font-size: 1.4rem !important;
     padding: 1.5rem !important;
-    width: 32em !important; /* ปรับความกว้างให้เล็กลง */
+    width: 32em !important;
 }
 
 .swal2-title {
@@ -436,132 +728,158 @@ header .fa-bars{
     padding: 0.8rem 1.6rem !important;
 }
 
-/* ปรับขนาด icon */
 .swal2-icon {
     width: 5em !important;
     height: 5em !important;
     margin: 1rem auto !important;
 }
 
-/* media queries */
-@media (max-width:991px) {
-    
-    html{
+/* 12. Ripple Effect */
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(232, 67, 147, 0.3);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* 13. Navigation Background Effect */
+.nav-bg-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, 
+        rgba(232, 67, 147, 0.05) 0%,
+        rgba(253, 121, 168, 0.05) 50%,
+        rgba(232, 67, 147, 0.05) 100%);
+    opacity: 0;
+    transition: var(--transition);
+    pointer-events: none;
+}
+
+.modern-navbar:hover .nav-bg-effect {
+    opacity: 1;
+}
+
+/* 14. Media Queries */
+@media (max-width: 991px) {
+    html {
         font-size: 55%;
     }
 
-    header{
+    .modern-navbar {
         padding: 2rem;
     }
 
-    section{
+    section {
         padding: 2rem;
     }
 
-    .home{
+    .home {
         background-position: left;
     }
+
+    .products .box {
+        flex: 1 1 calc(50% - 1.5rem);
+    }
 }
 
-/* โค้ด navbar ปกติ (แนวนอนสำหรับหน้าจอใหญ่) */
-header .navbar {
-    display: flex;
-    gap: 1.5rem;
-}
-
-/* ปุ่ม Hamburger ซ่อนเมื่อหน้าจอใหญ่กว่า 768px */
-header .fa-bars {
-    display: none;
-}
-
-/* เมนู navbar เป็นแนวตั้งเมื่อหน้าจอแคบกว่า 768px */
 @media (max-width: 768px) {
-    header .navbar {
-        display: flex;
-        flex-direction: column; /* ตั้งให้ navbar เป็นแนวตั้ง */
-        position: absolute;
-        top: 100%; /* วางใต้ header */
-        left: 0;
-        right: 0;
-        background: #eee;
-        border-top: 0.1rem solid rgba(0,0,0,.1);
-        padding: 1rem;
-        clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
-        transition: clip-path 0.5s ease;
-        z-index: 1000; /* ให้ navbar อยู่ด้านหน้า */
+    .modern-navbar {
+        padding: 0.8rem 2rem;
     }
 
-    /* ใช้ clip-path เพื่อแสดง/ซ่อนเมนู navbar */
-    header #toggler:checked ~ .navbar {
+    .navbar-toggler-custom {
+        display: block;
+    }
+
+    .modern-navbar .navbar {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--white);
+        border-top: 0.1rem solid rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+        transition: clip-path 0.4s ease-in-out;
+    }
+
+    .modern-navbar #toggler:checked ~ .navbar {
+        display: flex;
         clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
     }
 
-    /* ปรับรูปแบบลิงก์ในแนวตั้ง */
-    header .navbar a {
+    .navbar .nav-link {
         margin: 1rem 0;
         padding: 1rem;
-        background: #fff;
+        background: var(--bg-light);
         border-radius: 0.5rem;
         text-align: center;
-        color: #333;
     }
 
-    /* แสดงปุ่ม Hamburger เมื่อหน้าจอเล็กลง */
-    header .fa-bars {
-        display: block; /* แสดงปุ่ม Hamburger */
-        cursor: pointer;
-        font-size: 2.5rem; /* เพิ่มขนาดปุ่ม */
-        color: #333;
-    }
-}
-
-
-    .home .contentb h3{
-        font-size: 5rem;
+    .products .box {
+        flex: 1 1 100%;
     }
 
-    .home .contentb span{
-        font-size: 2.5rem;
-    }
-
-
-@media (max-width:450px) {
-    
-    html{
-        font-size: 50%;
-    }
-
-    .heading{
-        font-size: 3rem;
-    }
-
-}
-
-/* ปรับแต่งสำหรับหน้าจอขนาดเล็ก */
-@media (max-width: 768px) {
     .auth-button {
         padding: 0.4rem 0.8rem;
         font-size: 1.2rem;
     }
-    
+
     .auth-button i {
         font-size: 1.7rem;
     }
-    
+
     .auth-button span {
         font-size: 1.2rem;
     }
 }
 
-/* Responsive Design */ 
-@media (max-width: 992px) {
-    .products .box {
-        flex: 1 1 calc(50% - 1.5rem); /* 2 boxes per row on medium screens */
+@media (max-width: 450px) {
+    html {
+        font-size: 50%;
+    }
+
+    .heading {
+        font-size: 3rem;
     }
 }
 
-@media (max-width: 768px) {
-    .products .box {
-        flex: 1 1 100%; /* 1 box per row on small screens */
+/* 15. Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+.nav-link:focus,
+.auth-btn:focus,
+.auth-button:focus,
+.profile-btn:focus,
+.dropdown-item:focus {
+    outline: 2px solid var(--primary-pink);
+    outline-offset: 2px;
+}
+
+@media (prefers-contrast: high) {
+    :root {
+        --primary-pink: #d63384;
+        --text-dark: #000000;
+        --text-light: #333333;
     }
 }
