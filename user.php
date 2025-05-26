@@ -37,7 +37,7 @@ if (!isset($_SESSION['user_login'])) {
             <h3>ยินดีต้อนรับกลับมา!</h3>
             <span>Indira Gift flowers Shop</span>
             <p>คุณได้เข้าสู่ระบบเรียบร้อยแล้ว :) สนุกกับการเลือกชมดอกไม้และของขวัญสุดพิเศษได้เลย!</p>
-            <a href="logout.php" class="btn btn-danger">ออกจากระบบ</a>
+            <a href="admin/index.php" class="btn btn-danger">เข้าสู่หน้าแอดมิน</a>
         </div>
     </section>
     <!-- home section ends-->
