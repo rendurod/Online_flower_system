@@ -1,3 +1,14 @@
+<?php
+session_start();
+require_once('config/db.php');
+
+// ตรวจสอบว่ามี session adminid หรือไม่
+if (!isset($_SESSION['adminid'])) {
+    header("Location: login.php");
+    exit();
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,7 +20,9 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>SB Admin 2 - Dashboard</title>
+    <title>Admin - flowerShop</title>
+    <!-- LOGO -->
+    <link rel="icon" href="assets/img/LOGO_FlowerShopp.png" type="image/x-icon">
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
