@@ -130,7 +130,7 @@ if (isset($_POST['submit'])) {
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>แก้ไขสมาชิก - FlowerShop Admin</title>
+    <title>ข้อมูลสมาชิก - FlowerShop Admin</title>
 
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
@@ -151,7 +151,7 @@ if (isset($_POST['submit'])) {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">แก้ไขสมาชิก: <?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?></h1>
+                        <h1 class="h3 mb-0 text-gray-800">สมาชิก : <?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?></h1>
                         <a href="members.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังรายการสมาชิก
                         </a>
@@ -159,7 +159,7 @@ if (isset($_POST['submit'])) {
 
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">ฟอร์มแก้ไขข้อมูลสมาชิก</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">ฟอร์มข้อมูลสมาชิก</h6>
                         </div>
                         <div class="card-body">
                             <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>

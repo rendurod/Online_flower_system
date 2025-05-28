@@ -100,9 +100,9 @@ if (!is_dir($target_dir)) {
                                     <thead>
                                         <tr>
                                             <th>ลำดับ</th>
-                                            <th>รูปภาพ</th>
                                             <th>ชื่อ</th>
                                             <th>อีเมล</th>
+                                            <th>เบอร์</th>
                                             <th>วันที่สมัคร</th>
                                             <th>วันที่แก้ไข</th>
                                             <th class="no-sort text-center">จัดการ</th>
@@ -122,23 +122,9 @@ if (!is_dir($target_dir)) {
                                         ?>
                                                     <tr>
                                                         <td class="col-1 fw-bold"><?php echo $i++; ?></td>
-                                                        <td class="col-1 text-center">
-                                                            <?php if (!empty($member['Image']) && file_exists($target_dir . $member['Image'])): ?>
-                                                                <img src="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>"
-                                                                    alt="<?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?>"
-                                                                    class="img-thumbnail image-preview"
-                                                                    style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                                                                    data-image="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>">
-                                                            <?php else: ?>
-                                                                <div class="bg-light d-flex align-items-center justify-content-center image-preview"
-                                                                    style="width: 60px; height: 60px; border-radius: 5px; cursor: pointer;"
-                                                                    data-image="">
-                                                                    <i class="fas fa-image text-muted"></i>
-                                                                </div>
-                                                            <?php endif; ?>
-                                                        </td>
                                                         <td class="col-2"><?php echo htmlspecialchars($member['FirstName'] ?? ''); ?></td>
                                                         <td class="col-2"><?php echo htmlspecialchars($member['EmailId']); ?></td>
+                                                        <td class="col-2"><?php echo htmlspecialchars($member['ContactNo'] ?? '-'); ?></td>
                                                         <td class="col-1"><?php echo date('d/m/Y H:i', strtotime($member['RegDate'])); ?></td>
                                                         <td class="col-1"><?php echo $member['UpdationDate'] ? date('d/m/Y H:i', strtotime($member['UpdationDate'])) : '-'; ?></td>
                                                         <td class="col-1 text-center">
