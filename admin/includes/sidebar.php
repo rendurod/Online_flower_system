@@ -40,6 +40,11 @@
             <i class="fas fa-fw fa-table"></i>
             <span>ประเภทสินค้า</span></a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" href="flowers.php">
+            <i class="fas fa-fw fa-table"></i>
+            <span>ข้อมูลสินค้า</span></a>
+    </li>
 
     <!-- Heading -->
     <div class="sidebar-heading mt-2">
