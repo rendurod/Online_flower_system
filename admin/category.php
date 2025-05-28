@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once('config/db.php');
+require_once('includes/functions.php');
 
 // ตรวจสอบว่ามี session adminid หรือไม่
 if (!isset($_SESSION['adminid'])) {
@@ -163,13 +164,14 @@ if (isset($_POST['submit'])) {
                                                     <td class="col-2 fw-bold"><?php echo $category['CreationDate']; ?></td>
                                                     <td class="col-2 fw-bold"><?php echo $category['UpdationDate'] ?: '-'; ?></td>
                                                     <td class="col-2 text-center">
-                                                        <a href="edit-category.php?id=<?php echo $category['ID']; ?>" class="btn btn-warning btn-sm">
-                                                            <i class="fas fa-edit"></i> แก้ไข
-                                                        </a>
-                                                        <a href="#" class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $category['ID']; ?>">
-                                                            <i class="fas fa-trash"></i> ลบ
-                                                        </a>
-                                                    </td>
+    <a href="<?php echo checkPageExists('edit-category.php', ['id' => $category['ID']]); ?>" 
+       class="btn btn-warning btn-sm">
+        <i class="fas fa-edit"></i> แก้ไข
+    </a>
+    <a href="#" class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $category['ID']; ?>">
+        <i class="fas fa-trash"></i> ลบ
+    </a>
+</td>
                                                 </tr>
                                         <?php
                                             }
