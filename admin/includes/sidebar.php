@@ -31,17 +31,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
     <!-- Heading -->
     <div class="sidebar-heading">
-        การจัดการข้อมูลพื้นฐาน
+        การจัดการข้อมูลสินค้า
     </div>
 
-    <!-- Nav Item - Charts -->
-    <li class="nav-item">
-        <a class="nav-link" href="charts.html">
-            <i class="fas fa-fw fa-chart-area"></i>
-            <span>Charts</span></a>
-    </li>
-
-
+    <!-- Nav Item -->
     <li class="nav-item <?= ($currentPage == 'category.php') ? 'active' : '' ?>">
         <a class="nav-link" href="category.php">
             <i class="fas fa-fw fa-table"></i>
@@ -56,30 +49,18 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </a>
     </li>
 
-    <li class="nav-item <?= ($currentPage == 'tables.html') ? 'active' : '' ?>">
-        <a class="nav-link" href="tables.html">
-            <i class="fas fa-fw fa-table"></i>
-            <span>Tables</span>
-        </a>
-    </li>
-
-
     <!-- Heading -->
     <div class="sidebar-heading mt-2">
-        การจัดการข้อมูลพื้นฐาน
+        การจัดการข้อมูลคำสั่งซื้อ
     </div>
 
-    <li class="nav-item">
-        <a class="nav-link" href="tables.html">
+    <!-- Nav Item -->
+    <li class="nav-item <?= ($currentPage == 'flowers.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="flowers.php">
             <i class="fas fa-fw fa-table"></i>
-            <span>Tables</span></a>
+            <span>ข้อมูลสินค้า</span>
+        </a>
     </li>
-
-    <!-- Nav Item - Pages Collapse Menu -->
-
-
-    <!-- Nav Item - Utilities Collapse Menu -->
-
 
     <!-- Divider -->
     <hr class="sidebar-divider">
@@ -88,9 +69,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <div class="sidebar-heading">
         Addons
     </div>
-
-    <!-- Nav Item - Tables -->
-
 
     <!-- Nav Item - Pages Collapse Menu -->
     <li class="nav-item">
@@ -111,6 +89,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 <a class="collapse-item" href="blank.html">Blank Page</a>
             </div>
         </div>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="charts.html">
+            <i class="fas fa-fw fa-chart-area"></i>
+            <span>Charts</span></a>
     </li>
 
     <!-- Divider -->

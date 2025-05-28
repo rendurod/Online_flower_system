@@ -29,7 +29,7 @@ if (isset($_POST['submit'])) {
     $flower_description = trim($_POST['flower_description']);
     $price = floatval($_POST['price']);
     $stock_quantity = intval($_POST['stock_quantity']);
-    
+
     // Handle image upload
     $image = '';
     $max_file_size = 5 * 1024 * 1024; // 5MB limit
@@ -39,11 +39,11 @@ if (isset($_POST['submit'])) {
         } else {
             $file_extension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
             $allowed_extensions = array('jpg', 'jpeg', 'png', 'gif');
-            
+
             if (in_array($file_extension, $allowed_extensions)) {
                 $new_filename = uniqid() . '.' . $file_extension;
                 $target_file = $target_dir . $new_filename;
-                
+
                 if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
                     $image = $new_filename;
                 } else {
@@ -54,13 +54,13 @@ if (isset($_POST['submit'])) {
             }
         }
     }
-    
+
     if (!isset($_SESSION['error'])) {
         if (!empty($flower_name) && !empty($flower_category) && $price > 0) {
             try {
                 $stmt = $conn->prepare("INSERT INTO tbl_flowers (flower_name, flower_category, flower_description, price, image, stock_quantity) VALUES (?, ?, ?, ?, ?, ?)");
                 $stmt->execute([$flower_name, $flower_category, $flower_description, $price, $image, $stock_quantity]);
-                
+
                 $_SESSION['success'] = 'เพิ่มข้อมูลดอกไม้เรียบร้อยแล้ว';
                 header("Location: flowers.php"); // Redirect to avoid form resubmission
                 exit();
@@ -81,16 +81,16 @@ if (isset($_GET['delete'])) {
         $stmt = $conn->prepare("SELECT image FROM tbl_flowers WHERE ID = ?");
         $stmt->execute([$deleteId]);
         $flower = $stmt->fetch();
-        
+
         // Delete from database
         $stmt = $conn->prepare("DELETE FROM tbl_flowers WHERE ID = ?");
         $stmt->execute([$deleteId]);
-        
+
         // Delete image file if exists
         if ($flower && !empty($flower['image']) && file_exists($target_dir . $flower['image'])) {
             unlink($target_dir . $flower['image']);
         }
-        
+
         $_SESSION['success'] = 'ลบข้อมูลดอกไม้เรียบร้อยแล้ว';
         header("Location: flowers.php"); // Redirect after delete
         exit();
@@ -111,6 +111,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -203,7 +204,15 @@ try {
                                                             <label for="price" class="font-weight-bold text-gray-700">
                                                                 <i class="fas fa-money-bill text-pink mr-2"></i>ราคา (บาท) <span class="text-danger">*</span>
                                                             </label>
-                                                            <input type="number" required class="form-control" name="price" id="price" placeholder="0.00" step="0.01" min="0">
+                                                            <input type="number"
+                                                                required
+                                                                class="form-control"
+                                                                name="price"
+                                                                id="price"
+                                                                placeholder="0"
+                                                                min="0"
+                                                                step="1"
+                                                                oninput="this.value = Math.floor(this.value);">
                                                             <div class="invalid-feedback">กรุณากรอกราคาที่ถูกต้อง</div>
                                                         </div>
                                                     </div>
@@ -279,13 +288,15 @@ try {
                                                         <td class="col-1 fw-bold"><?php echo htmlspecialchars($flower['ID']); ?></td>
                                                         <td class="col-1 text-center">
                                                             <?php if (!empty($flower['image']) && file_exists($target_dir . $flower['image'])): ?>
-                                                                <img src="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>" 
-                                                                     alt="<?php echo htmlspecialchars($flower['flower_name']); ?>" 
-                                                                     class="img-thumbnail" 
-                                                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                                                <img src="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>"
+                                                                    alt="<?php echo htmlspecialchars($flower['flower_name']); ?>"
+                                                                    class="img-thumbnail image-preview"
+                                                                    style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                                                                    data-image="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>">
                                                             <?php else: ?>
-                                                                <div class="bg-light d-flex align-items-center justify-content-center" 
-                                                                     style="width: 60px; height: 60px; border-radius: 5px;">
+                                                                <div class="bg-light d-flex align-items-center justify-content-center image-preview"
+                                                                    style="width: 60px; height: 60px; border-radius: 5px; cursor: pointer;"
+                                                                    data-image="">
                                                                     <i class="fas fa-image text-muted"></i>
                                                                 </div>
                                                             <?php endif; ?>
@@ -300,8 +311,8 @@ try {
                                                         </td>
                                                         <td class="col-1 fw-bold"><?php echo date('d/m/Y H:i', strtotime($flower['creation_date'])); ?></td>
                                                         <td class="col-2 text-center">
-                                                            <a href="edit-flower.php?id=<?php echo htmlspecialchars($flower['ID']); ?>" 
-                                                               class="btn btn-warning btn-sm mb-1">
+                                                            <a href="edit-flower.php?id=<?php echo htmlspecialchars($flower['ID']); ?>"
+                                                                class="btn btn-warning btn-sm mb-1">
                                                                 <i class="fas fa-edit"></i> แก้ไข
                                                             </a>
                                                             <a href="#" class="btn btn-danger btn-sm delete-btn" data-id="<?php echo htmlspecialchars($flower['ID']); ?>">
@@ -342,49 +353,75 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Show SweetAlert2 for success/error messages
-        <?php if (isset($_SESSION['success'])): ?>
-            Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ',
-                text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            <?php unset($_SESSION['success']); ?>
-        <?php endif; ?>
+    // Show SweetAlert2 for success/error messages
+    <?php if (isset($_SESSION['success'])): ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ',
+            text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
 
-        <?php if (isset($_SESSION['error'])): ?>
-            Swal.fire({
-                icon: 'error',
-                title: 'ข้อผิดพลาด',
-                text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            <?php unset($_SESSION['error']); ?>
-        <?php endif; ?>
+    <?php if (isset($_SESSION['error'])): ?>
+        Swal.fire({
+            icon: 'error',
+            title: 'ข้อผิดพลาด',
+            text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
 
-        // Handle delete confirmation with SweetAlert2
-        $(document).ready(function() {
-            $('.delete-btn').click(function(e) {
-                e.preventDefault();
-                const deleteId = $(this).data('id');
+    // Handle delete confirmation with SweetAlert2
+    $(document).ready(function() {
+        $('.delete-btn').click(function(e) {
+            e.preventDefault();
+            const deleteId = $(this).data('id');
+            Swal.fire({
+                title: 'คุณแน่ใจหรือไม่?',
+                text: "คุณต้องการลบข้อมูลดอกไม้นี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '?delete=' + encodeURIComponent(deleteId);
+                }
+            });
+        });
+
+        // Image preview in SweetAlert2
+        $('.image-preview').click(function() {
+            const imageUrl = $(this).data('image');
+            if (imageUrl) {
                 Swal.fire({
-                    title: 'คุณแน่ใจหรือไม่?',
-                    text: "คุณต้องการลบข้อมูลดอกไม้นี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'ใช่, ลบเลย!',
-                    cancelButtonText: 'ยกเลิก'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '?delete=' + encodeURIComponent(deleteId);
+                    imageUrl: imageUrl,
+                    imageAlt: 'รูปภาพดอกไม้',
+                    imageWidth: '80%',
+                    imageHeight: 'auto',
+                    showConfirmButton: false,
+                    showCloseButton: true,
+                    background: '#fff',
+                    customClass: {
+                        popup: 'image-preview-modal'
                     }
                 });
-            });
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'ไม่มีรูปภาพ',
+                    text: 'ดอกไม้นี้ยังไม่มีรูปภาพที่อัพโหลด',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
         });
 
         // Form validation
@@ -454,6 +491,8 @@ try {
                 $(this).val(value.toFixed(2));
             }
         });
-    </script>
+    });
+</script>
 </body>
+
 </html>

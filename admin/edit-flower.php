@@ -124,6 +124,8 @@ if (isset($_POST['submit'])) {
 
     <title>แก้ไขดอกไม้ - Flower Shop Admin</title>
 
+    <!-- LOGO -->
+    <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
@@ -189,8 +191,16 @@ if (isset($_POST['submit'])) {
                                             <label for="price" class="font-weight-bold text-gray-700">
                                                 <i class="fas fa-money-bill text-pink mr-2"></i>ราคา (บาท) <span class="text-danger">*</span>
                                             </label>
-                                            <input type="number" required class="form-control" name="price" id="price"
-                                                value="<?php echo number_format($flower['price'], 2); ?>" placeholder="0.00" step="0.01" min="0">
+                                            <input type="number"
+                                                required
+                                                class="form-control"
+                                                name="price"
+                                                id="price"
+                                                value="<?php echo intval($flower['price']); ?>"
+                                                placeholder="0"
+                                                min="0"
+                                                step="1"
+                                                oninput="this.value = Math.floor(this.value);">
                                             <div class="invalid-feedback">กรุณากรอกราคาที่ถูกต้อง</div>
                                         </div>
                                     </div>
@@ -344,9 +354,9 @@ if (isset($_POST['submit'])) {
 
         // Format price input
         $('#price').on('input', function() {
-            let value = parseFloat($(this).val());
+            let value = parseInt($(this).val());
             if (!isNaN(value)) {
-                $(this).val(value.toFixed(2));
+                $(this).val(Math.floor(value));
             }
         });
     </script>
