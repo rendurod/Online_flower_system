@@ -8,7 +8,12 @@
     --gradient-pink: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
     --gradient-purple: linear-gradient(135deg, #667eea, #764ba2);
 }
-
+/* background styles */
+.bg-gradient-pink {
+    background: var(--gradient-pink);
+    color: #fff;
+}
+/* button styles */
 .btn-pink {
     background: var(--gradient-pink);
     color: white;

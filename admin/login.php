@@ -23,9 +23,11 @@
 
   <!-- Custom styles for this template-->
   <link href="css/sb-admin-2.min.css" rel="stylesheet" />
+  <link href="css/style.css" rel="stylesheet" />
+
 </head>
 
-<body class="bg-gradient-primary">
+<body class="bg-gradient-pink">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-xl-10 col-lg-12 col-md-9">
@@ -49,14 +51,14 @@
                     </div>
                     <div class="form-group">
                       <input type="password"
-                        class="form-control form-control-user"
+                        class="form-control form-control-user mb-5"
                         id="password"
                         name="password"
                         placeholder="Password"
                         required />
                     </div>
                     <div id="result" class="alert" style="display: none;"></div>
-                    <button type="submit" class="btn btn-primary btn-user btn-block">
+                    <button type="submit" class="btn btn-pink btn-user btn-block">
                       Login
                     </button>
                   </form>
