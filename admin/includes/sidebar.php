@@ -29,11 +29,34 @@
         การจัดการข้อมูลพื้นฐาน
     </div>
 
+    <!-- Nav Item - Charts -->
+    <li class="nav-item">
+        <a class="nav-link" href="charts.html">
+            <i class="fas fa-fw fa-chart-area"></i>
+            <span>Charts</span></a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="tables.html">
+            <i class="fas fa-fw fa-table"></i>
+            <span>Tables</span></a>
+    </li>
+
+    <!-- Heading -->
+    <div class="sidebar-heading mt-2">
+        การจัดการข้อมูลพื้นฐาน
+    </div>
+
+    <li class="nav-item">
+        <a class="nav-link" href="tables.html">
+            <i class="fas fa-fw fa-table"></i>
+            <span>Tables</span></a>
+    </li>
+
     <!-- Nav Item - Pages Collapse Menu -->
-    
+
 
     <!-- Nav Item - Utilities Collapse Menu -->
-    
+
 
     <!-- Divider -->
     <hr class="sidebar-divider">
@@ -42,6 +65,9 @@
     <div class="sidebar-heading">
         Addons
     </div>
+
+    <!-- Nav Item - Tables -->
+
 
     <!-- Nav Item - Pages Collapse Menu -->
     <li class="nav-item">
@@ -62,20 +88,6 @@
                 <a class="collapse-item" href="blank.html">Blank Page</a>
             </div>
         </div>
-    </li>
-
-    <!-- Nav Item - Charts -->
-    <li class="nav-item">
-        <a class="nav-link" href="charts.html">
-            <i class="fas fa-fw fa-chart-area"></i>
-            <span>Charts</span></a>
-    </li>
-
-    <!-- Nav Item - Tables -->
-    <li class="nav-item">
-        <a class="nav-link" href="tables.html">
-            <i class="fas fa-fw fa-table"></i>
-            <span>Tables</span></a>
     </li>
 
     <!-- Divider -->
