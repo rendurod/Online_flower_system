@@ -41,6 +41,7 @@ if (!is_dir($target_dir)) {
 
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -67,6 +68,7 @@ if (!is_dir($target_dir)) {
             max-width: 90% !important;
             padding: 20px;
         }
+
         .image-preview-modal .swal2-image {
             max-width: 100%;
             max-height: 80vh;
@@ -122,15 +124,15 @@ if (!is_dir($target_dir)) {
                                                         <td class="col-1 fw-bold"><?php echo $i++; ?></td>
                                                         <td class="col-1 text-center">
                                                             <?php if (!empty($member['Image']) && file_exists($target_dir . $member['Image'])): ?>
-                                                                <img src="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>" 
-                                                                     alt="<?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?>" 
-                                                                     class="img-thumbnail image-preview" 
-                                                                     style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                                                                     data-image="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>">
+                                                                <img src="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>"
+                                                                    alt="<?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?>"
+                                                                    class="img-thumbnail image-preview"
+                                                                    style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                                                                    data-image="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>">
                                                             <?php else: ?>
-                                                                <div class="bg-light d-flex align-items-center justify-content-center image-preview" 
-                                                                     style="width: 60px; height: 60px; border-radius: 5px; cursor: pointer;"
-                                                                     data-image="">
+                                                                <div class="bg-light d-flex align-items-center justify-content-center image-preview"
+                                                                    style="width: 60px; height: 60px; border-radius: 5px; cursor: pointer;"
+                                                                    data-image="">
                                                                     <i class="fas fa-image text-muted"></i>
                                                                 </div>
                                                             <?php endif; ?>
@@ -140,9 +142,9 @@ if (!is_dir($target_dir)) {
                                                         <td class="col-1"><?php echo date('d/m/Y H:i', strtotime($member['RegDate'])); ?></td>
                                                         <td class="col-1"><?php echo $member['UpdationDate'] ? date('d/m/Y H:i', strtotime($member['UpdationDate'])) : '-'; ?></td>
                                                         <td class="col-1 text-center">
-                                                            <a href="edit-member.php?id=<?php echo htmlspecialchars($member['ID']); ?>" 
-                                                               class="btn btn-warning btn-sm">
-                                                                <i class="fas fa-edit"></i> แก้ไข
+                                                            <a href="edit-member.php?id=<?php echo htmlspecialchars($member['ID']); ?>"
+                                                                class="btn btn-info btn-sm">
+                                                                <i class="fas fa-eye"></i> ดูเพิ่มเติม
                                                             </a>
                                                         </td>
                                                     </tr>
@@ -232,4 +234,5 @@ if (!is_dir($target_dir)) {
         });
     </script>
 </body>
+
 </html>
