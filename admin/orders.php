@@ -263,18 +263,18 @@ try {
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
-                                            <th>รหัส</th>
-                                            <th>รูปภาพ</th>
-                                            <th>ชื่อดอกไม้</th>
-                                            <th>ประเภท</th>
-                                            <th>ราคา</th>
-                                            <th>สต็อก</th>
-                                            <th>วันที่เพิ่ม</th>
+                                            <th>ลำดับ</th>
+                                            <th>หมายเลขคำสั่งซื้อ</th>
+                                            <th>ชื่อลูกค้า</th>
+                                            <th>สินค้าที่เลือก</th>
+                                            <th>จำนวนที่สั่ง</th>
+                                            <th>วันที่ต้องจัดส่ง</th>
+                                            <th>สถานะ</th>
                                             <th class="no-sort text-center">จัดการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        
+
                                     </tbody>
                                 </table>
                             </div>

@@ -141,7 +141,7 @@ if (isset($_POST['submit'])) {
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
-                                            <th>ไอดี</th>
+                                            <th>ลำดับ</th>
                                             <th>ประเภท</th>
                                             <th>วันที่เพิ่ม</th>
                                             <th>วันที่แก้ไข</th>

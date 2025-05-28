@@ -263,7 +263,7 @@ try {
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
                                         <tr>
-                                            <th>รหัส</th>
+                                            <th>ลำดับ</th>
                                             <th>รูปภาพ</th>
                                             <th>ชื่อดอกไม้</th>
                                             <th>ประเภท</th>
