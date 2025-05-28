@@ -61,6 +61,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>คำสั่งซื้อสินค้า</span>
         </a>
     </li>
+    <li class="nav-item <?= ($currentPage == '#.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="orders.php">
+            <i class="fas fa-fw fa-table"></i>
+            <span>คำสั่งซื้อสินค้า</span>
+        </a>
+    </li>
+
+    <!-- Heading -->
+    <div class="sidebar-heading mt-2">
+        การจัดการข้อมูลทั่วไป
+    </div>
+
+    <!-- Nav Item -->
+    <li class="nav-item <?= ($currentPage == 'members.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="members.php">
+            <i class="fas fa-fw fa-table"></i>
+            <span>ข้อมูลสมาชิก</span>
+        </a>
+    </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider">
