@@ -1,0 +1,96 @@
+/*  Variables */
+:root {
+    --pink: #e84393;
+    --primary-pink: #e84393;
+    --secondary-pink: #fd79a8;
+    --light-pink: rgba(232, 67, 147, 0.1);
+    --dark-pink: #c44569;
+    --gradient-pink: linear-gradient(135deg, var(--primary-pink), var(--secondary-pink));
+    --gradient-purple: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.btn-pink {
+    background: var(--gradient-pink);
+    color: white;
+    transition: var(--transition);
+}
+
+.btn-pink:hover {
+    background: var(--dark-pink);
+    color: white;
+    transform: translateY(1px);
+    box-shadow: var(--shadow-medium);
+}
+/* Sidebar Background */
+.sidebar {
+    background: var(--gradient-pink) !important;
+}
+
+/* Sidebar Brand */
+.sidebar-brand {
+    color: white !important;
+}
+
+/* Sidebar Links */
+.sidebar .nav-item .nav-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.sidebar .nav-item .nav-link:hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar .nav-item.active .nav-link {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Sidebar Headings */
+.sidebar-heading {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Sidebar Dividers */
+.sidebar-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Sidebar Toggler */
+#sidebarToggle {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+#sidebarToggle:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Collapse Menu Items */
+.sidebar .collapse-inner {
+    background: white !important;
+}
+
+.sidebar .collapse-item {
+    color: var(--text-dark) !important;
+}
+
+.sidebar .collapse-item:hover {
+    background: var(--light-pink) !important;
+    color: var(--primary-pink) !important;
+}
+
+/* Collapse Headers */
+.sidebar .collapse-header {
+    color: var(--text-dark) !important;
+}
+
+/* Icons in Sidebar */
+.sidebar .nav-item .nav-link i {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.sidebar .nav-item .nav-link:hover i,
+.sidebar .nav-item.active .nav-link i {
+    color: white !important;
+}
+
