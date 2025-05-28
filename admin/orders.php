@@ -153,7 +153,7 @@ try {
 
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">ตาราง : ข้อมูลดอกไม้</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">ตารางข้อมูลดอกไม้</h6>
                         </div>
                         <div class="card-body">
                             <!-- Add Flower Modal -->
@@ -274,59 +274,7 @@ try {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php
-                                        try {
-                                            $stmt = $conn->query("SELECT * FROM tbl_flowers ORDER BY ID DESC");
-                                            $flowers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                            if (!$flowers) {
-                                                echo "<tr><td colspan='8' class='text-center'>ไม่พบข้อมูลดอกไม้</td></tr>";
-                                            } else {
-                                                foreach ($flowers as $flower) {
-                                        ?>
-                                                    <tr>
-                                                        <td class="col-1 fw-bold"><?php echo htmlspecialchars($flower['ID']); ?></td>
-                                                        <td class="col-1 text-center">
-                                                            <?php if (!empty($flower['image']) && file_exists($target_dir . $flower['image'])): ?>
-                                                                <img src="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>"
-                                                                    alt="<?php echo htmlspecialchars($flower['flower_name']); ?>"
-                                                                    class="img-thumbnail image-preview"
-                                                                    style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                                                                    data-image="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>">
-                                                            <?php else: ?>
-                                                                <div class="bg-light d-flex align-items-center justify-content-center image-preview"
-                                                                    style="width: 60px; height: 60px; border-radius: 5px; cursor: pointer;"
-                                                                    data-image="">
-                                                                    <i class="fas fa-image text-muted"></i>
-                                                                </div>
-                                                            <?php endif; ?>
-                                                        </td>
-                                                        <td class="col-2 text-primary fw-bold"><?php echo htmlspecialchars($flower['flower_name']); ?></td>
-                                                        <td class="col-1"><?php echo htmlspecialchars($flower['flower_category']); ?></td>
-                                                        <td class="col-1 text-success fw-bold">฿<?php echo number_format($flower['price'], 2); ?></td>
-                                                        <td class="col-1 text-center">
-                                                            <span class="badge badge-<?php echo $flower['stock_quantity'] > 0 ? 'success' : 'danger'; ?>">
-                                                                <?php echo htmlspecialchars($flower['stock_quantity']); ?>
-                                                            </span>
-                                                        </td>
-                                                        <td class="col-1 fw-bold"><?php echo date('d/m/Y H:i', strtotime($flower['creation_date'])); ?></td>
-                                                        <td class="col-2 text-center">
-                                                            <a href="edit-flower.php?id=<?php echo htmlspecialchars($flower['ID']); ?>"
-                                                                class="btn btn-warning btn-sm mb-1">
-                                                                <i class="fas fa-edit"></i> แก้ไข
-                                                            </a>
-                                                            <a href="#" class="btn btn-danger btn-sm delete-btn" data-id="<?php echo htmlspecialchars($flower['ID']); ?>">
-                                                                <i class="fas fa-trash"></i> ลบ
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                        <?php
-                                                }
-                                            }
-                                        } catch (PDOException $e) {
-                                            echo "<tr><td colspan='8' class='text-center text-danger'>เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage()) . "</td></tr>";
-                                        }
-                                        ?>
+                                        
                                     </tbody>
                                 </table>
                             </div>
