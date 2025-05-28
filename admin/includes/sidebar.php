@@ -1,3 +1,7 @@
+<?php
+$currentPage = basename($_SERVER['PHP_SELF']);
+?>
+
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
@@ -15,10 +19,11 @@
     <hr class="sidebar-divider my-0">
 
     <!-- Nav Item - Dashboard -->
-    <li class="nav-item active">
+    <li class="nav-item <?= ($currentPage == 'index.php') ? 'active' : '' ?>">
         <a class="nav-link" href="index.php">
             <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>หน้าแรก</span></a>
+            <span>หน้าแรก</span>
+        </a>
     </li>
 
     <!-- Divider -->
@@ -35,16 +40,29 @@
             <i class="fas fa-fw fa-chart-area"></i>
             <span>Charts</span></a>
     </li>
-    <li class="nav-item">
+
+
+    <li class="nav-item <?= ($currentPage == 'category.php') ? 'active' : '' ?>">
         <a class="nav-link" href="category.php">
             <i class="fas fa-fw fa-table"></i>
-            <span>ประเภทสินค้า</span></a>
+            <span>ประเภทสินค้า</span>
+        </a>
     </li>
-    <li class="nav-item">
+
+    <li class="nav-item <?= ($currentPage == 'flowers.php') ? 'active' : '' ?>">
         <a class="nav-link" href="flowers.php">
             <i class="fas fa-fw fa-table"></i>
-            <span>ข้อมูลสินค้า</span></a>
+            <span>ข้อมูลสินค้า</span>
+        </a>
     </li>
+
+    <li class="nav-item <?= ($currentPage == 'tables.html') ? 'active' : '' ?>">
+        <a class="nav-link" href="tables.html">
+            <i class="fas fa-fw fa-table"></i>
+            <span>Tables</span>
+        </a>
+    </li>
+
 
     <!-- Heading -->
     <div class="sidebar-heading mt-2">
