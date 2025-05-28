@@ -70,7 +70,7 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">ประเภทสินค้า</h1>
-                        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-pink shadow-sm">
+                        <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-pink shadow-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                             <i class="fas fa-plus fa-sm text-white"></i> เพิ่มประเภท
                         </a>
                     </div>
