@@ -157,10 +157,11 @@ if (isset($_POST['submit'])) {
                                         if (!$categories) {
                                             echo "<tr><td colspan='5' class='text-center'>No data available</td></tr>";
                                         } else {
+                                            $i = 1; 
                                             foreach ($categories as $category) {
                                         ?>
                                                 <tr>
-                                                    <td class="col-1 fw-bold"><?php echo $category['ID']; ?></td>
+                                                    <td class="col-1 fw-bold"><?php echo $i++; ?></td>
                                                     <td class="col-3 text-primary fw-bold"><?php echo htmlspecialchars($category['FlowerType']); ?></td>
                                                     <td class="col-2 fw-bold"><?php echo $category['CreationDate']; ?></td>
                                                     <td class="col-2 fw-bold"><?php echo $category['UpdationDate'] ?: '-'; ?></td>

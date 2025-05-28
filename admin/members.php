@@ -115,10 +115,11 @@ if (!is_dir($target_dir)) {
                                             if (!$members) {
                                                 echo "<tr><td colspan='8' class='text-center'>ไม่พบข้อมูลสมาชิก</td></tr>";
                                             } else {
+                                                $i = 1;
                                                 foreach ($members as $member) {
                                         ?>
                                                     <tr>
-                                                        <td class="col-1 fw-bold"><?php echo htmlspecialchars($member['ID']); ?></td>
+                                                        <td class="col-1 fw-bold"><?php echo $i++; ?></td>
                                                         <td class="col-1 text-center">
                                                             <?php if (!empty($member['Image']) && file_exists($target_dir . $member['Image'])): ?>
                                                                 <img src="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>" 

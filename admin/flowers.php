@@ -282,10 +282,11 @@ try {
                                             if (!$flowers) {
                                                 echo "<tr><td colspan='8' class='text-center'>ไม่พบข้อมูลดอกไม้</td></tr>";
                                             } else {
+                                                $i = 1;
                                                 foreach ($flowers as $flower) {
                                         ?>
                                                     <tr>
-                                                        <td class="col-1 fw-bold"><?php echo htmlspecialchars($flower['ID']); ?></td>
+                                                        <td class="col-1 fw-bold"><?php echo $i++; ?></td>
                                                         <td class="col-1 text-center">
                                                             <?php if (!empty($flower['image']) && file_exists($target_dir . $flower['image'])): ?>
                                                                 <img src="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>"
