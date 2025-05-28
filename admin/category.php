@@ -49,28 +49,18 @@ if (isset($_POST['submit'])) {
         header("location: category.php");
         exit();
     } else {
-        // Check if the number of rows in tbl_category is less than 10
-        $checkRowCount = $conn->query("SELECT COUNT(*) FROM tbl_category");
-        $rowCount = $checkRowCount->fetchColumn();
+        // Insert new category
+        $sql = $conn->prepare("INSERT INTO tbl_category(FlowerType, CreationDate) VALUES(:FlowerType, NOW())");
+        $sql->bindParam(":FlowerType", $FlowerType);
 
-        if ($rowCount >= 10) {
-            $_SESSION['error'] = "ไม่สามารถเพิ่มข้อมูลได้ เนื่องจากครบ 10 รายการแล้ว";
+        if ($sql->execute()) {
+            $_SESSION['success'] = "เพิ่มประเภทสินค้าเรียบร้อยแล้ว";
             header("location: category.php");
             exit();
         } else {
-            // Insert new category
-            $sql = $conn->prepare("INSERT INTO tbl_category(FlowerType, CreationDate) VALUES(:FlowerType, NOW())");
-            $sql->bindParam(":FlowerType", $FlowerType);
-
-            if ($sql->execute()) {
-                $_SESSION['success'] = "เพิ่มประเภทสินค้าเรียบร้อยแล้ว";
-                header("location: category.php");
-                exit();
-            } else {
-                $_SESSION['error'] = "เพิ่มข้อมูลไม่สำเร็จ";
-                header("location: category.php");
-                exit();
-            }
+            $_SESSION['error'] = "เพิ่มข้อมูลไม่สำเร็จ";
+            header("location: category.php");
+            exit();
         }
     }
 }
@@ -86,12 +76,14 @@ if (isset($_POST['submit'])) {
     <meta name="description" content="">
     <meta name="author" content="">
     <title>Admin - Category</title>
-    <link rel="icon" href="img/LOCO_FlowerShopp.png" type="image/x-icon">
+    <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 
 <body id="page-top">
@@ -108,26 +100,6 @@ if (isset($_POST['submit'])) {
                         </a>
                     </div>
 
-                    <!-- Success/Error Messages -->
-                    <?php if (isset($_SESSION['success'])) { ?>
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle"></i> <?php echo $_SESSION['success']; ?>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <?php unset($_SESSION['success']); ?>
-                    <?php } ?>
-                    <?php if (isset($_SESSION['error'])) { ?>
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle"></i> <?php echo $_SESSION['error']; ?>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <?php unset($_SESSION['error']); ?>
-                    <?php } ?>
-
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">ตาราง ประเภทสินค้า</h6>
@@ -140,7 +112,7 @@ if (isset($_POST['submit'])) {
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="addCategoryModalLabel">เพิ่มประเภทสินค้า</h5>
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
+                                                <span aria-hidden="true">×</span>
                                             </button>
                                         </div>
                                         <div class="modal-body">
@@ -186,15 +158,15 @@ if (isset($_POST['submit'])) {
                                             foreach ($categories as $category) {
                                         ?>
                                                 <tr>
-                                                    <td class="col-1 text-dark fw-bold">#F<?php echo $category['ID']; ?></td>
+                                                    <td class="col-1 fw-bold"><?php echo $category['ID']; ?></td>
                                                     <td class="col-3 text-primary fw-bold"><?php echo htmlspecialchars($category['FlowerType']); ?></td>
-                                                    <td class="col-2"><?php echo $category['CreationDate']; ?></td>
-                                                    <td class="col-2"><?php echo $category['UpdationDate'] ?: '-'; ?></td>
-                                                    <td class="text-center">
+                                                    <td class="col-2 fw-bold"><?php echo $category['CreationDate']; ?></td>
+                                                    <td class="col-2 fw-bold"><?php echo $category['UpdationDate'] ?: '-'; ?></td>
+                                                    <td class="col-2 text-center">
                                                         <a href="edit-category.php?id=<?php echo $category['ID']; ?>" class="btn btn-warning btn-sm">
                                                             <i class="fas fa-edit"></i> แก้ไข
                                                         </a>
-                                                        <a onclick="return confirm('Are you sure you want to delete?');" href="?delete=<?php echo $category['ID']; ?>" class="btn btn-danger btn-sm">
+                                                        <a href="#" class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $category['ID']; ?>">
                                                             <i class="fas fa-trash"></i> ลบ
                                                         </a>
                                                     </td>
@@ -225,6 +197,53 @@ if (isset($_POST['submit'])) {
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
     <script src="js/demo/datatables-demo.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Show SweetAlert2 for success/error messages
+        <?php if (isset($_SESSION['success'])) { ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ',
+                text: '<?php echo $_SESSION['success']; ?>',
+                timer: 3000,
+                showConfirmButton: false
+            });
+            <?php unset($_SESSION['success']); ?>
+        <?php } ?>
+        <?php if (isset($_SESSION['error'])) { ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'ข้อผิดพลาด',
+                text: '<?php echo $_SESSION['error']; ?>',
+                timer: 3000,
+                showConfirmButton: false
+            });
+            <?php unset($_SESSION['error']); ?>
+        <?php } ?>
+
+        // Handle delete confirmation with SweetAlert2
+        $(document).ready(function() {
+            $('.delete-btn').click(function(e) {
+                e.preventDefault();
+                const deleteId = $(this).data('id');
+                Swal.fire({
+                    title: 'คุณแน่ใจหรือไม่?',
+                    text: "คุณต้องการลบประเภทนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'ใช่, ลบเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '?delete=' + deleteId;
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
