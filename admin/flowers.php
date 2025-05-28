@@ -118,7 +118,7 @@ try {
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Admin - Flowers</title>
+    <title>รายการดอกไม้ - FlowerShop</title>
 
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">

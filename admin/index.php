@@ -26,7 +26,7 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Admin - flowerShop</title>
+    <title>Admin - FlowerShop</title>
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
 

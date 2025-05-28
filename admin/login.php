@@ -10,7 +10,7 @@
   <meta name="description" content="" />
   <meta name="author" content="" />
 
-  <title>Login</title>
+  <title>Login - FlowerShop</title>
 
   <!-- Custom fonts for this template-->
   <link
