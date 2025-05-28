@@ -11,7 +11,8 @@
   <meta name="author" content="" />
 
   <title>Login - FlowerShop</title>
-
+  <!-- LOGO -->
+  <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
   <!-- Custom fonts for this template-->
   <link
     href="vendor/fontawesome-free/css/all.min.css"
@@ -62,6 +63,10 @@
                       Login
                     </button>
                   </form>
+                  <hr>
+                  <div class="text-center">
+                    <a class="small" href="change-password.php">Change password</a>
+                  </div>
                 </div>
               </div>
             </div>
