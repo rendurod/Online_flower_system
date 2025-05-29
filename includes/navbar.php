@@ -48,10 +48,10 @@
             <div class="profile-dropdown">
                 <div class="profile-btn" onclick="toggleProfileDropdown()">
                     <div class="profile-avatar">
-                        <?php if (!empty($userImage) && file_exists("img/imageprofile/" . $userImage)): ?>
-                            <img src="img/imageprofile/<?php echo htmlspecialchars($userImage); ?>" alt="profile">
+                        <?php if (!empty($user['Image']) && file_exists("Uploads/imgprofile/" . $user['Image'])): ?>
+                            <img src="Uploads/imgprofile/<?php echo htmlspecialchars($user['Image']); ?>" alt="Current Profile" class="current-image">
                         <?php else: ?>
-                            <img src="assets/img/account.png" alt="default profile">
+                            <img src="assets/img/account.png" alt="Default Profile" class="current-image">
                         <?php endif; ?>
                         <div class="online-indicator"></div>
                     </div>
@@ -65,10 +65,10 @@
                 <div class="profile-dropdown-menu">
                     <div class="dropdown-header">
                         <div class="user-info">
-                            <?php if (!empty($userImage) && file_exists("img/imageprofile/" . $userImage)): ?>
-                                <img src="img/imageprofile/<?php echo htmlspecialchars($userImage); ?>" alt="profile">
+                            <?php if (!empty($user['Image']) && file_exists("Uploads/imgprofile/" . $user['Image'])): ?>
+                                <img src="Uploads/imgprofile/<?php echo htmlspecialchars($user['Image']); ?>" alt="Current Profile" class="current-image">
                             <?php else: ?>
-                                <img src="assets/img/account.png" alt="default profile">
+                                <img src="assets/img/account.png" alt="Default Profile" class="current-image">
                             <?php endif; ?>
                             <div>
                                 <div class="user-name"><?php echo htmlspecialchars($user['FirstName'] ?? 'ผู้ใช้'); ?></div>
