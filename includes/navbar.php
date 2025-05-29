@@ -83,7 +83,7 @@
                         <li>
                             <a href="user-mybooking.php" class="dropdown-item">
                                 <i class="fas fa-calendar-check"></i>
-                                <span>การจองของฉัน</span>
+                                <span>คำสั่งซื้อของฉัน</span>
                             </a>
                         </li>
                         <li>
