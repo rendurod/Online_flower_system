@@ -13,11 +13,6 @@
     ?>
 
     <nav class="navbar">
-        <a href="#" class="nav-link <?php echo ($currentPage == '#') ? 'active' : ''; ?>">
-            <i class="fas fa-home nav-icon"></i>
-            <span>Home</span>
-            <div class="nav-underline"></div>
-        </a>
         <a href="about-us.php" class="nav-link <?php echo ($currentPage == 'about-us.php') ? 'active' : ''; ?>">
             <i class="fas fa-info-circle nav-icon"></i>
             <span>About Us</span>
@@ -26,6 +21,11 @@
         <a href="products.php" class="nav-link <?php echo ($currentPage == 'products.php') ? 'active' : ''; ?>">
             <i class="fas fa-leaf nav-icon"></i>
             <span>Products</span>
+            <div class="nav-underline"></div>
+        </a>
+        <a href="#" class="nav-link <?php echo ($currentPage == '#') ? 'active' : ''; ?>">
+            <i class="fas fa-solid fa-dolly nav-icon"></i>
+            <span>Tracking ID</span>
             <div class="nav-underline"></div>
         </a>
         <a href="contact.php" class="nav-link <?php echo ($currentPage == 'contact.php') ? 'active' : ''; ?>">
