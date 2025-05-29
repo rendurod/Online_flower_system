@@ -98,7 +98,7 @@
                         </li>
                         <li class="dropdown-divider"></li>
                         <li>
-                            <a href="logout.php" class="dropdown-item logout-item">
+                            <a href="javascript:void(0);" class="dropdown-item logout-item" onclick="confirmLogout()">
                                 <i class="fas fa-sign-out-alt"></i>
                                 <span>ออกจากระบบ</span>
                             </a>
@@ -191,4 +191,22 @@
             }
         });
     });
+
+    // SweetAlert2 Logout Confirmation
+    function confirmLogout() {
+        Swal.fire({
+            title: 'คุณแน่ใจหรือไม่?',
+            text: 'คุณต้องการออกจากระบบหรือไม่?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ออกจากระบบ',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'logout.php';
+            }
+        });
+    }
 </script>
