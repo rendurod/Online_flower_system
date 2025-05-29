@@ -16,7 +16,7 @@
         </a>
         <a href="index.php#about" class="nav-link">
             <i class="fas fa-info-circle nav-icon"></i>
-            <span>About</span>
+            <span>About Us</span>
             <div class="nav-underline"></div>
         </a>
         <a href="index.php#products" class="nav-link">
@@ -45,10 +45,10 @@
                 <div class="profile-btn" onclick="toggleProfileDropdown()">
                     <div class="profile-avatar">
                         <?php if (!empty($userImage) && file_exists("img/imageprofile/" . $userImage)): ?>
-                                <img src="img/imageprofile/<?php echo htmlspecialchars($userImage); ?>" alt="profile">
-                            <?php else: ?>
-                                <img src="assets/img/account.png" alt="default profile">
-                            <?php endif; ?>
+                            <img src="img/imageprofile/<?php echo htmlspecialchars($userImage); ?>" alt="profile">
+                        <?php else: ?>
+                            <img src="assets/img/account.png" alt="default profile">
+                        <?php endif; ?>
                         <div class="online-indicator"></div>
                     </div>
                     <div class="profile-info d-none d-md-block">
@@ -105,7 +105,7 @@
         <?php else: ?>
             <a href="login.php" class="auth-button">
                 <i class="fas fa-user"></i>
-                <span>สมัครสมาชิกฟรี/เข้าสู่ระบบ</span>
+                <span style="font-weight: 500;">Sign up for free/Log In</span>
             </a>
         <?php endif; ?>
     </div>
