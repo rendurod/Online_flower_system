@@ -14,17 +14,17 @@
             <span>Home</span>
             <div class="nav-underline"></div>
         </a>
-        <a href="index.php#about" class="nav-link">
+        <a href="about-us.php" class="nav-link">
             <i class="fas fa-info-circle nav-icon"></i>
             <span>About Us</span>
             <div class="nav-underline"></div>
         </a>
-        <a href="index.php#products" class="nav-link">
+        <a href="products.php" class="nav-link">
             <i class="fas fa-leaf nav-icon"></i>
             <span>Products</span>
             <div class="nav-underline"></div>
         </a>
-        <a href="index.php#contact" class="nav-link">
+        <a href="contact.php" class="nav-link">
             <i class="fas fa-envelope nav-icon"></i>
             <span>Contact</span>
             <div class="nav-underline"></div>
