@@ -85,7 +85,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="user-mybooking.php" class="dropdown-item">
+                            <a href="user-order.php" class="dropdown-item">
                                 <i class="fas fa-calendar-check"></i>
                                 <span>คำสั่งซื้อของฉัน</span>
                             </a>
