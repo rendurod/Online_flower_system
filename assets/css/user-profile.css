@@ -1,0 +1,218 @@
+.profile-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.profile-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-heavy);
+    overflow: hidden;
+}
+
+.profile-form {
+    padding: 3rem;
+}
+
+.form-group {
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-label i {
+    color: var(--primary-pink);
+    width: 16px;
+}
+
+.form-control {
+    border: 2px solid rgba(232, 67, 147, 0.2);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    font-size: 1.4rem;
+    transition: var(--transition);
+    background: var(--bg-light);
+}
+
+.form-control:focus {
+    border-color: var(--primary-pink);
+    box-shadow: 0 0 0 0.2rem rgba(232, 67, 147, 0.25);
+    background: var(--white);
+}
+
+.image-upload-section {
+    text-align: center;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.current-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-pink);
+}
+
+.file-input-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    background: var(--gradient-pink);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    width: 200px;
+    text-align: center;
+}
+
+.file-input-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.file-input-wrapper input[type=file] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.btn-update {
+    background: var(--gradient-pink);
+    border: none;
+    padding: 1.2rem 3rem;
+    font-size: 1.6rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    color: white;
+    transition: var(--transition);
+    width: 100%;
+}
+
+.btn-update:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+    color: white;
+}
+
+.alert {
+    border-radius: var(--border-radius);
+    border: none;
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+}
+
+.member-since {
+    background: var(--light-pink);
+    padding: 1.5rem;
+    margin-top: 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.member-since i {
+    color: var(--primary-pink);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.nav-tabs .nav-item {
+    flex: 1;
+    text-align: center;
+}
+
+.nav-tabs .nav-link {
+    font-size: 16px;
+    border: none;
+    text-align: center;
+    font-weight: bold;
+    padding: 15px;
+    color: white;
+    background-color: pink;
+    text-decoration: none;
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 0;
+    border: 2px solid rgb(255, 117, 140);
+    border-bottom: 2px solid rgb(255, 117, 140);
+}
+
+body.profile .nav-tabs .nav-item:first-child .nav-link {
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+body.profile .nav-tabs .nav-item:last-child .nav-link {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.nav-tabs .nav-link:hover {
+    color: white;
+    background-color: #cb8598;
+    text-decoration: none;
+    border-color: #8c4356;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: white;
+    color: #8c4356;
+    border-color: rgb(255, 117, 140);
+    border-bottom: 2px solid rgb(255, 117, 140);
+}
+
+.nav-tabs .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link:not(.active) {
+    color: white;
+}
+
+.tab-content {
+    padding: 20px;
+}
+
+@media (max-width: 768px) {
+    .profile-container {
+        padding: 0 1rem;
+    }
+
+    .profile-form {
+        padding: 2rem 1.5rem;
+    }
+
+    .file-input-wrapper {
+        width: 100%;
+        max-width: 200px;
+    }
+}
