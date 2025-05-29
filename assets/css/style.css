@@ -183,6 +183,20 @@ section {
     gap: 2rem;
 }
 
+/* เพิ่มในไฟล์ CSS ของคุณ */
+.nav-link.active {
+    color: var(--primary-pink);
+}
+
+.nav-link.active .nav-icon {
+    color: var(--primary-pink);
+}
+
+.nav-link.active .nav-underline {
+    width: 100%;
+    background-color: var(--primary-pink);
+}
+
 .navbar .nav-link {
     display: flex;
     align-items: center;

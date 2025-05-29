@@ -8,23 +8,27 @@
     </a>
 
     <!-- Navigation Menu -->
+    <?php
+    $currentPage = basename($_SERVER['PHP_SELF']);
+    ?>
+
     <nav class="navbar">
-        <a href="index.php#home" class="nav-link">
+        <a href="index.php#home" class="nav-link <?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">
             <i class="fas fa-home nav-icon"></i>
             <span>Home</span>
             <div class="nav-underline"></div>
         </a>
-        <a href="about-us.php" class="nav-link">
+        <a href="about-us.php" class="nav-link <?php echo ($currentPage == 'about-us.php') ? 'active' : ''; ?>">
             <i class="fas fa-info-circle nav-icon"></i>
             <span>About Us</span>
             <div class="nav-underline"></div>
         </a>
-        <a href="products.php" class="nav-link">
+        <a href="products.php" class="nav-link <?php echo ($currentPage == 'products.php') ? 'active' : ''; ?>">
             <i class="fas fa-leaf nav-icon"></i>
             <span>Products</span>
             <div class="nav-underline"></div>
         </a>
-        <a href="contact.php" class="nav-link">
+        <a href="contact.php" class="nav-link <?php echo ($currentPage == 'contact.php') ? 'active' : ''; ?>">
             <i class="fas fa-envelope nav-icon"></i>
             <span>Contact</span>
             <div class="nav-underline"></div>
