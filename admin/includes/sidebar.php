@@ -61,8 +61,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>คำสั่งซื้อสินค้า</span>
         </a>
     </li>
-    <li class="nav-item <?= ($currentPage == '#.php') ? 'active' : '' ?>">
-        <a class="nav-link" href="orders.php">
+    <li class="nav-item <?= ($currentPage == 'history.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="history.php">
             <i class="fas fa-fw fa-table"></i>
             <span>ประวัติคำสั่งซื้อทั้งหมด</span>
         </a>
