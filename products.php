@@ -3,10 +3,6 @@
 session_start();
 include('config/db.php');
 
-if (isset($_SESSION['user_login'])) {
-    header("location: user.php");
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="en">

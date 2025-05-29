@@ -13,7 +13,7 @@
     ?>
 
     <nav class="navbar">
-        <a href="index.php#home" class="nav-link <?php echo ($currentPage == 'index.php') ? 'active' : ''; ?>">
+        <a href="#" class="nav-link <?php echo ($currentPage == '#') ? 'active' : ''; ?>">
             <i class="fas fa-home nav-icon"></i>
             <span>Home</span>
             <div class="nav-underline"></div>
@@ -169,15 +169,25 @@
     });
 
     // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    document.querySelectorAll('a[href*="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            const href = this.getAttribute('href');
+            const [targetPage, targetId] = href.split('#');
+            const currentPage = '<?php echo $currentPage; ?>';
+
+            if (targetPage === '' || targetPage === currentPage) {
+                // Scroll within the same page
+                const target = document.querySelector('#' + targetId);
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            } else {
+                // Navigate to another page
+                window.location.href = href;
             }
         });
     });
