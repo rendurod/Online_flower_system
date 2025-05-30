@@ -354,146 +354,146 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-    // Show SweetAlert2 for success/error messages
-    <?php if (isset($_SESSION['success'])): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'สำเร็จ',
-            text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
-            timer: 3000,
-            showConfirmButton: false
-        });
-        <?php unset($_SESSION['success']); ?>
-    <?php endif; ?>
-
-    <?php if (isset($_SESSION['error'])): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'ข้อผิดพลาด',
-            text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
-            timer: 3000,
-            showConfirmButton: false
-        });
-        <?php unset($_SESSION['error']); ?>
-    <?php endif; ?>
-
-    // Handle delete confirmation with SweetAlert2
-    $(document).ready(function() {
-        $('.delete-btn').click(function(e) {
-            e.preventDefault();
-            const deleteId = $(this).data('id');
+        // Show SweetAlert2 for success/error messages
+        <?php if (isset($_SESSION['success'])): ?>
             Swal.fire({
-                title: 'คุณแน่ใจหรือไม่?',
-                text: "คุณต้องการลบข้อมูลดอกไม้นี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'ใช่, ลบเลย!',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '?delete=' + encodeURIComponent(deleteId);
-                }
+                icon: 'success',
+                title: 'สำเร็จ',
+                text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
+                timer: 3000,
+                showConfirmButton: false
             });
-        });
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
 
-        // Image preview in SweetAlert2
-        $('.image-preview').click(function() {
-            const imageUrl = $(this).data('image');
-            if (imageUrl) {
+        <?php if (isset($_SESSION['error'])): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'ข้อผิดพลาด',
+                text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
+                timer: 3000,
+                showConfirmButton: false
+            });
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
+        // Handle delete confirmation with SweetAlert2
+        $(document).ready(function() {
+            $('.delete-btn').click(function(e) {
+                e.preventDefault();
+                const deleteId = $(this).data('id');
                 Swal.fire({
-                    imageUrl: imageUrl,
-                    imageAlt: 'รูปภาพดอกไม้',
-                    imageWidth: '80%',
-                    imageHeight: 'auto',
-                    showConfirmButton: false,
-                    showCloseButton: true,
-                    background: '#fff',
-                    customClass: {
-                        popup: 'image-preview-modal'
+                    title: 'คุณแน่ใจหรือไม่?',
+                    text: "คุณต้องการลบข้อมูลดอกไม้นี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'ใช่, ลบเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '?delete=' + encodeURIComponent(deleteId);
                     }
                 });
-            } else {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'ไม่มีรูปภาพ',
-                    text: 'ดอกไม้นี้ยังไม่มีรูปภาพที่อัพโหลด',
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-            }
-        });
+            });
 
-        // Form validation
-        (function() {
-            'use strict';
-            window.addEventListener('load', function() {
-                var forms = document.getElementsByClassName('needs-validation');
-                Array.prototype.filter.call(forms, function(form) {
-                    form.addEventListener('submit', function(event) {
-                        if (form.checkValidity() === false) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }
-                        form.classList.add('was-validated');
-                    }, false);
-                });
-            }, false);
-        })();
-
-        // Image file input handling
-        $('#image').on('change', function() {
-            const fileName = $(this).val().split('\\').pop();
-            $(this).next('.custom-file-label').html(fileName || 'เลือกรูปภาพ...');
-            
-            // Image preview
-            const file = this.files[0];
-            if (file) {
-                if (file.size > 5 * 1024 * 1024) {
+            // Image preview in SweetAlert2
+            $('.image-preview').click(function() {
+                const imageUrl = $(this).data('image');
+                if (imageUrl) {
                     Swal.fire({
-                        icon: 'error',
-                        title: 'ข้อผิดพลาด',
-                        text: 'ขนาดไฟล์รูปภาพใหญ่เกินไป (สูงสุด 5MB)',
+                        imageUrl: imageUrl,
+                        imageAlt: 'รูปภาพดอกไม้',
+                        imageWidth: '80%',
+                        imageHeight: 'auto',
+                        showConfirmButton: false,
+                        showCloseButton: true,
+                        background: '#fff',
+                        customClass: {
+                            popup: 'image-preview-modal'
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'ไม่มีรูปภาพ',
+                        text: 'ดอกไม้นี้ยังไม่มีรูปภาพที่อัพโหลด',
                         timer: 3000,
                         showConfirmButton: false
                     });
-                    $(this).val('');
-                    $(this).next('.custom-file-label').html('เลือกรูปภาพ...');
-                    $('#imagePreview').empty();
-                    return;
                 }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#imagePreview').html(`
+            });
+
+            // Form validation
+            (function() {
+                'use strict';
+                window.addEventListener('load', function() {
+                    var forms = document.getElementsByClassName('needs-validation');
+                    Array.prototype.filter.call(forms, function(form) {
+                        form.addEventListener('submit', function(event) {
+                            if (form.checkValidity() === false) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                }, false);
+            })();
+
+            // Image file input handling
+            $('#image').on('change', function() {
+                const fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').html(fileName || 'เลือกรูปภาพ...');
+
+                // Image preview
+                const file = this.files[0];
+                if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'ข้อผิดพลาด',
+                            text: 'ขนาดไฟล์รูปภาพใหญ่เกินไป (สูงสุด 5MB)',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                        $(this).val('');
+                        $(this).next('.custom-file-label').html('เลือกรูปภาพ...');
+                        $('#imagePreview').empty();
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#imagePreview').html(`
                         <img src="${e.target.result}" 
                              class="img-thumbnail" 
                              style="max-width: 200px; max-height: 200px; object-fit: cover;">
                     `);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                $('#imagePreview').empty();
-            }
-        });
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreview').empty();
+                }
+            });
 
-        // Reset form when modal is closed
-        $('#addFlowerModal').on('hidden.bs.modal', function() {
-            $(this).find('form')[0].reset();
-            $(this).find('.custom-file-label').html('เลือกรูปภาพ...');
-            $(this).find('#imagePreview').empty();
-            $(this).find('.needs-validation').removeClass('was-validated');
-        });
+            // Reset form when modal is closed
+            $('#addFlowerModal').on('hidden.bs.modal', function() {
+                $(this).find('form')[0].reset();
+                $(this).find('.custom-file-label').html('เลือกรูปภาพ...');
+                $(this).find('#imagePreview').empty();
+                $(this).find('.needs-validation').removeClass('was-validated');
+            });
 
-        // Format price input
-        $('#price').on('input', function() {
-            let value = parseFloat($(this).val());
-            if (!isNaN(value)) {
-                $(this).val(value.toFixed(2));
-            }
+            // Format price input
+            $('#price').on('input', function() {
+                let value = parseInt($(this).val());
+                if (!isNaN(value)) {
+                    $(this).val(Math.floor(value));
+                }
+            });
         });
-    });
-</script>
+    </script>
 </body>
 
 </html>
