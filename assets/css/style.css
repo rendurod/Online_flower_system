@@ -24,16 +24,82 @@
 }
 
 /* 3. Reset and Base Styles */
+/* 3. Reset and Base Styles - แก้ไขส่วน font-family */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
+    /* เพิ่มฟอนต์ภาษาไทย IBM Plex Sans Thai เป็นฟอนต์หลัก */
+    font-family: 'IBM Plex Sans Thai', 'Poppins', sans-serif;
     outline: none;
     border: none;
     text-decoration: none;
     text-transform: capitalize;
     transition: var(--transition);
+}
+
+/* ส่วนของ Logo - ใช้ฟอนต์ Sriracha */
+.modern-navbar .logo {
+    font-size: 3rem;
+    color: var(--text-dark);
+    font-weight: bolder;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    font-family: 'Sriracha', cursive;
+    transition: var(--transition);
+}
+
+/* ส่วนของ Headings - ใช้ฟอนต์ Playpen Sans Thai */
+.heading,
+h1, h2, h3, h4, h5, h6,
+.footer-title {
+    font-family: 'Playpen Sans Thai', sans-serif;
+}
+
+/* ส่วนของ Navigation Links - ใช้ฟอนต์ Anuphan */
+.navbar .nav-link,
+.auth-button,
+.dropdown-item {
+    font-family: 'Anuphan', sans-serif;
+}
+
+/* ส่วนของ Content Text - ใช้ฟอนต์ IBM Plex Sans Thai */
+p, 
+.footer-contact li,
+.flower-description,
+.profile-name,
+.user-name,
+.user-email {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+}
+
+/* ปรับแต่ง font-weight สำหรับภาษาไทย */
+.nav-link {
+    font-weight: 500;
+}
+
+.heading {
+    font-weight: 600;
+}
+
+.footer-title {
+    font-weight: 600;
+}
+
+.profile-name {
+    font-weight: 500;
+}
+
+/* ยกเลิก text-transform: capitalize สำหรับข้อความภาษาไทย */
+.nav-link,
+.footer-links a,
+.dropdown-item,
+.profile-name,
+.user-name,
+.flower-name,
+.flower-description {
+    text-transform: none;
 }
 
 html {
@@ -785,6 +851,8 @@ section {
 .modern-navbar:hover .nav-bg-effect {
     opacity: 1;
 }
+
+
 
 /* Footer Styles */
 .footer {
