@@ -18,23 +18,22 @@ include('config/db.php');
 </head>
 
 <body>
+    <!-- header section starts -->
     <?php include("includes/navbar.php"); ?>
-    <section class="about" id="about">
-        <h1 class="heading"><span> about </span> us </h1>
-        <div class="row">
-            <div class="video-container">
-                <video src="assets/video/flower1.mp4" loop autoplay muted></video>
-                <h3>best flower sellers</h3>
-            </div>
-            <div class="content">
-                <h3>why choose us?</h3>
-                <p>Indira Gift flowers คือร้านดอกไม้ออนไลน์ที่ให้บริการด้วยใจ
-                    ดอกไม้ทุกช่อของเราถูกจัดขึ้นอย่างประณีต เพื่อสื่อสารความรู้สึกแท้จริงของคุณ
-                    ส่งมอบความประทับใจอย่างมืออาชีพในทุกโอกาสพิเศษ.</p>
-                <a href="#" class="btn">learn more</a>
+    <!-- header section ends -->
+
+    <!-- Hero Section -->
+    <section class="products-hero">
+        <div class="container">
+            <div class="text-center">
+                <h1 class="heading mb-3">เกี่ยวกับ<span>เรา</span></h1>
+                <p style="font-size: 1.8rem; color: var(--text-light); max-width: 600px; margin: 0 auto;">
+                    ค้นพบความงามของดอกไม้สดใหม่ คัดสรรมาเป็นพิเศษเพื่อคุณ
+                </p>
             </div>
         </div>
     </section>
+    <!-- Hero Section Ends-->
 
     <!-- footer -->
     <?php include("includes/footer.php"); ?>

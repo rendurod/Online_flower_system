@@ -852,7 +852,24 @@ section {
     opacity: 1;
 }
 
+/* HERO Page Styles */
+.products-hero {
+    background: linear-gradient(135deg, var(--light-pink), rgba(253, 121, 168, 0.1));
+    padding: 6rem 0 4rem;
+    margin-top: 30px;
+    position: relative;
+    overflow: hidden;
+}
 
+.products-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="flowers" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="2" fill="%23e84393" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23flowers)"/></svg>');
+}
 
 /* Footer Styles */
 .footer {

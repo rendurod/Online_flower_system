@@ -24,20 +24,23 @@ include('config/db.php');
 </head>
 
 <body>
-
     <!-- header section starts -->
-
     <?php include("includes/navbar.php"); ?>
-
     <!-- header section ends -->
 
-    <!-- tracking section starts-->
-    <section class="products" id="products">
-        <h1 class="heading"> Tracking <span>ID(iTems)</span></h1>
-        
+    <!-- Hero Section -->
+    <section class="products-hero">
+        <div class="container">
+            <div class="text-center">
+                <h1 class="heading mb-3">ติดตาม<span>สินค้า</span></h1>
+                <p style="font-size: 1.8rem; color: var(--text-light); max-width: 600px; margin: 0 auto;">
+                    ค้นพบความงามของดอกไม้สดใหม่ คัดสรรมาเป็นพิเศษเพื่อคุณ
+                </p>
+            </div>
+        </div>
     </section>
-    <!-- tracking section ends-->
-
+    <!-- Hero Section Ends-->
+    
     <!-- footer -->
     <?php include("includes/footer.php"); ?>
     <!-- footer ends-->
