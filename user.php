@@ -38,28 +38,11 @@ if (!isset($_SESSION['user_login'])) {
             <h3>ยินดีต้อนรับกลับมา!</h3>
             <span>Indira Gift flowers Shop</span>
             <p>คุณได้เข้าสู่ระบบเรียบร้อยแล้ว :) สนุกกับการเลือกชมดอกไม้และของขวัญสุดพิเศษได้เลย!</p>
-            <a href="admin/index.php" class="btn btn-danger">เข้าสู่หน้าแอดมิน</a>
+            <a href="products.php" class="btn">shop now</a>
         </div>
     </section>
     <!-- home section ends-->
 
-    <!-- about section starts-->
-    <section class="about" id="about">
-        <h1 class="heading"><span> about </span> us </h1>
-        <div class="row">
-            <div class="video-container">
-                <video src="assets/video/flower1.mp4" loop autoplay muted></video>
-                <h3>best flower sellers</h3>
-            </div>
-            <div class="content">
-                <h3>why choose us?</h3>
-                <p>Indira Gift flowers คือร้านดอกไม้ออนไลน์ที่ให้บริการด้วยใจ
-                    ดอกไม้ทุกช่อของเราถูกจัดขึ้นอย่างประณีต เพื่อสื่อสารความรู้สึกแท้จริงของคุณ
-                    ส่งมอบความประทับใจอย่างมืออาชีพในทุกโอกาสพิเศษ.</p>
-                <a href="#" class="btn">learn more</a>
-            </div>
-        </div>
-    </section>
     <!-- about section ends-->
 
     <!-- SweetAlert2 JS -->

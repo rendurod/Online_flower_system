@@ -35,7 +35,7 @@ if (isset($_SESSION['user_login'])) {
             <p>The most presented scents are often many. People think of the time when they want to find a gift on a
                 special day, each type of fragrance has a different meaning, different flowers for that special person can be used to
                 give.</p>
-            <a href="#" class="btn">shop now</a>
+            <a href="products.php" class="btn">shop now</a>
         </div>
     </section>
     <!-- home section ends-->
