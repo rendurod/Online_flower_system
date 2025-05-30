@@ -236,11 +236,11 @@ if (isset($_POST['submit'])) {
                                     </div>
                                 </div>
 
-                                <div class="form-group d-flex justify-content-end">
+                                <!-- <div class="form-group d-flex justify-content-end">
                                     <a href="members.php" class="btn btn-secondary">
                                         <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการสมาชิก
                                     </a>
-                                </div>
+                                </div> -->
                             </form>
                         </div>
 
