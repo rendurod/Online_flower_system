@@ -57,7 +57,6 @@
                     </div>
                     <div class="profile-info d-none d-md-block">
                         <span class="profile-name"><?php echo htmlspecialchars($user['FirstName'] ?? 'ผู้ใช้'); ?></span>
-                        <span class="profile-status">ออนไลน์</span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-arrow"></i>
                 </div>

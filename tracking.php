@@ -31,12 +31,12 @@ include('config/db.php');
 
     <!-- header section ends -->
 
-    <!-- products section starts-->
+    <!-- tracking section starts-->
     <section class="products" id="products">
         <h1 class="heading"> Tracking <span>ID(iTems)</span></h1>
         
     </section>
-    <!-- products section ends-->
+    <!-- tracking section ends-->
 
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>

@@ -31,20 +31,12 @@ include('config/db.php');
 
     <!-- header section ends -->
 
-    <!-- home section starts-->
-
-    <section class="home" id="home">
-        <div class="content">
-            <h3>Indira Gift flowers Shop</h3>
-            <span>I will always be your flower.</span>
-            <p>The most presented scents are often many. People think of the time when they want to find a gift on a
-                special day,
-                each type of fragrance has a different meaning, different flowers for that special person can be used to
-                give.</p>
-            <a href="#" class="btn">shop now</a>
-        </div>
+    <!-- Contact section starts-->
+    <section class="products" id="products">
+        <h1 class="heading"> Contact <span>Us</span></h1>
+        
     </section>
-    <!-- home section ends-->
+    <!-- Contact section ends-->
 
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
