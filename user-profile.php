@@ -152,10 +152,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
             <!-- Navigation Tabs -->
             <div class="nav-tabs">
                 <div class="nav-item mt-5 ms-5">
-                    <a class="nav-link active" href="user-profile.php">โปรไฟล์ส่วนตัว</a>
+                    <a class="nav-link" href="user-profile.php">โปรไฟล์ส่วนตัว</a>
                 </div>
                 <div class="nav-item mt-5 me-5">
-                    <a class="nav-link" href="user-order.php">ประวัติการสั่งซื้อ</a>
+                    <a class="nav-link active" href="user-order.php">ประวัติการสั่งซื้อ</a>
                 </div>
             </div>
 

@@ -2,7 +2,7 @@
 session_start();
 include('config/db.php');
 
-// ตรวจสอบว่าผู้ใช้ล็อกอินแล้วหรือยัง
+// Check if user is logged in
 if (!isset($_SESSION['user_login'])) {
     header("location: login.php");
     exit;
@@ -12,115 +12,61 @@ $userId = $_SESSION['user_login'];
 $message = '';
 $messageType = '';
 
-// ดึงข้อมูลผู้ใช้ปัจจุบัน
+// Fetch user email
 try {
-    $stmt = $conn->prepare("SELECT * FROM tbl_members WHERE ID = ?");
+    $stmt = $conn->prepare("SELECT EmailId FROM tbl_members WHERE ID = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$user) {
-        header("location: logout.php");
-        exit;
-    }
+    $userEmail = $user['EmailId'] ?? '';
 } catch (PDOException $e) {
-    $message = "เกิดข้อผิดพลาดในการดึงข้อมูล";
+    $message = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้: " . htmlspecialchars($e->getMessage());
     $messageType = "danger";
+    $userEmail = '';
 }
 
-// จัดการการอัปเดตโปรไฟล์
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
-    $firstName = trim($_POST['firstName']);
-    $lastName = trim($_POST['lastName']);
-    $email = trim($_POST['email']);
-    $contactNo = trim($_POST['contactNo']);
-    $address = trim($_POST['address']);
+// Fetch user orders with flower details
+$orders = [];
+if ($userEmail) {
+    try {
+        // Check if tbl_flowers table exists and has the required columns
+        $checkTable = $conn->query("SHOW TABLES LIKE 'tbl_flowers'");
+        $tableExists = $checkTable->rowCount() > 0;
 
-    // Validation
-    $errors = [];
-
-    if (empty($firstName)) {
-        $errors[] = "กรุณากรอกชื่อ";
-    }
-
-    if (empty($lastName)) {
-        $errors[] = "กรุณากรอกนามสกุล";
-    }
-
-    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = "กรุณากรอกอีเมลที่ถูกต้อง";
-    }
-
-    if (!empty($contactNo) && !preg_match('/^[0-9]{10}$/', $contactNo)) {
-        $errors[] = "กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง (10 หลัก)";
-    }
-
-    // ตรวจสอบว่าอีเมลซ้ำหรือไม่ (ยกเว้นของตัวเอง)
-    if (empty($errors)) {
-        try {
-            $checkEmail = $conn->prepare("SELECT ID FROM tbl_members WHERE EmailId = ? AND ID != ?");
-            $checkEmail->execute([$email, $userId]);
-            if ($checkEmail->fetch()) {
-                $errors[] = "อีเมลนี้ถูกใช้แล้ว";
-            }
-        } catch (PDOException $e) {
-            $errors[] = "เกิดข้อผิดพลาดในการตรวจสอบอีเมล";
-        }
-    }
-
-    // จัดการอัปโหลดรูปภาพ
-    $imageName = $user['Image']; // ใช้รูปเดิม
-    if (isset($_FILES['profileImage']) && $_FILES['profileImage']['error'] == UPLOAD_ERR_OK) {
-        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-        $maxSize = 5 * 1024 * 1024; // 5MB
-
-        if (!in_array($_FILES['profileImage']['type'], $allowedTypes)) {
-            $errors[] = "รองรับเฉพาะไฟล์รูปภาพ JPG, JPEG, PNG, GIF เท่านั้น";
-        } elseif ($_FILES['profileImage']['size'] > $maxSize) {
-            $errors[] = "ขนาดไฟล์ต้องไม่เกิน 5MB";
-        } else {
-            $uploadDir = 'Uploads/imgprofile/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+        if ($tableExists) {
+            $checkColumns = $conn->query("SHOW COLUMNS FROM tbl_flowers WHERE Field IN ('ID', 'FlowerName', 'Price')");
+            $columns = [];
+            while ($col = $checkColumns->fetch(PDO::FETCH_ASSOC)) {
+                $columns[] = $col['Field'];
             }
 
-            $imageExtension = pathinfo($_FILES['profileImage']['name'], PATHINFO_EXTENSION);
-            $imageName = 'profile_' . $userId . '_' . time() . '.' . $imageExtension;
-            $uploadPath = $uploadDir . $imageName;
+            $hasRequiredColumns = in_array('ID', $columns) && in_array('FlowerName', $columns) && in_array('Price', $columns);
 
-            if (!move_uploaded_file($_FILES['profileImage']['tmp_name'], $uploadPath)) {
-                $errors[] = "เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ";
-            } else {
-                // ลบรูปเดิม (ถ้าไม่ใช่รูปเริ่มต้น)
-                if ($user['Image'] && $user['Image'] != 'default.png' && file_exists($uploadDir . $user['Image'])) {
-                    unlink($uploadDir . $user['Image']);
-                }
+            if ($hasRequiredColumns) {
+                $stmt = $conn->prepare("
+                    SELECT o.*, f.FlowerName, f.Price
+                    FROM tbl_orders o 
+                    LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID 
+                    WHERE o.UserEmail = ? 
+                    ORDER BY o.PostingDate DESC
+                ");
+                $stmt->execute([$userEmail]);
+                $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
-    }
 
-    // อัปเดตข้อมูล
-    if (empty($errors)) {
-        try {
-            $updateStmt = $conn->prepare("UPDATE tbl_members SET FirstName = ?, LastName = ?, EmailId = ?, ContactNo = ?, Address = ?, Image = ?, UpdationDate = CURRENT_TIMESTAMP WHERE ID = ?");
-            $updateStmt->execute([$firstName, $lastName, $email, $contactNo, $address, $imageName, $userId]);
-
-            $message = "อัปเดตโปรไฟล์เรียบร้อยแล้ว";
-            $messageType = "success";
-
-            // รีเฟรชข้อมูลผู้ใช้
-            $stmt = $conn->prepare("SELECT * FROM tbl_members WHERE ID = ?");
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            $message = "เกิดข้อผิดพลาดในการอัปเดตข้อมูล";
-            $messageType = "danger";
+        // Fallback to fetch orders without joining if needed
+        if (empty($orders)) {
+            $stmt = $conn->prepare("SELECT * FROM tbl_orders WHERE UserEmail = ? ORDER BY PostingDate DESC");
+            $stmt->execute([$userEmail]);
+            $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-    } else {
-        $message = implode('<br>', $errors);
+    } catch (PDOException $e) {
+        $message = "เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: " . htmlspecialchars($e->getMessage());
         $messageType = "danger";
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="th">
 
@@ -139,8 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/user-profile.css">
-
-
 </head>
 
 <body class="profile">
@@ -150,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
 
     <div class="profile-container">
         <div class="profile-card">
-            <!-- Navigation Tabs -->
+            <!-- Navigation Tabs (Profile and Orders) -->
             <div class="nav-tabs">
                 <div class="nav-item mt-5 ms-5">
                     <a class="nav-link active" href="user-profile.php">โปรไฟล์ส่วนตัว</a>
@@ -160,8 +104,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                 </div>
             </div>
 
-            <!-- Profile Form -->
-            <div class="profile-form tab-content">
+            <!-- Order Status Tabs -->
+            <div class="status-tabs">
+                <div class="status-tab-item">
+                    <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'awaiting' ? 'active' : ''); ?>" href="user-order.php?tab=awaiting">
+                        รอแจ้งชำระเงิน
+                    </a>
+                </div>
+                <div class="status-tab-item">
+                    <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'tracking' ? 'active' : ''); ?>" href="user-order.php?tab=tracking">
+                        ติดตามสถานะ
+                    </a>
+                </div>
+                <div class="status-tab-item">
+                    <a class="status-tab-link <?php echo (!isset($_GET['tab']) || $_GET['tab'] == 'completed' ? 'active' : ''); ?>" href="user-order.php?tab=completed">
+                        คำสั่งซื้อสำเร็จ
+                    </a>
+                </div>
+            </div>
+
+            <!-- Order Content -->
+            <div class="tab-content">
                 <?php if (!empty($message)): ?>
                     <div class="alert alert-<?php echo $messageType; ?>" role="alert">
                         <i class="fas fa-<?php echo $messageType == 'success' ? 'check-circle' : 'exclamation-triangle'; ?> me-2"></i>
@@ -169,95 +132,96 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                     </div>
                 <?php endif; ?>
 
-                <form method="POST" enctype="multipart/form-data">
-                    <!-- Image Upload Section -->
-                    <div class="image-upload-section">
-                        <?php if (!empty($user['Image']) && file_exists("Uploads/imgprofile/" . $user['Image'])): ?>
-                            <img src="Uploads/imgprofile/<?php echo htmlspecialchars($user['Image']); ?>" alt="Current Profile" class="current-image">
+                <div class="tab-pane <?php echo (!isset($_GET['tab']) || $_GET['tab'] == 'completed' ? 'active' : ''); ?>" id="completed">
+                    <h4 class="tab-title">คำสั่งซื้อสำเร็จ</h4>
+                    <?php if ($orders): ?>
+                        <?php $completedOrders = array_filter($orders, function($order) { return $order['Status'] == 2; }); ?>
+                        <?php if (!empty($completedOrders)): ?>
+                            <?php foreach ($completedOrders as $order): ?>
+                                <div class="order-item">
+                                    <div class="order-header">
+                                        <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                        <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                    </div>
+                                    <div class="order-details">
+                                        <p><strong>ดอกไม้:</strong> <?php echo htmlspecialchars($order['FlowerName'] ?? 'ไม่ระบุ'); ?></p>
+                                        <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
+                                        <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['Price'] ?? 0), 2); ?> บาท</p>
+                                        <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
+                                        <p><strong>ข้อความ:</strong> <?php echo htmlspecialchars($order['Message'] ?? 'ไม่มีข้อความ'); ?></p>
+                                        <p><strong>สถานะ:</strong> สำเร็จ</p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         <?php else: ?>
-                            <img src="assets/img/account.png" alt="Default Profile" class="current-image">
+                            <div class="no-data-alert">ไม่มีคำสั่งซื้อสำเร็จ</div>
                         <?php endif; ?>
-                        <label class="file-input-wrapper">
-                            <i class="fas fa-upload me-2"></i>เลือกรูปภาพใหม่
-                            <input type="file" name="profileImage" accept="image/*">
-                        </label>
-                        <small class="text-muted d-block mt-2">รองรับไฟล์ JPG, JPEG, PNG, GIF ขนาดไม่เกิน 5MB</small>
-                    </div>
+                    <?php else: ?>
+                        <div class="no-data-alert">ไม่มีคำสั่งซื้อสำเร็จ</div>
+                    <?php endif; ?>
+                </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user"></i>
-                                    <h4>ชื่อ <span class="text-danger">*</span></h4>
-                                </label>
-                                <input type="text" class="form-control" name="firstName"
-                                    value="<?php echo htmlspecialchars($user['FirstName'] ?? ''); ?>" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user"></i>
-                                    <h4>นามสกุล <span class="text-danger">*</span></h4>
-                                </label>
-                                <input type="text" class="form-control" name="lastName"
-                                    value="<?php echo htmlspecialchars($user['LastName'] ?? ''); ?>" required>
-                            </div>
-                        </div>
-                    </div>
+                <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'awaiting' ? 'active' : ''); ?>" id="awaiting">
+                    <h4 class="tab-title">รอแจ้งชำระเงิน</h4>
+                    <?php if ($orders): ?>
+                        <?php $awaitingOrders = array_filter($orders, function($order) { return $order['Status'] == 0; }); ?>
+                        <?php if (!empty($awaitingOrders)): ?>
+                            <?php foreach ($awaitingOrders as $order): ?>
+                                <div class="order-item">
+                                    <div class="order-header">
+                                        <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                        <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                    </div>
+                                    <div class="order-details">
+                                        <p><strong>ดอกไม้:</strong> <?php echo htmlspecialchars($order['FlowerName'] ?? 'ไม่ระบุ'); ?></p>
+                                        <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
+                                        <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['Price'] ?? 0), 2); ?> บาท</p>
+                                        <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
+                                        <p><strong>ข้อความ:</strong> <?php echo htmlspecialchars($order['Message'] ?? 'ไม่มีข้อความ'); ?></p>
+                                        <p><strong>สถานะ:</strong> รอแจ้งชำระเงิน</p>
+                                        <a href="payment.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-update btn-sm">
+                                            <i class="fas fa-money-bill-wave me-2"></i>แจ้งชำระเงิน
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="no-data-alert">ไม่มีคำสั่งซื้อที่รอแจ้งชำระเงิน</div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่รอแจ้งชำระเงิน</div>
+                    <?php endif; ?>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-envelope"></i>
-                            <h4>อีเมล <span class="text-danger">*</span></h4>
-                        </label>
-                        <input type="email" class="form-control" name="email"
-                            value="<?php echo htmlspecialchars($user['EmailId'] ?? ''); ?>" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-phone"></i>
-                            <h4>เบอร์โทรศัพท์</h4>
-                        </label>
-                        <input type="tel" class="form-control" name="contactNo"
-                            value="<?php echo htmlspecialchars($user['ContactNo'] ?? ''); ?>"
-                            placeholder="กรุณากรอกเบอร์โทร" maxlength="10">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <h4>ที่อยู่จัดส่ง - ผู้รับ</h4>
-                        </label>
-                        <textarea class="form-control" name="address" rows="3"
-                            placeholder="กรอกที่อยู่ของคุณ"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
-                    </div>
-
-                    <button type="submit" name="update_profile" class="btn-update">
-                        <i class="fas fa-save me-2"></i>
-                        อัปเดตโปรไฟล์
-                    </button>
-                </form>
-
-                <!-- Member Since Info -->
-                <div class="member-since">
-                    <i class="fas fa-calendar-alt"></i>
-                    <div>
-                        <strong>สมาชิกตั้งแต่:</strong>
-                        <?php
-                        if ($user['RegDate']) {
-                            echo date('d/m/Y H:i', strtotime($user['RegDate']));
-                        }
-                        ?>
-                    </div>
-                    <?php if ($user['UpdationDate']): ?>
-                        <div class="mt-1">
-                            <small class="text-muted">
-                                อัปเดตล่าสุด: <?php echo date('d/m/Y H:i', strtotime($user['UpdationDate'])); ?>
-                            </small>
-                        </div>
+                <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'tracking' ? 'active' : ''); ?>" id="tracking">
+                    <h4 class="tab-title">ติดตามสถานะ</h4>
+                    <?php if ($orders): ?>
+                        <?php $trackingOrders = array_filter($orders, function($order) { return $order['Status'] == 1; }); ?>
+                        <?php if (!empty($trackingOrders)): ?>
+                            <?php foreach ($trackingOrders as $order): ?>
+                                <div class="order-item">
+                                    <div class="order-header">
+                                        <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                        <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                    </div>
+                                    <div class="order-details">
+                                        <p><strong>ดอกไม้:</strong> <?php echo htmlspecialchars($order['FlowerName'] ?? 'ไม่ระบุ'); ?></p>
+                                        <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
+                                        <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['Price'] ?? 0), 2); ?> บาท</p>
+                                        <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
+                                        <p><strong>ข้อความ:</strong> <?php echo htmlspecialchars($order['Message'] ?? 'ไม่มีข้อความ'); ?></p>
+                                        <p><strong>สถานะ:</strong> กำลังดำเนินการ</p>
+                                        <a href="tracking.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-update btn-sm">
+                                            <i class="fas fa-truck me-2"></i>ดูสถานะ
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="no-data-alert">ไม่มีคำสั่งซื้อที่กำลังดำเนินการ</div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่กำลังดำเนินการ</div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -270,53 +234,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Preview image before upload
-        document.querySelector('input[name="profileImage"]').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.querySelector('.current-image').src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Form validation
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const firstName = document.querySelector('input[name="firstName"]').value.trim();
-            const lastName = document.querySelector('input[name="lastName"]').value.trim();
-            const email = document.querySelector('input[name="email"]').value.trim();
-            const contactNo = document.querySelector('input[name="contactNo"]').value.trim();
-
-            if (!firstName || !lastName || !email) {
-                e.preventDefault();
-                alert('กรุณากรอกข้อมูลที่จำเป็น (ชื่อ, นามสกุล, อีเมล)');
-                return;
-            }
-
-            if (contactNo && !/^[0-9]{10}$/.test(contactNo)) {
-                e.preventDefault();
-                alert('กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง (10 หลัก)');
-                return;
-            }
-        });
-
-        // Add smooth animations
-        document.addEventListener('DOMContentLoaded', function() {
-            const formGroups = document.querySelectorAll('.form-group');
-            formGroups.forEach((group, index) => {
-                group.style.opacity = '0';
-                group.style.transform = 'translateY(20px)';
-
-                setTimeout(() => {
-                    group.style.transition = 'all 0.3s ease';
-                    group.style.opacity = '1';
-                    group.style.transform = 'translateY(0)';
-                }, index * 100);
+        // Smooth tab transition for order status tabs
+        document.querySelectorAll('.status-tabs .status-tab-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                document.querySelectorAll('.status-tabs .status-tab-link').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+                document.getElementById(this.getAttribute('href').split('?tab=')[1]).classList.add('active');
             });
+        });
+
+        // Initialize active tab based on URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const tab = '<?php echo isset($_GET['tab']) ? $_GET['tab'] : 'completed'; ?>';
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
         });
     </script>
 </body>
-
 </html>

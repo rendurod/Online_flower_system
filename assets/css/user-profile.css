@@ -202,6 +202,90 @@ body.profile .nav-tabs .nav-item:last-child .nav-link {
     padding: 20px;
 }
 
+/* Existing CSS from previous response... */
+
+/* Enhanced Tab Title */
+.tab-title {
+    font-size: 2rem;
+    color: var(--primary-pink);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--primary-pink);
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+/* No Data Alert */
+.no-data-alert {
+    text-align: center;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border: 2px solid #ffcccc; /* Light red frame */
+    background-color: #fff0f0; /* Very light red background */
+    border-radius: var(--border-radius);
+    color: #d9534f; /* Darker red text for contrast */
+    font-weight: 600;
+    font-size: 1.4rem;
+}
+
+/* Order Status Tabs (unchanged from previous response) */
+.status-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+    padding: 0 1rem;
+    flex-wrap: wrap;
+}
+
+.status-tab-item {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+    text-align: center;
+}
+
+.status-tab-link {
+    display: block;
+    padding: 1rem 1.5rem;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.4rem;
+    transition: var(--transition);
+    border: 2px solid var(--primary-pink);
+    box-shadow: var(--shadow-medium);
+}
+
+.status-tab-link:hover {
+    background: var(--primary-pink);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-heavy);
+}
+
+.status-tab-link.active {
+    background: var(--gradient-pink);
+    color: var(--white);
+    border-color: var(--primary-pink);
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .status-tab-item {
+        min-width: 150px;
+    }
+
+    .status-tab-link {
+        padding: 0.8rem 1rem;
+        font-size: 1.2rem;
+    }
+}
+
 @media (max-width: 768px) {
     .profile-container {
         padding: 0 1rem;
