@@ -786,6 +786,78 @@ section {
     opacity: 1;
 }
 
+/* Footer Styles */
+.footer {
+    position: relative;
+    background: linear-gradient(45deg, #1a1a1a, #2c2c2c);
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+}
+
+.footer-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 50px;
+    height: 2px;
+    background: #ff4d6d;
+}
+
+.footer-links li {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: #9ca3af;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #fff;
+    padding-left: 8px;
+}
+
+.footer-contact li {
+    color: #9ca3af;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+.social-links a {
+    width: 35px;
+    height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.social-links a:hover {
+    transform: translateY(-3px);
+    background-color: #ff4d6d !important;
+    border-color: #ff4d6d !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .footer {
+        padding-bottom: 1rem;
+    }
+    
+    .footer-title {
+        margin-top: 1.5rem;
+    }
+}
+
 /* 14. Media Queries */
 @media (max-width: 991px) {
     html {

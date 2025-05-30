@@ -53,6 +53,10 @@ include('config/db.php');
     </section>
     <!-- products section ends-->
 
+    <!-- footer -->
+    <?php include("includes/footer.php"); ?>
+    <!-- footer ends-->
+
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <!-- Bootstrap 5 JS Bundle -->
