@@ -10,7 +10,7 @@ include('config/db.php');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สินค้าดอกไม้ - FlowerShop</title>
+    <title>ติดตามสินค้า - SlowerShop</title>
     <!-- LOGO -->
     <link rel="icon" href="assets/img/LOGO_FlowerShopp.png" type="image/x-icon">
     <!-- Bootstrap 5 CSS -->
@@ -33,23 +33,8 @@ include('config/db.php');
 
     <!-- products section starts-->
     <section class="products" id="products">
-        <h1 class="heading"> Latest <span>Products</span></h1>
-        <div class="box-container">
-            <!-- ตัวอย่างสินค้า -->
-            <div class="box">
-                <div class="image">
-                    <img src="images/flowers.jpg" alt="Flower Pot">
-                    <div class="icons">
-                        <a href="#" class="fas fa-heart"></a>
-                        <a href="add.php" class="cart-btn">Add to Cart</a>
-                    </div>
-                </div>
-                <div class="content">
-                    <h3>Flower Pot</h3>
-                    <div class="price">3990฿</div>
-                </div>
-            </div>
-        </div>
+        <h1 class="heading"> Tracking <span>ID(iTems)</span></h1>
+        
     </section>
     <!-- products section ends-->
 

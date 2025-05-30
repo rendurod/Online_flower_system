@@ -23,7 +23,7 @@
             <span>Products</span>
             <div class="nav-underline"></div>
         </a>
-        <a href="#" class="nav-link <?php echo ($currentPage == '#') ? 'active' : ''; ?>">
+        <a href="tracking.php" class="nav-link <?php echo ($currentPage == 'tracking.php') ? 'active' : ''; ?>">
             <i class="fas fa-solid fa-dolly nav-icon"></i>
             <span>Tracking ID</span>
             <div class="nav-underline"></div>
