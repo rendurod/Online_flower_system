@@ -110,10 +110,10 @@
                     </button>
                 </div>
                 <div class="modal-body">เลือก "ออกจากระบบ" ข้างล่างหากคุณพร้อมที่จะสิ้นสุดเซสชันปัจจุบันของคุณ</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">ยกเลิก</button>
-                    <a class="btn btn-danger" href="login.php">ออกจากระบบ</a>
-                </div>
+<div class="modal-footer">
+    <button class="btn btn-secondary" type="button" data-dismiss="modal">ยกเลิก</button>
+    <a class="btn btn-danger" href="logout.php">ออกจากระบบ</a>
+</div>
             </div>
         </div>
     </div>
