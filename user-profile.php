@@ -338,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                             </div>
                         <?php endif; ?>
                         <textarea class="form-control" name="address" rows="3"
-                            placeholder="กรุณากรอกที่อยู่ให้ครบถ้วน เช่น บ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, รหัสไปรษณีย์"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
+                            placeholder="ยังไม่มีที่อยู่ข้อมูล"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
                         <small class="text-muted d-block mt-2">กรุณากรอกที่อยู่ให้ครบถ้วน รวมถึงบ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, และรหัสไปรษณีย์ เพื่อให้การจัดส่งสะดวกและรวดเร็ว</small>
                         <!-- Address Requirements Button and List -->
                         <div class="address-info-wrapper mt-2">
