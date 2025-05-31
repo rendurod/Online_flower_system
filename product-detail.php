@@ -56,7 +56,6 @@ $all_flowers = $all_flowers_stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/productPHP.css">
     <link rel="stylesheet" href="assets/css/productDetail.css">
-
 </head>
 
 <body>
@@ -193,6 +192,7 @@ $all_flowers = $all_flowers_stmt->fetchAll(PDO::FETCH_ASSOC);
                     autoplay: {
                         delay: 3500,
                         disableOnInteraction: false,
+                        pauseOnMouseEnter: true, // Pause autoplay on hover
                     },
                     pagination: {
                         el: '.swiper-pagination',
@@ -227,6 +227,7 @@ $all_flowers = $all_flowers_stmt->fetchAll(PDO::FETCH_ASSOC);
                     autoplay: {
                         delay: 3500,
                         disableOnInteraction: false,
+                        pauseOnMouseEnter: true, // Pause autoplay on hover
                     },
                     pagination: {
                         el: '.swiper-pagination',
