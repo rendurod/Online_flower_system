@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <!-- Custom CSS for Validation Status -->
     <style>
         .address-status {
-            margin-top: 15px;
+            margin: 10px 0;
             padding: 10px;
             border-radius: 5px;
             font-size: 1rem;
@@ -152,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
         .address-status i {
             margin-right: 8px;
             font-size: 1.2rem;
+
         }
         .status-not-verified {
             background-color: #f8f9fa;
@@ -273,30 +274,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                             <i class="fas fa-map-marker-alt"></i>
                             <h4>ที่อยู่จัดส่ง - ผู้รับ</h4>
                         </label>
-                        <textarea class="form-control" name="address" rows="3"
-                            placeholder="กรุณากรอกที่อยู่ให้ครบถ้วน เช่น บ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, รหัสไปรษณีย์"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
-                        <small class="text-muted d-block mt-2">กรุณากรอกที่อยู่ให้ครบถ้วน รวมถึงบ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, และรหัสไปรษณีย์ เพื่อให้การจัดส่งสะดวกและรวดเร็ว</small>
-                        <!-- Address Requirements Button and List -->
-                        <div class="address-info-wrapper mt-2">
-                            <button type="button" class="btn-show-requirements">
-                                <i class="fas fa-info-circle"></i>
-                                แสดงข้อกำหนดที่อยู่
-                            </button>
-                            <div class="address-requirements" style="display: none;">
-                                <div class="requirements-title">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span>ข้อกำหนดที่อยู่:</span>
-                                </div>
-                                <ul class="requirements-list">
-                                    <li><i class="fas fa-check-circle"></i> บ้านเลขที่</li>
-                                    <li><i class="fas fa-check-circle"></i> ตำบล</li>
-                                    <li><i class="fas fa-check-circle"></i> อำเภอ</li>
-                                    <li><i class="fas fa-check-circle"></i> จังหวัด</li>
-                                    <li><i class="fas fa-check-circle"></i> รหัสไปรษณีย์</li>
-                                    <li><i class="fas fa-check-circle"></i> และอื่น ๆ (เช่น ถนน, หมู่บ้าน)</li>
-                                </ul>
-                            </div>
-                        </div>
                         <!-- Address Validation Status -->
                         <div class="address-status
                             <?php
@@ -333,6 +310,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                                 <strong>เหตุผล:</strong> <?php echo htmlspecialchars($user['Validate']); ?>
                             </div>
                         <?php endif; ?>
+                        <textarea class="form-control" name="address" rows="3"
+                            placeholder="กรุณากรอกที่อยู่ให้ครบถ้วน เช่น บ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, รหัสไปรษณีย์"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
+                        <small class="text-muted d-block mt-2">กรุณากรอกที่อยู่ให้ครบถ้วน รวมถึงบ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, และรหัสไปรษณีย์ เพื่อให้การจัดส่งสะดวกและรวดเร็ว</small>
+                        <!-- Address Requirements Button and List -->
+                        <div class="address-info-wrapper mt-2">
+                            <button type="button" class="btn-show-requirements">
+                                <i class="fas fa-info-circle"></i>
+                                แสดงข้อกำหนดที่อยู่
+                            </button>
+                            <div class="address-requirements" style="display: none;">
+                                <div class="requirements-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>ข้อกำหนดที่อยู่:</span>
+                                </div>
+                                <ul class="requirements-list">
+                                    <li><i class="fas fa-check-circle"></i> บ้านเลขที่</li>
+                                    <li><i class="fas fa-check-circle"></i> ตำบล</li>
+                                    <li><i class="fas fa-check-circle"></i> อำเภอ</li>
+                                    <li><i class="fas fa-check-circle"></i> จังหวัด</li>
+                                    <li><i class="fas fa-check-circle"></i> รหัสไปรษณีย์</li>
+                                    <li><i class="fas fa-check-circle"></i> และอื่น ๆ (เช่น ถนน, หมู่บ้าน)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
                     </div>
 
                     <button type="submit" name="update_profile" class="btn-update">
