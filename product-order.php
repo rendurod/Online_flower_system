@@ -508,23 +508,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $addressStatus = '';
                         $statusClass = '';
                         $reasonText = '';
+                        $iconClass = ''; // Variable to store the icon class
                         if (empty($user_data['Address'])) {
                             $addressStatus = 'ยังไม่มีข้อมูล';
                             $statusClass = 'status-not-verified';
+                            $iconClass = 'fa-clock'; // Clock icon for "no data"
                         } elseif ($user_data['Validate'] === 'ที่อยู่ถูกต้อง') {
                             $addressStatus = 'ที่อยู่ได้รับการยืนยัน';
                             $statusClass = 'status-verified';
+                            $iconClass = 'fa-check-circle'; // Check circle for verified
                         } elseif (!empty($user_data['Validate']) && $user_data['Validate'] !== 'ยังไม่ยืนยัน') {
                             $addressStatus = 'ที่อยู่ไม่ผ่านการตรวจสอบ';
                             $statusClass = 'status-incorrect';
                             $reasonText = "เหตุผล: " . htmlspecialchars($user_data['Validate']);
+                            $iconClass = 'fa-times-circle'; // Times circle for incorrect
                         } else {
                             $addressStatus = 'รอการตรวจสอบ';
                             $statusClass = 'status-not-verified';
+                            $iconClass = 'fa-clock'; // Clock icon for pending
                         }
                         ?>
                         <div class="address-status <?php echo $statusClass; ?>">
-                            <?php echo htmlspecialchars($addressStatus); ?>
+                            <i class="fas <?php echo $iconClass; ?>"></i> <?php echo htmlspecialchars($addressStatus); ?>
                         </div>
                         <?php if ($statusClass === 'status-incorrect'): ?>
                             <div class="status-incorrect-text"><?php echo $reasonText; ?></div>
@@ -545,7 +550,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="payment-section">
                             <img src="assets/img/payment-clip.jpg" alt="Payment Clip">
                             <button type="button" class="copy-btn" onclick="copyText('123-456-7890')">คัดลอกบัญชีเงิน</button>
-                            <button type="button" class="copy-btn" onclick="copyText('098-765-4321')">คัดลอกเงินพร้อมเพย์</button>
                             <div class="upload-slip">
                                 <label for="payment_slip" class="upload-btn">
                                     <i class="fas fa-upload"></i> อัพโหลดสลิปโอนเงิน
@@ -619,7 +623,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const addressValidate = "<?php echo $user_data['Validate']; ?>";
 
         // Update total price and selected quantity display
-        document.getElementById('quantity').addEventListener('input', function () {
+        document.getElementById('quantity').addEventListener('input', function() {
             let quantity = parseInt(this.value) || 1;
             if (quantity < 1) quantity = 1;
             if (quantity > maxQuantity) quantity = maxQuantity;
@@ -633,12 +637,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         // Image preview for payment slip
-        document.getElementById('payment_slip').addEventListener('change', function (e) {
+        document.getElementById('payment_slip').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const preview = document.getElementById('slip_preview');
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function (e) {
+                reader.onload = function(e) {
                     preview.src = e.target.result;
                     preview.style.display = 'block';
                 };
