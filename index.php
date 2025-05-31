@@ -13,11 +13,11 @@ $message = '';
 $messageType = '';
 
 try {
-    $stmt = $conn->prepare("SELECT ID, flower_name, flower_description, price, image FROM tbl_flowers WHERE stock_quantity > 0 ORDER BY creation_date DESC");
+    $stmt = $conn->prepare("SELECT ID, flower_name, flower_description, price, image, stock_quantity FROM tbl_flowers WHERE stock_quantity > 0 ORDER BY creation_date DESC");
     $stmt->execute();
     $flowers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $message = "เกิดข้อผิดพลาดในการดึงข้อมูลดอกไม้: " . htmlspecialchars($e->getMessage());
+    $message = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
     $messageType = "danger";
 }
 ?>
