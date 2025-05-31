@@ -33,7 +33,7 @@ try {
 }
 
 // Ensure uploads directory exists for member images
-$target_dir = "uploads/members/";
+$target_dir = "Uploads/members/";
 if (!is_dir($target_dir)) {
     mkdir($target_dir, 0755, true);
 }
@@ -49,7 +49,7 @@ $member_id = intval($_GET['id']);
 
 // Fetch member data
 try {
-    $stmt = $conn->prepare("SELECT ID, FirstName, LastName, EmailId, ContactNo, Address, Image FROM tbl_members WHERE ID = ?");
+    $stmt = $conn->prepare("SELECT ID, FirstName, LastName, EmailId, ContactNo, Address, Image, Validate FROM tbl_members WHERE ID = ?");
     $stmt->execute([$member_id]);
     $member = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -64,58 +64,41 @@ try {
     exit();
 }
 
-// Handle form submission for updating member
+// Handle form submission for updating Validate field
 if (isset($_POST['submit'])) {
-    $first_name = trim($_POST['first_name']);
-    $last_name = trim($_POST['last_name']);
-    $email = trim($_POST['email']);
-    $contact_no = trim($_POST['contact_no']);
-    $address = trim($_POST['address']);
+    $validate_status = $_POST['validate_status'] ?? '';
+    $validate_reason = trim($_POST['validate_reason'] ?? '');
 
-    // Handle image upload
-    $image = $member['Image']; // Keep existing image by default
-    $max_file_size = 5 * 1024 * 1024; // 5MB limit
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        if ($_FILES['image']['size'] > $max_file_size) {
-            $_SESSION['error'] = 'ขนาดไฟล์รูปภาพใหญ่เกินไป (สูงสุด 5MB)';
+    $validate = '';
+    $errors = [];
+
+    if ($validate_status === 'not_verified') {
+        $validate = 'ยังไม่ยืนยัน';
+    } elseif ($validate_status === 'incorrect') {
+        if (empty($validate_reason)) {
+            $errors[] = 'กรุณาระบุเหตุผลที่ที่อยู่ไม่ถูกต้อง';
         } else {
-            $file_extension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $allowed_extensions = array('jpg', 'jpeg', 'png', 'gif');
-
-            if (in_array($file_extension, $allowed_extensions)) {
-                $new_filename = uniqid() . '.' . $file_extension;
-                $target_file = $target_dir . $new_filename;
-
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
-                    // Delete old image if exists
-                    if (!empty($member['Image']) && file_exists($target_dir . $member['Image'])) {
-                        unlink($target_dir . $member['Image']);
-                    }
-                    $image = $new_filename;
-                } else {
-                    $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัพโหลดรูปภาพ';
-                }
-            } else {
-                $_SESSION['error'] = 'รองรับเฉพาะไฟล์รูปภาพ (JPG, JPEG, PNG, GIF)';
-            }
+            $validate = $validate_reason;
         }
+    } elseif ($validate_status === 'verified') {
+        $validate = 'ที่อยู่ถูกต้อง';
+    } else {
+        $errors[] = 'กรุณาเลือกสถานะการตรวจสอบที่อยู่';
     }
 
-    if (!isset($_SESSION['error'])) {
-        if (!empty($first_name) && !empty($last_name) && !empty($email)) {
-            try {
-                $stmt = $conn->prepare("UPDATE tbl_members SET FirstName = ?, LastName = ?, EmailId = ?, ContactNo = ?, Address = ?, Image = ?, UpdationDate = CURRENT_TIMESTAMP WHERE ID = ?");
-                $stmt->execute([$first_name, $last_name, $email, $contact_no, $address, $image, $member_id]);
+    if (empty($errors)) {
+        try {
+            $stmt = $conn->prepare("UPDATE tbl_members SET Validate = ?, UpdationDate = CURRENT_TIMESTAMP WHERE ID = ?");
+            $stmt->execute([$validate, $member_id]);
 
-                $_SESSION['success'] = 'อัพเดทข้อมูลสมาชิกเรียบร้อยแล้ว';
-                header("Location: members.php");
-                exit();
-            } catch (PDOException $e) {
-                $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัพเดทข้อมูล: ' . $e->getMessage();
-            }
-        } else {
-            $_SESSION['error'] = 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน';
+            $_SESSION['success'] = 'อัพเดทสถานะที่อยู่เรียบร้อยแล้ว';
+            header("Location: members.php");
+            exit();
+        } catch (PDOException $e) {
+            $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัพเดทสถานะ: ' . $e->getMessage();
         }
+    } else {
+        $_SESSION['error'] = implode('<br>', $errors);
     }
 }
 ?>
@@ -141,6 +124,83 @@ if (isset($_POST['submit'])) {
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+
+    <!-- Custom CSS for radio buttons and validation -->
+    <style>
+        .disabled-field {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .validate-radio-group {
+            background-color: #fff5f5;
+            border: 2px solid #ff6f61;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .validate-radio-label {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .validate-radio-label:hover {
+            background-color: #ffe5e5;
+            color: #ff6f61;
+        }
+
+        .validate-radio-label input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .validate-radio-label i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+
+        .validate-radio-label.not-verified i {
+            color: #6c757d;
+        }
+
+        .validate-radio-label.incorrect i {
+            color: #dc3545;
+        }
+
+        .validate-radio-label.verified i {
+            color: #28a745;
+        }
+
+        .validate-reason {
+            display: none;
+            margin-top: 10px;
+            margin-left: 20px;
+        }
+
+        .validate-reason input {
+            border-color: #ff6f61;
+        }
+
+        .validate-reason input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255, 111, 97, 0.25);
+            border-color: #e55a4f;
+        }
+
+        .form-text {
+            font-size: 0.9rem;
+            color: #ff6f61;
+            font-style: italic;
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -162,14 +222,24 @@ if (isset($_POST['submit'])) {
                             <h6 class="m-0 font-weight-bold text-primary">ฟอร์มข้อมูลสมาชิก</h6>
                         </div>
                         <div class="card-body">
-                            <form action="" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                            <?php if (isset($_SESSION['error'])): ?>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <?php echo htmlspecialchars($_SESSION['error']); ?>
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                <?php unset($_SESSION['error']); ?>
+                            <?php endif; ?>
+
+                            <form action="" method="post">
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="first_name" class="font-weight-bold text-gray-700">
                                                 <i class="fas fa-user text-pink mr-2"></i>ชื่อ
                                             </label>
-                                            <input type="text" class="form-control  " name="first_name" id="first_name"
+                                            <input type="text" class="form-control disabled-field" name="first_name" id="first_name"
                                                 value="<?php echo htmlspecialchars($member['FirstName'] ?? ''); ?>"
                                                 placeholder="ไม่มีข้อมูลนี้" disabled>
                                         </div>
@@ -179,7 +249,7 @@ if (isset($_POST['submit'])) {
                                             <label for="last_name" class="font-weight-bold text-gray-700">
                                                 <i class="fas fa-user text-pink mr-2"></i>นามสกุล
                                             </label>
-                                            <input type="text" class="form-control  " name="last_name" id="last_name"
+                                            <input type="text" class="form-control disabled-field" name="last_name" id="last_name"
                                                 value="<?php echo htmlspecialchars($member['LastName'] ?? ''); ?>"
                                                 placeholder="ไม่มีข้อมูลนี้" disabled>
                                         </div>
@@ -192,7 +262,7 @@ if (isset($_POST['submit'])) {
                                             <label for="email" class="font-weight-bold text-gray-700">
                                                 <i class="fas fa-envelope text-pink mr-2"></i>อีเมล
                                             </label>
-                                            <input type="email" class="form-control  " name="email" id="email"
+                                            <input type="email" class="form-control disabled-field" name="email" id="email"
                                                 value="<?php echo htmlspecialchars($member['EmailId']); ?>"
                                                 placeholder="ไม่มีข้อมูลนี้" disabled>
                                         </div>
@@ -202,9 +272,9 @@ if (isset($_POST['submit'])) {
                                             <label for="contact_no" class="font-weight-bold text-gray-700">
                                                 <i class="fas fa-phone text-pink mr-2"></i>เบอร์ติดต่อ
                                             </label>
-                                            <input type="text" class="form-control  " name="contact_no" id="contact_no"
+                                            <input type="text" class="form-control disabled-field" name="contact_no" id="contact_no"
                                                 value="<?php echo htmlspecialchars($member['ContactNo'] ?? ''); ?>"
-                                                placeholder="ไม่มีข้อมูลนี้" maxlength="11" disabled>
+                                                placeholder="ไม่มีข้อมูลนี้" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -213,8 +283,38 @@ if (isset($_POST['submit'])) {
                                     <label for="address" class="font-weight-bold text-gray-700">
                                         <i class="fas fa-map-marker-alt text-pink mr-2"></i>ที่อยู่จัดส่งของลูกค้า
                                     </label>
-                                    <textarea class="form-control  " name="address" id="address" rows="4"
+                                    <textarea class="form-control disabled-field" name="address" id="address" rows="4"
                                         placeholder="ไม่มีข้อมูลนี้" disabled><?php echo htmlspecialchars($member['Address'] ?? ''); ?></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="font-weight-bold text-gray-700">
+                                        <i class="fas fa-check-circle text-pink mr-2"></i>การตรวจสอบที่อยู่
+                                    </label>
+                                    <div class="validate-radio-group">
+                                        <label class="validate-radio-label not-verified" for="validate_not_verified">
+                                            <input type="radio" name="validate_status" id="validate_not_verified" value="not_verified"
+                                                <?php echo ($member['Validate'] === 'ยังไม่ยืนยัน' || empty($member['Validate'])) ? 'checked' : ''; ?>>
+                                            <i class="fas fa-clock"></i> ยังไม่ยืนยัน
+                                        </label>
+                                        <label class="validate-radio-label incorrect" for="validate_incorrect">
+                                            <input type="radio" name="validate_status" id="validate_incorrect" value="incorrect"
+                                                <?php echo ($member['Validate'] !== 'ยังไม่ยืนยัน' && $member['Validate'] !== 'ที่อยู่ถูกต้อง' && $member['Validate'] !== null) ? 'checked' : ''; ?>>
+                                            <i class="fas fa-times-circle"></i> ที่อยู่ไม่ถูกต้อง
+                                        </label>
+                                        <div class="validate-reason" id="validate-reason"
+                                            style="<?php echo ($member['Validate'] !== 'ยังไม่ยืนยัน' && $member['Validate'] !== 'ที่อยู่ถูกต้อง' && $member['Validate'] !== null) ? 'display: block;' : ''; ?>">
+                                            <input type="text" class="form-control" name="validate_reason"
+                                                value="<?php echo ($member['Validate'] !== 'ยังไม่ยืนยัน' && $member['Validate'] !== 'ที่อยู่ถูกต้อง' && $member['Validate'] !== null) ? htmlspecialchars($member['Validate']) : ''; ?>"
+                                                placeholder="ระบุเหตุผล เช่น 'รหัสไปรษณีย์ไม่ถูกต้อง แก้ไขใหม่อีกครั้ง'">
+                                        </div>
+                                        <label class="validate-radio-label verified" for="validate_verified">
+                                            <input type="radio" name="validate_status" id="validate_verified" value="verified"
+                                                <?php echo ($member['Validate'] === 'ที่อยู่ถูกต้อง') ? 'checked' : ''; ?>>
+                                            <i class="fas fa-check-circle"></i> ยืนยันที่อยู่ถูกต้อง
+                                        </label>
+                                    </div>
+                                    <small class="form-text">เลือกสถานะการตรวจสอบที่อยู่และระบุเหตุผลหากที่อยู่ไม่ถูกต้อง</small>
                                 </div>
 
                                 <div class="form-group">
@@ -236,14 +336,16 @@ if (isset($_POST['submit'])) {
                                     </div>
                                 </div>
 
-                                <!-- <div class="form-group d-flex justify-content-end">
+                                <div class="form-group d-flex justify-content-end">
+                                    <button type="submit" name="submit" class="btn btn-primary mr-2">
+                                        <i class="fas fa-save mr-2"></i> บันทึกการตรวจสอบ
+                                    </button>
                                     <a href="members.php" class="btn btn-secondary">
                                         <i class="fas fa-arrow-left mr-2"></i> กลับหน้ารายการสมาชิก
                                     </a>
-                                </div> -->
+                                </div>
                             </form>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -286,23 +388,18 @@ if (isset($_POST['submit'])) {
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-            // Form validation
-            (function() {
-                'use strict';
-                window.addEventListener('load', function() {
-                    var forms = document.getElementsByClassName('needs-validation');
-                    Array.prototype.filter.call(forms, function(form) {
-                        form.addEventListener('submit', function(event) {
-                            if (form.checkValidity() === false) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                            }
-                            form.classList.add('was-validated');
-                        }, false);
-                    });
-                }, false);
-            })();
+        // Toggle validate reason input visibility
+        $(document).ready(function() {
+            $('input[name="validate_status"]').change(function() {
+                if ($(this).val() === 'incorrect') {
+                    $('#validate-reason').slideDown(300);
+                    $('#validate-reason input').prop('required', true);
+                } else {
+                    $('#validate-reason').slideUp(300);
+                    $('#validate-reason input').prop('required', false);
+                }
+            });
+        });
     </script>
 </body>
-
 </html>
