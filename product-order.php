@@ -64,6 +64,19 @@ if (!$user_data) {
     ];
 }
 
+// Fetch payment details from tbl_payment
+$payment_query = "SELECT QRCodeImage, AccountName, BankAccountNumber FROM tbl_payment ORDER BY CreatedAt DESC LIMIT 1";
+$payment_stmt = $conn->prepare($payment_query);
+$payment_stmt->execute();
+$payment_data = $payment_stmt->fetch(PDO::FETCH_ASSOC);
+
+// Check if QR Code image exists, otherwise use default
+$qrCodeImagePath = !empty($payment_data['QRCodeImage']) && file_exists("uploads/qrcodes/" . $payment_data['QRCodeImage'])
+    ? "uploads/qrcodes/" . htmlspecialchars($payment_data['QRCodeImage'])
+    : "assets/img/default-qrcode.jpg";
+$accountName = $payment_data ? htmlspecialchars($payment_data['AccountName']) : 'ชื่อบัญชี (ไม่พบข้อมูล)';
+$bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccountNumber']) : 'เลขบัญชี (ไม่พบข้อมูล)';
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $flower_id = $flower['ID'];
@@ -449,6 +462,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-top: 1rem;
         }
 
+        /* Adjusted quantity input */
+        .quantity-input {
+            width: 100px;
+            height: 50px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            text-align: center;
+            border: 3px solid var(--primary-pink);
+            border-radius: 10px;
+            background-color: #fff;
+            color: var(--text-dark);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+            border-color: #e84393;
+            box-shadow: 0 0 0 4px rgba(232, 67, 147, 0.2);
+        }
+
         @media (max-width: 768px) {
             .order-form-container {
                 flex-direction: column;
@@ -508,24 +541,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $addressStatus = '';
                         $statusClass = '';
                         $reasonText = '';
-                        $iconClass = ''; // Variable to store the icon class
+                        $iconClass = '';
                         if (empty($user_data['Address'])) {
                             $addressStatus = 'ยังไม่มีข้อมูล';
                             $statusClass = 'status-not-verified';
-                            $iconClass = 'fa-clock'; // Clock icon for "no data"
+                            $iconClass = 'fa-clock';
                         } elseif ($user_data['Validate'] === 'ที่อยู่ถูกต้อง') {
                             $addressStatus = 'ที่อยู่ได้รับการยืนยัน';
                             $statusClass = 'status-verified';
-                            $iconClass = 'fa-check-circle'; // Check circle for verified
+                            $iconClass = 'fa-check-circle';
                         } elseif (!empty($user_data['Validate']) && $user_data['Validate'] !== 'ยังไม่ยืนยัน') {
                             $addressStatus = 'ที่อยู่ไม่ผ่านการตรวจสอบ';
                             $statusClass = 'status-incorrect';
                             $reasonText = "เหตุผล: " . htmlspecialchars($user_data['Validate']);
-                            $iconClass = 'fa-times-circle'; // Times circle for incorrect
+                            $iconClass = 'fa-times-circle';
                         } else {
                             $addressStatus = 'รอการตรวจสอบ';
                             $statusClass = 'status-not-verified';
-                            $iconClass = 'fa-clock'; // Clock icon for pending
+                            $iconClass = 'fa-clock';
                         }
                         ?>
                         <div class="address-status <?php echo $statusClass; ?>">
@@ -548,8 +581,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="order-form-group">
                         <h3>4. ชำระเงิน</h3>
                         <div class="payment-section">
-                            <img src="assets/img/payment-clip.jpg" alt="Payment Clip">
-                            <button type="button" class="copy-btn" onclick="copyText('123-456-7890')">คัดลอกบัญชีเงิน</button>
+                            <img src="<?php echo $qrCodeImagePath; ?>" alt="QR Code Payment">
+                            <p><strong>ชื่อบัญชี:</strong> <?php echo $accountName; ?></p>
+                            <p><strong>เลขที่บัญชี:</strong> <?php echo $bankAccountNumber; ?></p>
+                            <button type="button" class="copy-btn" onclick="copyText('<?php echo $bankAccountNumber; ?>')">คัดลอกเลขบัญชี</button>
                             <div class="upload-slip">
                                 <label for="payment_slip" class="upload-btn">
                                     <i class="fas fa-upload"></i> อัพโหลดสลิปโอนเงิน
