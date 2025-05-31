@@ -34,6 +34,30 @@ include('config/db.php');
         </div>
     </section>
     <!-- Hero Section Ends-->
+     <section class="about" id="about">
+
+        <div class="row">
+            <div class="video-container">
+                <video src="assets/video/flower1.mp4" loop autoplay muted></video>
+                <h3>best flower sellers</h3>
+            </div>
+
+            <div class="content">
+                <h3>why choose us?</h3>
+                <p>หากคุณกำลังมองหาร้านดอกไม้ออนไลน์คุณภาพ ให้บริการอย่างมือย่างชีพ และจัดส่งตรงเวลา Indira Gift flowers
+                    คือคำตอบที่คุณกำลังตามหา
+                    สินค้าดอกไม้ของเราจัดทำด้วยความใส่ใจ พิถีพิถันในทุกกรายละเอียด เพื่อให้ดอกไม้ออกมาสวยงานมากที่สุด
+                    เพราะเรารู้ดีว่า ดอกไม้ คือตัวตัวแทนของ
+                    ความรักและความห่วงใยจากผู้ให้ถึงผู้รับ หากเลือก Indira Gift flowers มั่นใจได้เลยว่า
+                    ผู้รับจะต้องประกับใจกับของขวัญสุดพิเศษนี้อย่างแน่นอนค่ะ
+                </p>
+                <!-- <a href="#" class="btn">learn more</a> -->
+            </div>
+
+        </div>
+
+
+    </section>
 
     <!-- footer -->
     <?php include("includes/footer.php"); ?>

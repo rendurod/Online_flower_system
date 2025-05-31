@@ -88,7 +88,7 @@ try {
                                             class="flower-image">
                                         <div class="flower-overlay">
                                             <button class="select-shop-btn"
-                                                onclick="window.location.href='product_detail.php?id=<?php echo $flower['ID']; ?>'"
+                                                onclick="window.location.href='product-detail.php?id=<?php echo $flower['ID']; ?>'"
                                                 aria-label="เลือกซื้อ <?php echo htmlspecialchars($flower['flower_name']); ?>">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>

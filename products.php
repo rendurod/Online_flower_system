@@ -92,9 +92,6 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/productPHP.css">
     
-
-
-        
 </head>
 
 <body>
@@ -231,14 +228,19 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <h3 class="product-name"><?php echo htmlspecialchars($flower['flower_name']); ?></h3>
                             
                             <?php if (!empty($flower['flower_description'])): ?>
-                                <p class="product-description"><?php echo htmlspecialchars($flower['flower_description']); ?></p>
+                                <p class="product-description">
+                                    <?php 
+                                    $description = htmlspecialchars($flower['flower_description']);
+                                    echo strlen($description) > 50 ? substr($description, 0, 50) . '...' : $description;
+                                    ?>
+                                </p>
                             <?php endif; ?>
                             
                             <div class="product-price">฿<?php echo number_format($flower['price'], 2); ?></div>
                             
                             <div class="product-actions">
                                 <?php if ($flower['stock_quantity'] > 0): ?>
-                                    <button class="select-btn" onclick="window.location.href='product_detail.php?id=<?php echo $flower['ID']; ?>'">
+                                    <button class="select-btn" onclick="window.location.href='product-detail.php?id=<?php echo $flower['ID']; ?>'">
                                         <i class="fas fa-shopping-cart"></i>
                                         เลือกซื้อ
                                     </button>

@@ -143,10 +143,11 @@
     font-size: 1.3rem;
     color: var(--text-light);
     line-height: 1.5;
-    margin-bottom: 1.5rem;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 1rem;
 }
 
 .product-price {

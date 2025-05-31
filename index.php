@@ -13,11 +13,11 @@ $message = '';
 $messageType = '';
 
 try {
-    $stmt = $conn->prepare("SELECT ID, flower_name, flower_description, price, image FROM tbl_flowers WHERE stock_quantity > 0 ORDER BY creation_date DESC");
+    $stmt = $conn->prepare("SELECT ID, flower_name, flower_description, price, image, stock_quantity FROM tbl_flowers WHERE stock_quantity > 0 ORDER BY creation_date DESC");
     $stmt->execute();
     $flowers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $message = "เกิดข้อผิดพลาดในการดึงข้อมูลดอกไม้: " . htmlspecialchars($e->getMessage());
+    $message = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
     $messageType = "danger";
 }
 ?>
@@ -86,7 +86,7 @@ try {
                                             class="flower-image">
                                         <div class="flower-overlay">
                                             <button class="select-shop-btn"
-                                                onclick="window.location.href='product_detail.php?id=<?php echo $flower['ID']; ?>'"
+                                                onclick="window.location.href='product-detail.php?id=<?php echo $flower['ID']; ?>'"
                                                 aria-label="เลือกซื้อ <?php echo htmlspecialchars($flower['flower_name']); ?>">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>

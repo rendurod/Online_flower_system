@@ -123,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
 ?>
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -138,8 +139,78 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/user-profile.css">
+    <!-- Custom CSS for Validation Status -->
+    <style>
+        .address-status {
+            margin: 10px 0;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
+        .address-status i {
+            margin-right: 10px;
+            font-size: 1.4rem;
+        }
 
+        .status-not-verified {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .status-not-verified i {
+            color: #6c757d;
+        }
+
+        .status-incorrect {
+            background-color: #fff5f5;
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .status-incorrect i {
+            color: #dc3545;
+        }
+
+        .status-verified {
+            background-color: #e6f4ea;
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .status-verified i {
+            color: #28a745;
+        }
+
+        .status-incorrect-text {
+            margin-top: 8px;
+            font-size: 1rem;
+            color: #dc3545;
+            font-style: italic;
+            padding-left: 25px;
+        }
+
+        @media (max-width: 576px) {
+            .address-status {
+                font-size: 1rem;
+                padding: 10px 12px;
+            }
+            .address-status i {
+                font-size: 1.2rem;
+            }
+            .status-incorrect-text {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 </head>
 
 <body class="profile">
@@ -152,10 +223,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
             <!-- Navigation Tabs -->
             <div class="nav-tabs">
                 <div class="nav-item mt-5 ms-5">
-                    <a class="nav-link" href="user-profile.php">โปรไฟล์ส่วนตัว</a>
+                    <a class="nav-link active" href="user-profile.php">โปรไฟล์ส่วนตัว</a>
                 </div>
                 <div class="nav-item mt-5 me-5">
-                    <a class="nav-link active" href="user-order.php">ประวัติการสั่งซื้อ</a>
+                    <a class="nav-link" href="user-order.php">ประวัติการสั่งซื้อ</a>
                 </div>
             </div>
 
@@ -230,8 +301,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                             <i class="fas fa-map-marker-alt"></i>
                             <h4>ที่อยู่จัดส่ง - ผู้รับ</h4>
                         </label>
+                        <!-- Address Validation Status -->
+                        <div class="address-status
+                            <?php
+                            if ($user['Validate'] === 'ที่อยู่ถูกต้อง') {
+                                echo 'status-verified';
+                            } elseif ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== null && $user['Validate'] !== '') {
+                                echo 'status-incorrect';
+                            } else {
+                                echo 'status-not-verified';
+                            }
+                            ?>">
+                            <i class="fas
+                                <?php
+                                if ($user['Validate'] === 'ที่อยู่ถูกต้อง') {
+                                    echo 'fa-check-circle';
+                                } elseif ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== null && $user['Validate'] !== '') {
+                                    echo 'fa-times-circle';
+                                } else {
+                                    echo 'fa-clock';
+                                }
+                                ?>"></i>
+                            <?php
+                            if ($user['Validate'] === 'ที่อยู่ถูกต้อง') {
+                                echo 'ยืนยันที่อยู่ถูกต้อง';
+                            } elseif ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== null && $user['Validate'] !== '') {
+                                echo 'ที่อยู่ไม่ถูกต้อง';
+                            } else {
+                                echo 'ยังไม่ยืนยัน';
+                            }
+                            ?>
+                        </div>
+                        <?php if ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== 'ที่อยู่ถูกต้อง' && $user['Validate'] !== null && $user['Validate'] !== ''): ?>
+                            <div class="status-incorrect-text">
+                                <strong>เหตุผล:</strong> <?php echo htmlspecialchars($user['Validate']); ?>
+                            </div>
+                        <?php endif; ?>
                         <textarea class="form-control" name="address" rows="3"
-                            placeholder="กรอกที่อยู่ของคุณ"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
+                            placeholder="ยังไม่มีที่อยู่ข้อมูล"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
+                        <small class="text-muted d-block mt-2">กรุณากรอกที่อยู่ให้ครบถ้วน รวมถึงบ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, และรหัสไปรษณีย์ เพื่อให้การจัดส่งสะดวกและรวดเร็ว</small>
+                        <!-- Address Requirements Button and List -->
+                        <div class="address-info-wrapper mt-2">
+                            <button type="button" class="btn-show-requirements">
+                                <i class="fas fa-info-circle"></i>
+                                แสดงข้อกำหนดที่อยู่
+                            </button>
+                            <div class="address-requirements" style="display: none;">
+                                <div class="requirements-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>ข้อกำหนดที่อยู่:</span>
+                                </div>
+                                <ul class="requirements-list">
+                                    <li><i class="fas fa-check-circle"></i> บ้านเลขที่</li>
+                                    <li><i class="fas fa-check-circle"></i> ตำบล</li>
+                                    <li><i class="fas fa-check-circle"></i> อำเภอ</li>
+                                    <li><i class="fas fa-check-circle"></i> จังหวัด</li>
+                                    <li><i class="fas fa-check-circle"></i> รหัสไปรษณีย์</li>
+                                    <li><i class="fas fa-check-circle"></i> และอื่น ๆ (เช่น ถนน, หมู่บ้าน)</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
                     <button type="submit" name="update_profile" class="btn-update">
@@ -313,6 +442,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                     group.style.opacity = '1';
                     group.style.transform = 'translateY(0)';
                 }, index * 100);
+            });
+
+            // Address requirements toggle with enhanced animations
+            $('.btn-show-requirements').on('click', function() {
+                const requirements = $(this).siblings('.address-requirements');
+                requirements.slideToggle(300).toggleClass('show');
+
+                const buttonText = requirements.is(':visible') ?
+                    'ซ่อนข้อกำหนดที่อยู่' :
+                    'แสดงข้อกำหนดที่อยู่';
+                $(this).html(`<i class="fas fa-info-circle"></i> ${buttonText}`);
+
+                // Animate list items when shown
+                if (requirements.hasClass('show')) {
+                    requirements.find('.requirements-list li').each(function(index) {
+                        $(this).css({
+                            opacity: 0,
+                            transform: 'translateX(-20px)'
+                        }).delay(index * 100).animate({
+                            opacity: 1,
+                            transform: 'translateX(0)'
+                        }, 300);
+                    });
+                }
+            });
+
+            $(document).on('click', function(event) {
+                if (!$(event.target).closest('.address-info-wrapper').length) {
+                    $('.address-requirements').slideUp(300).removeClass('show');
+                    $('.btn-show-requirements').html('<i class="fas fa-info-circle"></i> แสดงข้อกำหนดที่อยู่');
+                    $('.requirements-list li').css({
+                        opacity: 0,
+                        transform: 'translateX(-20px)'
+                    });
+                }
             });
         });
     </script>
