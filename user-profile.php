@@ -138,8 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/user-profile.css">
-
-
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 </head>
 
 <body class="profile">
@@ -152,10 +152,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
             <!-- Navigation Tabs -->
             <div class="nav-tabs">
                 <div class="nav-item mt-5 ms-5">
-                    <a class="nav-link" href="user-profile.php">โปรไฟล์ส่วนตัว</a>
+                    <a class="nav-link active" href="user-profile.php">โปรไฟล์ส่วนตัว</a>
                 </div>
                 <div class="nav-item mt-5 me-5">
-                    <a class="nav-link active" href="user-order.php">ประวัติการสั่งซื้อ</a>
+                    <a class="nav-link" href="user-order.php">ประวัติการสั่งซื้อ</a>
                 </div>
             </div>
 
@@ -231,7 +231,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                             <h4>ที่อยู่จัดส่ง - ผู้รับ</h4>
                         </label>
                         <textarea class="form-control" name="address" rows="3"
-                            placeholder="กรอกที่อยู่ของคุณ"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
+                            placeholder="กรุณากรอกที่อยู่ให้ครบถ้วน เช่น บ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, รหัสไปรษณีย์"><?php echo htmlspecialchars($user['Address'] ?? ''); ?></textarea>
+                        <small class="text-muted d-block mt-2">กรุณากรอกที่อยู่ให้ครบถ้วน รวมถึงบ้านเลขที่, ถนน, หมู่บ้าน, ตำบล/แขวง, อำเภอ/เขต, จังหวัด, และรหัสไปรษณีย์ เพื่อให้การจัดส่งสะดวกและรวดเร็ว</small>
+                        <!-- Address Requirements Button and List -->
+                        <div class="address-info-wrapper mt-2">
+                            <button type="button" class="btn-show-requirements">
+                                <i class="fas fa-info-circle"></i>
+                                แสดงข้อกำหนดที่อยู่
+                            </button>
+                            <div class="address-requirements" style="display: none;">
+                                <div class="requirements-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>ข้อกำหนดที่อยู่:</span>
+                                </div>
+                                <ul class="requirements-list">
+                                    <li><i class="fas fa-check-circle"></i> บ้านเลขที่</li>
+                                    <li><i class="fas fa-check-circle"></i> ตำบล</li>
+                                    <li><i class="fas fa-check-circle"></i> อำเภอ</li>
+                                    <li><i class="fas fa-check-circle"></i> จังหวัด</li>
+                                    <li><i class="fas fa-check-circle"></i> รหัสไปรษณีย์</li>
+                                    <li><i class="fas fa-check-circle"></i> และอื่น ๆ (เช่น ถนน, หมู่บ้าน)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <?php if (!empty($user['Validate'])): ?>
+                            <div class="alert alert-warning mt-3" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <strong>การตรวจสอบที่อยู่:</strong> <?php echo htmlspecialchars($user['Validate']); ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <button type="submit" name="update_profile" class="btn-update">
@@ -313,6 +341,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                     group.style.opacity = '1';
                     group.style.transform = 'translateY(0)';
                 }, index * 100);
+            });
+
+            // Address requirements toggle with enhanced animations
+            $('.btn-show-requirements').on('click', function() {
+                const requirements = $(this).siblings('.address-requirements');
+                requirements.slideToggle(300).toggleClass('show');
+
+                const buttonText = requirements.is(':visible') ?
+                    'ซ่อนข้อกำหนดที่อยู่' :
+                    'แสดงข้อกำหนดที่อยู่';
+                $(this).html(`<i class="fas fa-info-circle"></i> ${buttonText}`);
+
+                // Animate list items when shown
+                if (requirements.hasClass('show')) {
+                    requirements.find('.requirements-list li').each(function(index) {
+                        $(this).css({
+                            opacity: 0,
+                            transform: 'translateX(-20px)'
+                        }).delay(index * 100).animate({
+                            opacity: 1,
+                            transform: 'translateX(0)'
+                        }, 300);
+                    });
+                }
+            });
+
+            $(document).on('click', function(event) {
+                if (!$(event.target).closest('.address-info-wrapper').length) {
+                    $('.address-requirements').slideUp(300).removeClass('show');
+                    $('.btn-show-requirements').html('<i class="fas fa-info-circle"></i> แสดงข้อกำหนดที่อยู่');
+                    $('.requirements-list li').css({
+                        opacity: 0,
+                        transform: 'translateX(-20px)'
+                    });
+                }
             });
         });
     </script>

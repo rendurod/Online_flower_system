@@ -70,8 +70,8 @@
                                 <img src="assets/img/account.png" alt="Default Profile" class="current-image">
                             <?php endif; ?>
                             <div>
-                                <div class="user-name"><?php echo htmlspecialchars($user['FirstName'] ?? 'ผู้ใช้'); ?></div>
-                                <div class="user-email"><?php echo htmlspecialchars($user['Email'] ?? ''); ?></div>
+                                <div class="user-name"><?php echo htmlspecialchars($user['FirstName'] ?? 'ผู้ใช้'); ?> <?php echo htmlspecialchars($user['LastName'] ?? 'นามสกุล'); ?></div>
+                                <div class="user-email"><?php echo htmlspecialchars($user['EmailId'] ?? 'อีเมลผู้ใช้?'); ?></div>
                             </div>
                         </div>
                     </div>
