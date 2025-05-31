@@ -14,9 +14,9 @@
         <li class="nav-item dropdown no-arrow mx-1">
             <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-bell fa-fw"></i>
+                <i class="fas fa-store text-gray-400"></i>
                 <!-- Counter - Alerts -->
-                <span class="badge badge-danger badge-counter">3+</span>
+                <span class="badge badge-danger badge-counter ">+</span>
             </a>
             <!-- Dropdown - Alerts -->
             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -79,13 +79,13 @@
                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                     โปร์ไฟล์
                 </a>
-                
+
                 <a class="dropdown-item" href="#">
-                    <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
-                    การแจ้งเตือน
+                    <i class="fas fa-store fa-sm fa-fw mr-2 text-gray-400"></i>
+                    ที่อยู่ของร้านค้า
                 </a>
                 <a class="dropdown-item" href="../index.php">
-                    <i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
+                    <i class="fas fa-shopping-basket fa-sm fa-fw mr-2 text-gray-400"></i>
                     ไปยังหน้าผู้ใช้งาน
                 </a>
                 <div class="dropdown-divider"></div>
@@ -110,10 +110,10 @@
                     </button>
                 </div>
                 <div class="modal-body">เลือก "ออกจากระบบ" ข้างล่างหากคุณพร้อมที่จะสิ้นสุดเซสชันปัจจุบันของคุณ</div>
-<div class="modal-footer">
-    <button class="btn btn-secondary" type="button" data-dismiss="modal">ยกเลิก</button>
-    <a class="btn btn-danger" href="logout.php">ออกจากระบบ</a>
-</div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">ยกเลิก</button>
+                    <a class="btn btn-danger" href="logout.php">ออกจากระบบ</a>
+                </div>
             </div>
         </div>
     </div>

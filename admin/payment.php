@@ -27,6 +27,20 @@ try {
     exit();
 }
 
+// Fetch existing payment data (latest record)
+$payment_data = [];
+$existing_qr_image = '';
+try {
+    $stmt = $conn->prepare("SELECT QRCodeImage, AccountName, BankAccountNumber FROM tbl_payment ORDER BY CreatedAt DESC LIMIT 1");
+    $stmt->execute();
+    $payment_data = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($payment_data && !empty($payment_data['QRCodeImage']) && file_exists('uploads/qrcodes/' . $payment_data['QRCodeImage'])) {
+        $existing_qr_image = 'uploads/qrcodes/' . $payment_data['QRCodeImage'];
+    }
+} catch (PDOException $e) {
+    $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลการชำระเงิน: ' . $e->getMessage();
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accountName = trim($_POST['account_name']);
@@ -68,11 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'กรุณาอัปโหลดรูปภาพ QR Code';
     }
 
-    // Insert into tbl_payment if no errors
+    // Insert or update into tbl_payment if no errors
     if (empty($errors)) {
         try {
             $stmt = $conn->prepare("INSERT INTO tbl_payment (QRCodeImage, AccountName, BankAccountNumber) VALUES (:qr_code_image, :account_name, :bank_account_number)");
-            $stmt->bindValue(':qr_code_image', $qrCodeImage, PDO::PARAM_STR);
+            $stmt->bindValue(':qr_code_image', $qrCodeImage ?: ($payment_data['QRCodeImage'] ?? ''), PDO::PARAM_STR);
             $stmt->bindValue(':account_name', $accountName, PDO::PARAM_STR);
             $stmt->bindValue(':bank_account_number', $bankAccountNumber, PDO::PARAM_STR);
             $stmt->execute();
@@ -125,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: 2px solid #ddd;
             border-radius: 5px;
             margin-top: 10px;
-            display: none;
+            display: <?php echo $existing_qr_image ? 'block' : 'none'; ?>;
         }
 
         .btn-submit {
@@ -167,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">เพิ่มการชำระเงิน</h1>
-                        <a href="dashboard.php" class="btn btn-secondary btn-sm">
+                        <a href="index.php" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left fa-sm text-white-50"></i> กลับไปหน้าแดชบอร์ด
                         </a>
                     </div>
@@ -181,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                     <?php echo htmlspecialchars($_SESSION['error']); ?>
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
+                                        <span aria-hidden="true">×</span>
                                     </button>
                                 </div>
                                 <?php unset($_SESSION['error']); ?>
@@ -191,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                                     <?php echo htmlspecialchars($_SESSION['success']); ?>
                                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
+                                        <span aria-hidden="true">×</span>
                                     </button>
                                 </div>
                                 <?php unset($_SESSION['success']); ?>
@@ -200,23 +214,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <form action="" method="POST" enctype="multipart/form-data">
                                 <div class="form-group">
                                     <label for="account_name"><i class="fas fa-user"></i> ชื่อบัญชี</label>
-                                    <input type="text" class="form-control" id="account_name" name="account_name" required>
+                                    <input type="text" class="form-control" id="account_name" name="account_name" value="<?php echo htmlspecialchars($payment_data['AccountName'] ?? ''); ?>" required>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="bank_account_number"><i class="fas fa-credit-card"></i> เลขที่บัญชีธนาคาร</label>
-                                    <input type="text" class="form-control" id="bank_account_number" name="bank_account_number" required>
+                                    <input type="text" class="form-control" id="bank_account_number" name="bank_account_number" value="<?php echo htmlspecialchars($payment_data['BankAccountNumber'] ?? ''); ?>" required>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="qr_code_image"><i class="fas fa-qrcode"></i> รูปภาพ QR Code</label>
-                                    <input type="file" class="form-control-file" id="qr_code_image" name="qr_code_image" accept="image/*" required>
-                                    <img id="image_preview" class="image-preview" src="#" alt="Preview QR Code">
-                                    <small class="form-text text-muted">รองรับไฟล์ JPG, JPEG, PNG, GIF ขนาดไม่เกิน 5MB</small>
+                                    <input type="file" class="form-control-file" id="qr_code_image" name="qr_code_image" accept="image/*">
+                                    <?php if ($existing_qr_image): ?>
+                                        <img id="image_preview" class="image-preview" src="<?php echo htmlspecialchars($existing_qr_image); ?>" alt="Existing QR Code">
+                                        <small class="form-text text-muted">อัปโหลดไฟล์ใหม่เพื่อแทนที่</small>
+                                    <?php else: ?>
+                                        <img id="image_preview" class="image-preview" src="#" alt="Preview QR Code">
+                                        <small class="form-text text-muted">รองรับไฟล์ JPG, JPEG, PNG, GIF ขนาดไม่เกิน 5MB</small>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="form-group d-flex justify-content-end">
-                                    <a href="dashboard.php" class="btn-back mr-2">
+                                    <a href="index.php" class="btn-back mr-2">
                                         <i class="fas fa-arrow-left"></i> กลับ
                                     </a>
                                     <button type="submit" class="btn-submit">
@@ -247,7 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Image preview functionality
+        // Image preview functionality for new upload
         document.getElementById('qr_code_image').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const preview = document.getElementById('image_preview');
@@ -259,8 +278,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 };
                 reader.readAsDataURL(file);
             } else {
-                preview.src = '#';
-                preview.style.display = 'none';
+                <?php if ($existing_qr_image): ?>
+                    preview.src = '<?php echo htmlspecialchars($existing_qr_image); ?>';
+                    preview.style.display = 'block';
+                <?php else: ?>
+                    preview.src = '#';
+                    preview.style.display = 'none';
+                <?php endif; ?>
             }
         });
     </script>
