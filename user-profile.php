@@ -138,6 +138,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/user-profile.css">
+    <!-- Custom CSS for Validation Status -->
+    <style>
+        .address-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+        .address-status i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+        .status-not-verified {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        .status-not-verified i {
+            color: #6c757d;
+        }
+        .status-incorrect {
+            background-color: #fff5f5;
+            color: #dc3545;
+        }
+        .status-incorrect i {
+            color: #dc3545;
+        }
+        .status-verified {
+            background-color: #e6f4ea;
+            color: #28a745;
+        }
+        .status-verified i {
+            color: #28a745;
+        }
+        .status-incorrect-text {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #dc3545;
+            font-style: italic;
+        }
+    </style>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 </head>
@@ -254,10 +297,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                                 </ul>
                             </div>
                         </div>
-                        <?php if (!empty($user['Validate'])): ?>
-                            <div class="alert alert-warning mt-3" role="alert">
-                                <i class="fas fa-exclamation-circle me-2"></i>
-                                <strong>การตรวจสอบที่อยู่:</strong> <?php echo htmlspecialchars($user['Validate']); ?>
+                        <!-- Address Validation Status -->
+                        <div class="address-status
+                            <?php
+                            if ($user['Validate'] === 'ที่อยู่ถูกต้อง') {
+                                echo 'status-verified';
+                            } elseif ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== null && $user['Validate'] !== '') {
+                                echo 'status-incorrect';
+                            } else {
+                                echo 'status-not-verified';
+                            }
+                            ?>">
+                            <i class="fas
+                                <?php
+                                if ($user['Validate'] === 'ที่อยู่ถูกต้อง') {
+                                    echo 'fa-check-circle';
+                                } elseif ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== null && $user['Validate'] !== '') {
+                                    echo 'fa-times-circle';
+                                } else {
+                                    echo 'fa-clock';
+                                }
+                                ?>"></i>
+                            <?php
+                            if ($user['Validate'] === 'ที่อยู่ถูกต้อง') {
+                                echo 'ยืนยันที่อยู่ถูกต้อง';
+                            } elseif ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== null && $user['Validate'] !== '') {
+                                echo 'ที่อยู่ไม่ถูกต้อง';
+                            } else {
+                                echo 'ยังไม่ยืนยัน';
+                            }
+                            ?>
+                        </div>
+                        <?php if ($user['Validate'] !== 'ยังไม่ยืนยัน' && $user['Validate'] !== 'ที่อยู่ถูกต้อง' && $user['Validate'] !== null && $user['Validate'] !== ''): ?>
+                            <div class="status-incorrect-text">
+                                <strong>เหตุผล:</strong> <?php echo htmlspecialchars($user['Validate']); ?>
                             </div>
                         <?php endif; ?>
                     </div>
