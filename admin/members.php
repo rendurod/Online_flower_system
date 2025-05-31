@@ -33,7 +33,7 @@ try {
 }
 
 // Ensure uploads directory exists for member images
-$target_dir = "uploads/members/";
+$target_dir = "Uploads/members/";
 if (!is_dir($target_dir)) {
     mkdir($target_dir, 0755, true);
 }
@@ -62,7 +62,7 @@ if (!is_dir($target_dir)) {
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 
-    <!-- Custom CSS for image preview modal -->
+    <!-- Custom CSS for image preview modal and address status -->
     <style>
         .image-preview-modal {
             max-width: 90% !important;
@@ -75,6 +75,31 @@ if (!is_dir($target_dir)) {
             object-fit: contain;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .address-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .status-gray {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .status-green {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-red {
+            background-color: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
@@ -103,6 +128,7 @@ if (!is_dir($target_dir)) {
                                             <th>ชื่อ</th>
                                             <th>อีเมล</th>
                                             <th>เบอร์</th>
+                                            <th>ที่อยู่</th>
                                             <th>วันที่สมัคร</th>
                                             <th>วันที่แก้ไข</th>
                                             <th class="no-sort text-center">จัดการ</th>
@@ -111,7 +137,7 @@ if (!is_dir($target_dir)) {
                                     <tbody>
                                         <?php
                                         try {
-                                            $stmt = $conn->query("SELECT ID, FirstName, LastName, EmailId, Image, RegDate, UpdationDate FROM tbl_members ORDER BY ID DESC");
+                                            $stmt = $conn->query("SELECT ID, FirstName, LastName, EmailId, ContactNo, Image, Address, Validate, RegDate, UpdationDate FROM tbl_members ORDER BY ID DESC");
                                             $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                             if (!$members) {
@@ -119,18 +145,39 @@ if (!is_dir($target_dir)) {
                                             } else {
                                                 $i = 1;
                                                 foreach ($members as $member) {
+                                                    // Determine address status
+                                                    $addressStatus = '';
+                                                    $statusClass = '';
+                                                    if (empty($member['Address'])) {
+                                                        $addressStatus = 'ยังไม่มีข้อมูล';
+                                                        $statusClass = 'status-gray';
+                                                    } elseif (!empty($member['Validate']) && strpos($member['Validate'], 'ถูกต้อง') !== false) {
+                                                        $addressStatus = 'ที่อยู่ได้รับการยืนยัน';
+                                                        $statusClass = 'status-green';
+                                                    } elseif (!empty($member['Validate'])) {
+                                                        $addressStatus = 'ที่อยู่ไม่ผ่านการตรวจสอบ';
+                                                        $statusClass = 'status-red';
+                                                    } else {
+                                                        $addressStatus = 'รอการตรวจสอบ';
+                                                        $statusClass = 'status-gray';
+                                                    }
                                         ?>
                                                     <tr>
                                                         <td class="col-1 fw-bold"><?php echo $i++; ?></td>
-                                                        <td class="col-2"><?php echo htmlspecialchars($member['FirstName'] ?? ''); ?></td>
+                                                        <td class="col-2"><?php echo htmlspecialchars($member['FirstName'] ?? '') . ' ' . htmlspecialchars($member['LastName'] ?? ''); ?></td>
                                                         <td class="col-2"><?php echo htmlspecialchars($member['EmailId']); ?></td>
-                                                        <td class="col-2"><?php echo htmlspecialchars($member['ContactNo'] ?? '-'); ?></td>
+                                                        <td class="col-1"><?php echo htmlspecialchars($member['ContactNo'] ?? '-'); ?></td>
+                                                        <td class="col-2">
+                                                            <span class="address-status <?php echo $statusClass; ?>">
+                                                                <?php echo htmlspecialchars($addressStatus); ?>
+                                                            </span>
+                                                        </td>
                                                         <td class="col-1"><?php echo date('d/m/Y H:i', strtotime($member['RegDate'])); ?></td>
                                                         <td class="col-1"><?php echo $member['UpdationDate'] ? date('d/m/Y H:i', strtotime($member['UpdationDate'])) : '-'; ?></td>
                                                         <td class="col-1 text-center">
                                                             <a href="edit-member.php?id=<?php echo htmlspecialchars($member['ID']); ?>"
                                                                 class="btn btn-info btn-sm">
-                                                                <i class="fas fa-eye"></i> ดูเพิ่มเติม
+                                                                <i class="fas fa-eye"></i> ดูเพิ่ม
                                                             </a>
                                                         </td>
                                                     </tr>
