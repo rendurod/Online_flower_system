@@ -177,7 +177,7 @@ if (!is_dir($target_dir)) {
                                                         <td class="col-1 text-center">
                                                             <a href="edit-member.php?id=<?php echo htmlspecialchars($member['ID']); ?>"
                                                                 class="btn btn-info btn-sm">
-                                                                <i class="fas fa-eye"></i> ดูเพิ่มเติม
+                                                                <i class="fas fa-eye"></i> ดูเพิ่ม
                                                             </a>
                                                         </td>
                                                     </tr>
