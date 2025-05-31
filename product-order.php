@@ -86,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Validate address
-    if (empty($user_data['Address']) || $user_data['Validate'] === 'ยังไม่ยืนยัน') {
-        $_SESSION['error'] = "กรุณากรอกที่อยู่ในโปรไฟล์และรอการยืนยันก่อนดำเนินการสั่งซื้อ";
+    if (empty($user_data['Address']) || $user_data['Validate'] !== 'ที่อยู่ถูกต้อง') {
+        $_SESSION['error'] = "ที่อยู่ของคุณยังไม่ได้รับการยืนยัน กรุณาอัปเดตที่อยู่ในโปรไฟล์และรอการอนุมัติจากแอดมิน";
         header("Location: product-order.php?id=" . $flower_id);
         exit();
     }
@@ -159,7 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/css/productPHP.css">
     <link rel="stylesheet" href="assets/css/productDetail.css">
     <style>
-        /* New Step Container Styles */
+        /* Existing styles remain the same */
         .step-container {
             display: flex;
             justify-content: center;
@@ -257,49 +257,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 1rem;
         }
 
-        .radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid rgba(232, 67, 147, 0.2);
-            border-radius: var(--border-radius);
-            font-size: 1.4rem;
-            transition: var(--transition);
-            background: var(--white);
-            margin-top: 0.5rem;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary-pink);
-            box-shadow: 0 0 0 3px rgba(232, 67, 147, 0.1);
-        }
-
-        .quantity-input {
-            width: 100px;
-            padding: 0.5rem;
-            border: 2px solid rgba(232, 67, 147, 0.2);
-            border-radius: var(--border-radius);
-            font-size: 1.4rem;
-        }
-
-        .stock-info {
-            font-size: 1.2rem;
-            color: var(--text-dark);
-            margin-left: 1rem;
-        }
-
         .data-display-box {
             background: #f5f5f5;
             padding: 1rem;
@@ -309,8 +266,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: var(--text-dark);
         }
 
-        .delivery-date-section {
-            margin-bottom: 1rem;
+        .address-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            min-width: 120px;
+            margin-top: 0.5rem;
+        }
+
+        .status-not-verified {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .status-verified {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-incorrect-text {
+            margin-top: 8px;
+            font-size: 1rem;
+            color: #721c24;
+            font-style: italic;
+            padding-left: 25px;
         }
 
         .delivery-date-section input[type="date"] {
@@ -329,10 +316,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 0 0 3px rgba(232, 67, 147, 0.1);
         }
 
-        .payment-section {
-            margin-bottom: 2rem;
-        }
-
         .payment-section img {
             width: 100%;
             max-width: 200px;
@@ -341,10 +324,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .upload-slip {
             margin-top: 1rem;
-        }
-
-        .upload-slip input[type="file"] {
-            margin-bottom: 1rem;
         }
 
         .upload-btn {
@@ -525,6 +504,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="data-display-box" id="existing_address_display">
                             ที่อยู่: <?php echo htmlspecialchars($user_data['Address']) ?: 'ยังไม่ได้ระบุที่อยู่'; ?>
                         </div>
+                        <?php
+                        $addressStatus = '';
+                        $statusClass = '';
+                        $reasonText = '';
+                        if (empty($user_data['Address'])) {
+                            $addressStatus = 'ยังไม่มีข้อมูล';
+                            $statusClass = 'status-not-verified';
+                        } elseif ($user_data['Validate'] === 'ที่อยู่ถูกต้อง') {
+                            $addressStatus = 'ที่อยู่ได้รับการยืนยัน';
+                            $statusClass = 'status-verified';
+                        } elseif (!empty($user_data['Validate']) && $user_data['Validate'] !== 'ยังไม่ยืนยัน') {
+                            $addressStatus = 'ที่อยู่ไม่ผ่านการตรวจสอบ';
+                            $statusClass = 'status-incorrect';
+                            $reasonText = "เหตุผล: " . htmlspecialchars($user_data['Validate']);
+                        } else {
+                            $addressStatus = 'รอการตรวจสอบ';
+                            $statusClass = 'status-not-verified';
+                        }
+                        ?>
+                        <div class="address-status <?php echo $statusClass; ?>">
+                            <?php echo htmlspecialchars($addressStatus); ?>
+                        </div>
+                        <?php if ($statusClass === 'status-incorrect'): ?>
+                            <div class="status-incorrect-text"><?php echo $reasonText; ?></div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- 3. เลือกวันที่จัดส่ง -->
@@ -683,11 +687,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Check address and validation status
-            if (!userAddress || userAddress === '' || addressValidate === 'ยังไม่ยืนยัน') {
+            if (!userAddress || userAddress === '' || addressValidate !== 'ที่อยู่ถูกต้อง') {
+                let errorMessage = 'ที่อยู่ของคุณยังไม่ได้รับการยืนยัน กรุณาอัปเดตที่อยู่ในหน้าโปรไฟล์และรอการอนุมัติจากแอดมิน';
+                if (addressValidate && addressValidate !== 'ยังไม่ยืนยัน' && addressValidate !== 'ที่อยู่ถูกต้อง') {
+                    errorMessage += `\nเหตุผล: ${addressValidate}`;
+                }
                 Swal.fire({
                     icon: 'error',
                     title: 'ที่อยู่ยังไม่ได้รับการยืนยัน',
-                    text: 'กรุณากรอกที่อยู่ในหน้าโปรไฟล์และรอการยืนยันก่อนดำเนินการสั่งซื้อ',
+                    text: errorMessage,
                     showCancelButton: true,
                     confirmButtonText: 'ไปที่หน้าโปรไฟล์',
                     cancelButtonText: 'ยกเลิก'
