@@ -123,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
 ?>
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -142,44 +143,70 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <style>
         .address-status {
             margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 1rem;
-            font-weight: 500;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
+            border: 1px solid transparent;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .address-status i {
-            margin-right: 8px;
-            font-size: 1.2rem;
 
+        .address-status i {
+            margin-right: 10px;
+            font-size: 1.4rem;
         }
+
         .status-not-verified {
             background-color: #f8f9fa;
             color: #6c757d;
+            border-color: #6c757d;
         }
+
         .status-not-verified i {
             color: #6c757d;
         }
+
         .status-incorrect {
             background-color: #fff5f5;
             color: #dc3545;
+            border-color: #dc3545;
         }
+
         .status-incorrect i {
             color: #dc3545;
         }
+
         .status-verified {
             background-color: #e6f4ea;
             color: #28a745;
+            border-color: #28a745;
         }
+
         .status-verified i {
             color: #28a745;
         }
+
         .status-incorrect-text {
-            margin-top: 5px;
-            font-size: 0.9rem;
+            margin-top: 8px;
+            font-size: 1rem;
             color: #dc3545;
             font-style: italic;
+            padding-left: 25px;
+        }
+
+        @media (max-width: 576px) {
+            .address-status {
+                font-size: 1rem;
+                padding: 10px 12px;
+            }
+            .address-status i {
+                font-size: 1.2rem;
+            }
+            .status-incorrect-text {
+                font-size: 0.9rem;
+            }
         }
     </style>
     <!-- jQuery -->
@@ -334,7 +361,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                                 </ul>
                             </div>
                         </div>
-                        
                     </div>
 
                     <button type="submit" name="update_profile" class="btn-update">
