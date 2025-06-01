@@ -77,13 +77,6 @@ $qrCodeImagePath = !empty($payment_data['QRCodeImage']) && file_exists("admin/up
 $accountName = $payment_data ? htmlspecialchars($payment_data['AccountName']) : 'ชื่อบัญชี (ไม่พบข้อมูล)';
 $bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccountNumber']) : 'เลขบัญชี (ไม่พบข้อมูล)';
 
-// Check if QR Code image exists, otherwise use default
-$qrCodeImagePath = !empty($payment_data['QRCodeImage']) && file_exists("admin/uploads/qrcodes/" . $payment_data['QRCodeImage'])
-    ? "admin/uploads/qrcodes/" . htmlspecialchars($payment_data['QRCodeImage'])
-    : "assets/img/default-qrcode.jpg";
-$accountName = $payment_data ? htmlspecialchars($payment_data['AccountName']) : 'ชื่อบัญชี (ไม่พบข้อมูล)';
-$bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccountNumber']) : 'เลขบัญชี (ไม่พบข้อมูล)';
-
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $flower_id = $flower['ID'];
@@ -147,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($order_stmt->execute()) {
         $_SESSION['success'] = "สั่งซื้อสำเร็จ! รอการยืนยันจากแอดมิน";
-        header("Location: products.php");
+        header("Location: product-finish.php"); // Redirect to product-finish.php instead of products.php
         exit();
     } else {
         $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ กรุณาลองใหม่";
