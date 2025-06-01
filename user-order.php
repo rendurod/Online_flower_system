@@ -129,16 +129,6 @@ if ($userEmail) {
             transition: var(--transition);
         }
 
-        .status-tab-link:hover {
-            color: var(--primary-pink);
-        }
-
-        .status-tab-link.active {
-            color: var(--primary-pink);
-            border-bottom: 2px solid var(--primary-pink);
-            font-weight: 500;
-        }
-
         .tab-content {
             margin-top: 2rem;
         }
@@ -312,7 +302,7 @@ if ($userEmail) {
                 </div>
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'tracking' ? 'active' : ''); ?>" href="user-order.php?tab=tracking">
-                        <i class="fas fa-truck me-1"></i> กำลังดำเนินการ
+                        <i class="fas fa-truck me-1"></i> ชำระเงินสำเร็จ & กำลังดำเนินการ
                     </a>
                 </div>
                 <div class="status-tab-item">

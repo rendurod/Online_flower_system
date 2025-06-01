@@ -27,7 +27,7 @@ if (!isset($_SESSION['adminid'])) {
     exit();
 }
 
-// ดึงข้อมูล username จากฐานข้อมูล
+// ดึงข้อมูล admin
 $admin_id = $_SESSION['adminid'];
 try {
     $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
@@ -48,7 +48,7 @@ try {
     exit();
 }
 
-// Fetch orders with status 0 (Awaiting Payment)
+// Fetch orders with status 1 or 3
 $orders = [];
 try {
     $stmt = $conn->prepare("
@@ -58,12 +58,12 @@ try {
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
-        WHERE o.Status = 0
+        WHERE o.Status IN (1, 3)
         ORDER BY o.PostingDate DESC
     ");
     $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    writeLog("Fetched " . count($orders) . " orders with status 0");
+    writeLog("Fetched " . count($orders) . " orders with status 1 or 3");
 } catch (PDOException $e) {
     writeLog("Error fetching orders: " . $e->getMessage());
     $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
@@ -80,7 +80,7 @@ try {
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>คำสั่งซื้อใหม่ - FlowerShop</title>
+    <title>คำสั่งซื้อที่รอดำเนินการ - FlowerShop</title>
 
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
@@ -101,7 +101,8 @@ try {
             font-weight: 500;
         }
 
-        .status-awaiting { background-color: #95a5a6; color: #fff; }
+        .status-paid { background-color: #2ecc71; color: #fff; }
+        .status-processing { background-color: #f1c40f; color: #fff; }
 
         .table th, .table td {
             vertical-align: middle;
@@ -118,15 +119,15 @@ try {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อใหม่</h1>
-                        <p class="d-none d-sm-inline-block btn btn-sm btn-pink shadow-sm">
-                            <i class="fas fa-search fa-sm text-white"></i> ค้นหาจากหมายเลขคำสั่งซื้อ
-                        </p>
+                        <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อที่รอดำเนินการ</h1>
+                        <a href="order-confirm.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                            <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังยืนยันการชำระเงิน
+                        </a>
                     </div>
 
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">ตารางข้อมูลคำสั่งซื้อใหม่</h6>
+                            <h6 class="m-0 font-weight-bold text-primary">ตารางข้อมูลคำสั่งซื้อ</h6>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -155,12 +156,20 @@ try {
                                                     <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
                                                     <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
                                                     <td>
-                                                        <span class="status-label status-awaiting">
-                                                            <i class="fas fa-clock me-1"></i> รอแจ้งชำระเงิน
+                                                        <?php
+                                                        $statusOptions = [
+                                                            1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
+                                                            3 => ['text' => 'กำลังดำเนินการ', 'class' => 'status-processing', 'icon' => 'fa-truck']
+                                                        ];
+                                                        $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1;
+                                                        ?>
+                                                        <span class="status-label <?php echo $statusOptions[$status]['class']; ?>">
+                                                            <i class="fas <?php echo $statusOptions[$status]['icon']; ?> me-1"></i>
+                                                            <?php echo $statusOptions[$status]['text']; ?>
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <a href="order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-pink">
+                                                        <a href="order-success-confirm.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-pink">
                                                             <i class="fas fa-eye me-1"></i> ดูรายละเอียด
                                                         </a>
                                                     </td>
@@ -168,7 +177,7 @@ try {
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อใหม่</td>
+                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อที่รอดำเนินการ</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>

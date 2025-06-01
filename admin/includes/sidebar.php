@@ -61,12 +61,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>คำสั่งซื้อสินค้า</span>
         </a>
     </li>
-    <li class="nav-item <?= ($currentPage == 'history.php') ? 'active' : '' ?>">
-        <a class="nav-link" href="history.php">
+    <li class="nav-item <?= ($currentPage == 'order-confirm.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="order-confirm.php">
             <i class="fas fa-fw fa-table"></i>
-            <span>ประวัติคำสั่งซื้อทั้งหมด</span>
+            <span>คำสั่งซื้อที่ชำระเงินสำเร็จ</span>
         </a>
     </li>
+    <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="order-success.php">
+            <i class="fas fa-fw fa-table"></i>
+            <span>คำสั่งซื้อที่กำลังดำเนินการ</span>
+        </a>
+    </li>
+    <li class="nav-item <?= ($currentPage == 'order-finish.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="order-finish.php">
+            <i class="fas fa-fw fa-table"></i>
+            <span>คำสั่งซื้อสำเร็จ</span>
+        </a>
+    </li>
+
 
     <!-- Heading -->
     <div class="sidebar-heading mt-2">
@@ -74,16 +87,22 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     </div>
 
     <!-- Nav Item -->
+    <li class="nav-item <?= ($currentPage == 'history.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="history.php">
+            <i class="fas fa-fw fa-table"></i>
+            <span>ประวัติคำสั่งซื้อทั้งหมด</span>
+        </a>
+    </li>
     <li class="nav-item <?= ($currentPage == 'members.php') ? 'active' : '' ?>">
         <a class="nav-link" href="members.php">
             <i class="fas fa-fw fa-table"></i>
             <span>ข้อมูลสมาชิก</span>
         </a>
     </li>
-    
+
     <!-- Divider -->
     <hr class="sidebar-divider">
-    
+
     <!-- Heading -->
     <div class="sidebar-heading mt-2">
         การจัดการข้อมูลการชำระเงิน
@@ -96,7 +115,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>เพิ่มการชำระเงิน</span>
         </a>
     </li>
-    
+
 
 
     <!-- Sidebar Toggler (Sidebar) -->
