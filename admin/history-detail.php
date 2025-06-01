@@ -3,18 +3,8 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
-// ฟังก์ชันสำหรับบันทึก log
-function writeLog($message) {
-    $logFile = 'debug.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $logMessage = "[$timestamp] $message\n";
-    file_put_contents($logFile, $logMessage, FILE_APPEND);
-}
-
 // ตรวจสอบการเชื่อมต่อฐานข้อมูล
-writeLog("Checking PDO connection");
 if (!$conn) {
-    writeLog("Database connection failed");
     $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
     header("Location: login.php");
     exit();
@@ -22,7 +12,6 @@ if (!$conn) {
 
 // ตรวจสอบว่ามี session adminid หรือไม่
 if (!isset($_SESSION['adminid'])) {
-    writeLog("No admin session found. Redirecting to login.php");
     header("Location: login.php");
     exit();
 }
@@ -36,13 +25,11 @@ try {
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$admin) {
-        writeLog("Admin not found for ID: $admin_id. Redirecting to login.php");
         $_SESSION['error'] = "ไม่พบข้อมูลผู้ดูแลระบบ";
         header("Location: login.php");
         exit();
     }
 } catch (PDOException $e) {
-    writeLog("Error fetching admin data: " . $e->getMessage());
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ดูแลระบบ: " . htmlspecialchars($e->getMessage());
     header("Location: login.php");
     exit();
@@ -52,7 +39,6 @@ try {
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
 
 if ($order_id <= 0) {
-    writeLog("Invalid order_id: $order_id. Redirecting to history.php");
     $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ระบุ";
     header("Location: history.php");
     exit();
@@ -77,14 +63,11 @@ try {
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$order) {
-        writeLog("Order not found for ID: $order_id. Redirecting to history.php");
         $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ระบุ";
         header("Location: history.php");
         exit();
     }
-    writeLog("Fetched order details: " . json_encode($order));
 } catch (PDOException $e) {
-    writeLog("Error fetching order details: " . $e->getMessage());
     $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
     header("Location: history.php");
     exit();

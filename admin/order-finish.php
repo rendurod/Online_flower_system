@@ -4,9 +4,7 @@ require_once 'config/db.php';
 require_once 'includes/functions.php';
 
 // ตรวจสอบการเชื่อมต่อฐานข้อมูล
-writeLog("Checking PDO connection");
 if (!$conn) {
-    writeLog("Database connection failed");
     $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
     header("Location: login.php");
     exit();
@@ -14,7 +12,6 @@ if (!$conn) {
 
 // ตรวจสอบว่ามี session adminid หรือไม่
 if (!isset($_SESSION['adminid'])) {
-    writeLog("No admin session found. Redirecting to login.php");
     header("Location: login.php");
     exit();
 }
@@ -28,13 +25,11 @@ try {
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$admin) {
-        writeLog("Admin not found for ID: $admin_id. Redirecting to login.php");
         $_SESSION['error'] = "ไม่พบข้อมูลผู้ดูแลระบบ";
         header("Location: login.php");
         exit();
     }
 } catch (PDOException $e) {
-    writeLog("Error fetching admin data: " . $e->getMessage());
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ดูแลระบบ: " . htmlspecialchars($e->getMessage());
     header("Location: login.php");
     exit();
@@ -44,10 +39,8 @@ try {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset($_POST['new_status'])) {
     $order_id = intval($_POST['order_id']);
     $new_status = intval($_POST['new_status']);
-    writeLog("Received POST request to update order $order_id to status $new_status");
 
     if (!in_array($new_status, [3, 4])) {
-        writeLog("Invalid status: $new_status");
         $_SESSION['error'] = 'สถานะที่เลือกไม่ถูกต้อง';
         header("Location: order-finish.php");
         exit();
@@ -62,15 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset(
         $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
         $result = $stmt->execute();
-        writeLog("SQL execution result for tbl_orders: " . ($result ? 'Success' : 'Failed'));
 
         $conn->commit();
-        writeLog("Transaction committed successfully for order $order_id");
         $_SESSION['success'] = 'อัปเดตสถานะคำสั่งซื้อเรียบร้อยแล้ว';
         header("Location: order-finish.php");
         exit();
     } catch (PDOException $e) {
-        writeLog("Transaction failed: " . $e->getMessage());
         $conn->rollBack();
         $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัปเดตสถานะ: ' . htmlspecialchars($e->getMessage());
         header("Location: order-finish.php");
@@ -93,9 +83,7 @@ try {
     ");
     $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    writeLog("Fetched " . count($orders) . " orders with status 3 or 4");
 } catch (PDOException $e) {
-    writeLog("Error fetching orders: " . $e->getMessage());
     $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
 }
 ?>

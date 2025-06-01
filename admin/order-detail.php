@@ -4,9 +4,7 @@ require_once 'config/db.php';
 require_once 'includes/functions.php';
 
 // ตรวจสอบการเชื่อมต่อฐานข้อมูล
-writeLog("Checking PDO connection");
 if (!$conn) {
-    writeLog("Database connection failed");
     $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
     header("Location: login.php");
     exit();
@@ -14,7 +12,6 @@ if (!$conn) {
 
 // ตรวจสอบว่ามี session adminid หรือไม่
 if (!isset($_SESSION['adminid'])) {
-    writeLog("No admin session found. Redirecting to login.php");
     header("Location: login.php");
     exit();
 }
@@ -28,13 +25,11 @@ try {
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$admin) {
-        writeLog("Admin not found for ID: $admin_id. Redirecting to login.php");
         $_SESSION['error'] = "ไม่พบข้อมูลผู้ดูแลระบบ";
         header("Location: login.php");
         exit();
     }
 } catch (PDOException $e) {
-    writeLog("Error fetching admin data: " . $e->getMessage());
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ดูแลระบบ: " . htmlspecialchars($e->getMessage());
     header("Location: login.php");
     exit();
@@ -44,7 +39,6 @@ try {
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
 
 if ($order_id <= 0) {
-    writeLog("Invalid order_id: $order_id. Redirecting to orders.php");
     $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ระบุ";
     header("Location: orders.php");
     exit();
@@ -68,14 +62,11 @@ try {
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$order) {
-        writeLog("Order not found for ID: $order_id. Redirecting to orders.php");
         $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ระบุ";
         header("Location: orders.php");
         exit();
     }
-    writeLog("Fetched order details: " . json_encode($order));
 } catch (PDOException $e) {
-    writeLog("Error fetching order details: " . $e->getMessage());
     $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
     header("Location: orders.php");
     exit();
@@ -83,7 +74,6 @@ try {
 
 // Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
-    writeLog("Received POST request: " . json_encode($_POST));
 
     $new_status = intval($_POST['status']);
     $message = isset($_POST['message']) ? trim($_POST['message']) : ($order['Message'] ?? '');
@@ -92,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     // ตรวจสอบสถานะใหม่
     $valid_statuses = [0, 1, 2]; // จำกัดเฉพาะสถานะ 0, 1, 2
     if (!in_array($new_status, $valid_statuses)) {
-        writeLog("Invalid new status: $new_status");
         $_SESSION['error'] = 'สถานะที่เลือกไม่ถูกต้อง';
         header("Location: order-detail.php?order_id=" . $order_id);
         exit();
@@ -100,83 +89,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
 
     // ตรวจสอบข้อความสำหรับสถานะแก้ไขการชำระเงิน
     if ($new_status == 2 && empty($message)) {
-        writeLog("Missing message for status 2 (Edited)");
         $_SESSION['error'] = 'กรุณาระบุข้อความสำหรับการแก้ไขการชำระเงิน';
         header("Location: order-detail.php?order_id=" . $order_id);
         exit();
     }
 
-    writeLog("Current status: $current_status, New status: $new_status, Message: $message");
 
     try {
-        writeLog("Starting transaction");
         $conn->beginTransaction();
 
         // Update order status and message
         $sql = "UPDATE tbl_orders SET Status = :status, Message = :message, LastupdateDate = CURRENT_TIMESTAMP WHERE ID = :id";
-        writeLog("Executing SQL for tbl_orders: $sql with params [status: $new_status, message: $message, id: $order_id]");
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
         $stmt->bindValue(':message', $message, PDO::PARAM_STR);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
         $result = $stmt->execute();
-        writeLog("SQL execution result for tbl_orders: " . ($result ? 'Success' : 'Failed'));
 
         // Fetch current stock quantity with locking
         $sql = "SELECT stock_quantity FROM tbl_flowers WHERE ID = :flower_id FOR UPDATE";
-        writeLog("Executing SQL to fetch stock: $sql with params [flower_id: {$order['FlowerId']}]");
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
         $stmt->execute();
         $current_stock = $stmt->fetchColumn();
-        writeLog("Current stock quantity for Flower ID {$order['FlowerId']}: $current_stock");
 
         // Define stock-affecting statuses
         $stock_reducing_statuses = [1]; // เฉพาะการชำระเงินสำเร็จ
         $order_quantity = $order['Quantity'];
-        writeLog("Order quantity: $order_quantity");
 
         // Handle stock adjustments
         if (!in_array($current_status, $stock_reducing_statuses) && in_array($new_status, $stock_reducing_statuses)) {
-            writeLog("Moving to stock-reducing status. Checking stock...");
             if ($current_stock >= $order_quantity) {
                 $new_stock = $current_stock - $order_quantity;
                 $sql = "UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id";
-                writeLog("Reducing stock. Executing SQL: $sql with params [stock: $new_stock, flower_id: {$order['FlowerId']}]");
                 $stmt = $conn->prepare($sql);
                 $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
                 $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
                 $result = $stmt->execute();
-                writeLog("SQL execution result for tbl_flowers: " . ($result ? 'Success' : 'Failed'));
             } else {
-                writeLog("Insufficient stock. Current stock: $current_stock, Required: $order_quantity");
                 $conn->rollBack();
                 $_SESSION['error'] = 'จำนวนสต็อกไม่เพียงพอสำหรับคำสั่งซื้อนี้';
                 header("Location: order-detail.php?order_id=" . $order_id);
                 exit();
             }
         } elseif (in_array($current_status, $stock_reducing_statuses) && !in_array($new_status, $stock_reducing_statuses)) {
-            writeLog("Moving to non-stock-reducing status. Restoring stock...");
             $new_stock = $current_stock + $order_quantity;
             $sql = "UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id";
-            writeLog("Restoring stock. Executing SQL: $sql with params [stock: $new_stock, flower_id: {$order['FlowerId']}]");
             $stmt = $conn->prepare($sql);
             $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
             $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
             $result = $stmt->execute();
-            writeLog("SQL execution result for tbl_flowers: " . ($result ? 'Success' : 'Failed'));
         } else {
-            writeLog("No stock adjustment needed.");
         }
 
         $conn->commit();
-        writeLog("Transaction committed successfully");
         $_SESSION['success'] = 'อัปเดตสถานะและสต็อกเรียบร้อยแล้ว';
         // แก้ไขจาก header redirect ไปใช้ SweetAlert2 ใน JavaScript
         // header("Location: order-detail.php?order_id=" . $order_id);
         // exit();
     } catch (PDOException $e) {
-        writeLog("Transaction failed: " . $e->getMessage());
         $conn->rollBack();
         $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' . htmlspecialchars($e->getMessage());
         header("Location: order-detail.php?order_id=" . $order_id);
