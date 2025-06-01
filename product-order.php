@@ -71,15 +71,8 @@ $payment_stmt->execute();
 $payment_data = $payment_stmt->fetch(PDO::FETCH_ASSOC);
 
 // Check if QR Code image exists, otherwise use default
-$qrCodeImagePath = !empty($payment_data['QRCodeImage']) && file_exists("admin/uploads/qrcodes/" . $payment_data['QRCodeImage'])
-    ? "admin/uploads/qrcodes/" . htmlspecialchars($payment_data['QRCodeImage'])
-    : "assets/img/default-qrcode.jpg";
-$accountName = $payment_data ? htmlspecialchars($payment_data['AccountName']) : 'ชื่อบัญชี (ไม่พบข้อมูล)';
-$bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccountNumber']) : 'เลขบัญชี (ไม่พบข้อมูล)';
-
-// Check if QR Code image exists, otherwise use default
-$qrCodeImagePath = !empty($payment_data['QRCodeImage']) && file_exists("admin/uploads/qrcodes/" . $payment_data['QRCodeImage'])
-    ? "admin/uploads/qrcodes/" . htmlspecialchars($payment_data['QRCodeImage'])
+$qrCodeImagePath = !empty($payment_data['QRCodeImage']) && file_exists("uploads/qrcodes/" . $payment_data['QRCodeImage'])
+    ? "uploads/qrcodes/" . htmlspecialchars($payment_data['QRCodeImage'])
     : "assets/img/default-qrcode.jpg";
 $accountName = $payment_data ? htmlspecialchars($payment_data['AccountName']) : 'ชื่อบัญชี (ไม่พบข้อมูล)';
 $bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccountNumber']) : 'เลขบัญชี (ไม่พบข้อมูล)';
