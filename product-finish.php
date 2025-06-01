@@ -311,7 +311,7 @@ if (!$sender_data) {
                 <a href="products.php" class="btn-continue">
                     <i class="fas fa-shopping-bag"></i> ซื้อสินค้าต่อ
                 </a>
-                <a href="user-order.php" class="btn-view-orders">
+                <a href="user-order.php?tab=awaiting" class="btn-view-orders">
                     <i class="fas fa-list"></i> ดูคำสั่งซื้อ
                 </a>
             </div>
