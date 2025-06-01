@@ -932,6 +932,67 @@ section {
     border-color: #ff4d6d !important;
 }
 
+/* Existing styles remain the same */
+.step-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0;
+    position: relative;
+    gap: 3rem;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100px;
+}
+
+.circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e8e8e8;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    z-index: 1;
+}
+
+.step.active .circle {
+    background-color: var(--primary-pink);
+    color: var(--white);
+}
+
+.label {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #b0b0b0;
+}
+
+.active-label {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.line {
+    position: absolute;
+    top: 20px;
+    left: -50%;
+    width: 100%;
+    height: 3px;
+    background-color: #e8e8e8;
+    z-index: 0;
+}
+
+.step:first-child .line {
+    display: none;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .footer {
