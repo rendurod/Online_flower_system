@@ -108,6 +108,37 @@ if ($userEmail) {
             font-weight: 500;
         }
 
+        .status-tabs {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #e8e8e8;
+            margin-top: 1rem;
+        }
+
+        .status-tab-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .status-tab-link {
+            display: block;
+            padding: 0.8rem;
+            font-size: 1.4rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .status-tab-link:hover {
+            color: var(--primary-pink);
+        }
+
+        .status-tab-link.active {
+            color: var(--primary-pink);
+            border-bottom: 2px solid var(--primary-pink);
+            font-weight: 500;
+        }
+
         .tab-content {
             margin-top: 2rem;
         }
@@ -189,18 +220,37 @@ if ($userEmail) {
         }
 
         .status-awaiting {
-            background-color: #ffeaa7;
-            color: #d63031;
+            background-color: #95a5a6;
+            color: #fff;
+        }
+
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .status-edited {
+            background-color: #e74c3c;
+            color: #fff;
         }
 
         .status-processing {
-            background-color: #74b9ff;
-            color: #2d3436;
+            background-color: #f1c40f;
+            color: #fff;
         }
 
         .status-completed {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: #7bed9f;
+            color: #fff;
+        }
+
+        .message-admin {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            margin-top: 0.5rem;
+            font-size: 1.4rem;
         }
 
         .btn-details {
@@ -252,17 +302,22 @@ if ($userEmail) {
             <div class="status-tabs">
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'awaiting' ? 'active' : ''); ?>" href="user-order.php?tab=awaiting">
-                        รอแจ้งชำระเงิน
+                        <i class="fas fa-clock me-1"></i> รอแจ้งชำระเงิน
+                    </a>
+                </div>
+                <div class="status-tab-item">
+                    <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'edited' ? 'active' : ''); ?>" href="user-order.php?tab=edited">
+                        <i class="fas fa-edit me-1"></i> แก้ไขการชำระเงิน
                     </a>
                 </div>
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'tracking' ? 'active' : ''); ?>" href="user-order.php?tab=tracking">
-                        กำลังดำเนินการ
+                        <i class="fas fa-truck me-1"></i> กำลังดำเนินการ
                     </a>
                 </div>
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (!isset($_GET['tab']) || $_GET['tab'] == 'completed' ? 'active' : ''); ?>" href="user-order.php?tab=completed">
-                        คำสั่งซื้อสำเร็จ
+                        <i class="fas fa-check-circle me-1"></i> คำสั่งซื้อสำเร็จ
                     </a>
                 </div>
             </div>
@@ -311,11 +366,49 @@ if ($userEmail) {
                     <?php endif; ?>
                 </div>
 
+                <!-- Edited Payment Tab -->
+                <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'edited' ? 'active' : ''); ?>" id="edited">
+                    <h4 class="tab-title">แก้ไขการชำระเงิน</h4>
+                    <?php if ($orders): ?>
+                        <?php $editedOrders = array_filter($orders, function($order) { return $order['Status'] == 2; }); ?>
+                        <?php if (!empty($editedOrders)): ?>
+                            <?php foreach ($editedOrders as $order): ?>
+                                <div class="order-item">
+                                    <div class="order-image">
+                                        <img src="<?php echo !empty($order['image']) && file_exists("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                    </div>
+                                    <div class="order-info">
+                                        <div class="order-header">
+                                            <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                            <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                        </div>
+                                        <div class="order-details">
+                                            <p><strong>ดอกไม้:</strong> <?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></p>
+                                            <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
+                                            <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
+                                            <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
+                                            <p><strong>สถานะ:</strong> <span class="status-label status-edited"><i class="fas fa-edit me-1"></i>แก้ไขการชำระเงิน</span></p>
+                                            <?php if (!empty($order['Message'])): ?>
+                                                <p class="message-admin"><strong>ข้อความจากแอดมิน:</strong> <?php echo htmlspecialchars($order['Message']); ?></p>
+                                            <?php endif; ?>
+                                            <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="no-data-alert">ไม่มีคำสั่งซื้อที่ต้องแก้ไขการชำระเงิน</div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่ต้องแก้ไขการชำระเงิน</div>
+                    <?php endif; ?>
+                </div>
+
                 <!-- Processing Tab -->
                 <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'tracking' ? 'active' : ''); ?>" id="tracking">
                     <h4 class="tab-title">กำลังดำเนินการ</h4>
                     <?php if ($orders): ?>
-                        <?php $trackingOrders = array_filter($orders, function($order) { return $order['Status'] == 1; }); ?>
+                        <?php $trackingOrders = array_filter($orders, function($order) { return in_array($order['Status'], [1, 3]); }); ?>
                         <?php if (!empty($trackingOrders)): ?>
                             <?php foreach ($trackingOrders as $order): ?>
                                 <div class="order-item">
@@ -332,7 +425,12 @@ if ($userEmail) {
                                             <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
-                                            <p><strong>สถานะ:</strong> <span class="status-label status-processing"><i class="fas fa-truck me-1"></i>กำลังดำเนินการ</span></p>
+                                            <p><strong>สถานะ:</strong> 
+                                                <span class="status-label <?php echo $order['Status'] == 1 ? 'status-paid' : 'status-processing'; ?>">
+                                                    <i class="fas <?php echo $order['Status'] == 1 ? 'fa-check' : 'fa-truck'; ?> me-1"></i>
+                                                    <?php echo $order['Status'] == 1 ? 'การชำระเงินสำเร็จ' : 'กำลังดำเนินการ'; ?>
+                                                </span>
+                                            </p>
                                             <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
                                         </div>
                                     </div>
@@ -350,7 +448,7 @@ if ($userEmail) {
                 <div class="tab-pane <?php echo (!isset($_GET['tab']) || $_GET['tab'] == 'completed' ? 'active' : ''); ?>" id="completed">
                     <h4 class="tab-title">คำสั่งซื้อสำเร็จ</h4>
                     <?php if ($orders): ?>
-                        <?php $completedOrders = array_filter($orders, function($order) { return $order['Status'] == 2; }); ?>
+                        <?php $completedOrders = array_filter($orders, function($order) { return $order['Status'] == 4; }); ?>
                         <?php if (!empty($completedOrders)): ?>
                             <?php foreach ($completedOrders as $order): ?>
                                 <div class="order-item">
@@ -367,7 +465,7 @@ if ($userEmail) {
                                             <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
-                                            <p><strong>สถานะ:</strong> <span class="status-label status-completed"><i class="fas fa-check-circle me-1"></i>สำเร็จ</span></p>
+                                            <p><strong>สถานะ:</strong> <span class="status-label status-completed"><i class="fas fa-check-circle me-1"></i>คำสั่งซื้อสำเร็จ</span></p>
                                             <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
                                         </div>
                                     </div>
