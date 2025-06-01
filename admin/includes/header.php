@@ -80,7 +80,7 @@
                     โปร์ไฟล์
                 </a>
 
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="address-store.php">
                     <i class="fas fa-store fa-sm fa-fw mr-2 text-gray-400"></i>
                     ที่อยู่ของร้านค้า
                 </a>

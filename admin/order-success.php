@@ -105,9 +105,7 @@ try {
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อที่รอดำเนินการ</h1>
-                        <a href="order-confirm.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังยืนยันการชำระเงิน
-                        </a>
+                        
                     </div>
 
                     <div class="card shadow mb-4">
