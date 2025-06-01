@@ -316,6 +316,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                         <td class="stock-highlight"><?php echo htmlspecialchars($order['stock_quantity'] ?? 'ไม่ระบุ'); ?> ชิ้น</td>
                                     </tr>
                                     <tr>
+                                        <th>รูปภาพสินค้า</th>
+                                        <td class="order-image">
+                                            <img src="<?php echo !empty($order['image']) && file_exists("uploads/flowers/" . $order['image']) ? "uploads/flowers/" . htmlspecialchars($order['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <th>สลิปการชำระเงิน</th>
                                         <td>
                                             <?php if (!empty($order['Image'])): ?>
@@ -323,12 +329,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                             <?php else: ?>
                                                 ไม่มีสลิป
                                             <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>รูปภาพสินค้า</th>
-                                        <td class="order-image">
-                                            <img src="<?php echo !empty($order['image']) && file_exists("uploads/flowers/" . $order['image']) ? "uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
                                         </td>
                                     </tr>
                                     <?php if (!empty($order['Message'])): ?>
