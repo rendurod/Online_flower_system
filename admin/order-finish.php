@@ -147,7 +147,6 @@ try {
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อที่เสร็จสิ้น</h1>
-                        
                     </div>
 
                     <div class="card shadow mb-4">
@@ -175,7 +174,11 @@ try {
                                             <?php foreach ($orders as $order): ?>
                                                 <tr>
                                                     <td><?php echo $index++; ?></td>
-                                                    <td><?php echo htmlspecialchars($order['BookingNumber']); ?></td>
+                                                    <td>
+                                                        <a href="history-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="text-primary">
+                                                            <?php echo htmlspecialchars($order['BookingNumber']); ?>
+                                                        </a>
+                                                    </td>
                                                     <td><?php echo htmlspecialchars($order['CustomerName'] ?? 'ไม่ระบุ'); ?></td>
                                                     <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
                                                     <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
@@ -237,14 +240,10 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
-
         // SweetAlert2 confirmation for status change
         document.querySelectorAll('.status-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                // console.log('Status form submit triggered');
                 const form = this;
                 const newStatus = form.querySelector('input[name="new_status"]').value;
                 const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังดำเนิน';
@@ -260,17 +259,13 @@ try {
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // console.log('Form submitted to change status to: ' + newStatus);
                         form.submit();
-                    } else {
-                        // console.log('Form submission cancelled');
                     }
                 });
             });
         });
 
         <?php if (isset($_SESSION['success'])): ?>
-            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -282,7 +277,6 @@ try {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',

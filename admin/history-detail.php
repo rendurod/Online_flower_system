@@ -152,9 +152,9 @@ try {
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อ: #<?php echo htmlspecialchars($order['BookingNumber']); ?></h1>
-                        <a href="history.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                        <!-- <a href="history.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังประวัติคำสั่งซื้อ
-                        </a>
+                        </a> -->
                     </div>
 
                     <div class="card shadow mb-4 order-detail-container">
