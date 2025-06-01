@@ -282,11 +282,11 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
+        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
+        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
 
         <?php if (isset($_SESSION['success'])): ?>
-            console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
+            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -300,7 +300,7 @@ try {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
+            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',

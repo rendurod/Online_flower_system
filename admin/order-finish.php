@@ -205,7 +205,7 @@ try {
                                                     <td>
                                                         <?php
                                                         $statusOptions = [
-                                                            3 => ['text' => 'กำลังดำเนินการ', 'class' => 'status-processing', 'icon' => 'fa-truck'],
+                                                            3 => ['text' => 'กำลังดำเนิน', 'class' => 'status-processing', 'icon' => 'fa-truck'],
                                                             4 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle']
                                                         ];
                                                         $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 3;
@@ -221,7 +221,7 @@ try {
                                                             <input type="hidden" name="new_status" value="<?php echo $order['Status'] == 3 ? 4 : 3; ?>">
                                                             <button type="submit" class="btn btn-toggle-status <?php echo $order['Status'] == 3 ? 'btn-to-completed' : 'btn-to-processing'; ?>">
                                                                 <i class="fas <?php echo $order['Status'] == 3 ? 'fa-check' : 'fa-undo'; ?> me-1"></i>
-                                                                <?php echo $order['Status'] == 3 ? 'เปลี่ยนเป็นสำเร็จ' : 'เปลี่ยนเป็นกำลังดำเนินการ'; ?>
+                                                                <?php echo $order['Status'] == 3 ? 'เปลี่ยนเป็นสำเร็จ' : 'เปลี่ยนเป็นกำลังดำเนิน'; ?>
                                                             </button>
                                                         </form>
                                                     </td>
@@ -259,17 +259,17 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
+        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
+        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
 
         // SweetAlert2 confirmation for status change
         document.querySelectorAll('.status-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                console.log('Status form submit triggered');
+                // console.log('Status form submit triggered');
                 const form = this;
                 const newStatus = form.querySelector('input[name="new_status"]').value;
-                const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังดำเนินการ';
+                const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังดำเนิน';
 
                 Swal.fire({
                     title: 'ยืนยันการเปลี่ยนสถานะ',
@@ -282,17 +282,17 @@ try {
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        console.log('Form submitted to change status to: ' + newStatus);
+                        // console.log('Form submitted to change status to: ' + newStatus);
                         form.submit();
                     } else {
-                        console.log('Form submission cancelled');
+                        // console.log('Form submission cancelled');
                     }
                 });
             });
         });
 
         <?php if (isset($_SESSION['success'])): ?>
-            console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
+            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -304,7 +304,7 @@ try {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
+            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',

@@ -379,20 +379,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
+        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
+        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
 
         // SweetAlert2 confirmation before updating status
         document.getElementById('updateStatusForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Form submit event triggered');
+            // console.log('Form submit event triggered');
             const form = this;
             const selectedStatus = document.getElementById('status').value;
             const statusText = document.getElementById('status').options[document.getElementById('status').selectedIndex].text.trim();
             const messageInput = document.getElementById('messageInput');
 
             if (selectedStatus === '2' && !messageInput.value.trim()) {
-                console.log('Message required for status 2 but not provided');
+                // console.log('Message required for status 2 but not provided');
                 Swal.fire({
                     icon: 'error',
                     title: 'ข้อผิดพลาด',
@@ -404,7 +404,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             }
 
             let confirmMessage = `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`;
-            console.log('Form data before submit:', new FormData(form));
+            // console.log('Form data before submit:', new FormData(form));
             Swal.fire({
                 title: 'ยืนยันการเปลี่ยนสถานะ',
                 text: confirmMessage,
@@ -416,10 +416,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    console.log('Form submitted with status: ' + selectedStatus);
+                    // console.log('Form submitted with status: ' + selectedStatus);
                     form.submit();
                 } else {
-                    console.log('Form submission cancelled');
+                    // console.log('Form submission cancelled');
                 }
             });
         });
@@ -428,7 +428,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         function updateMessageInputVisibility() {
             const status = document.getElementById('status').value;
             const messageInput = document.getElementById('messageInput');
-            console.log('Status changed to: ' + status);
+            // console.log('Status changed to: ' + status);
             if (status === '2') {
                 messageInput.style.display = 'block';
                 messageInput.required = true;
@@ -443,12 +443,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
 
         // Initial check for message input visibility
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded');
+            // console.log('DOM fully loaded');
             updateMessageInputVisibility();
         });
 
         <?php if (isset($_SESSION['success'])): ?>
-            console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
+            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -462,7 +462,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
+            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',

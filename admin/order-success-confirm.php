@@ -395,13 +395,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
+        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
+        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
 
         // SweetAlert2 confirmation before updating status
         document.getElementById('updateStatusForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Form submit event triggered');
+            // console.log('Form submit event triggered');
             const form = this;
             const selectedStatus = document.getElementById('status').value;
             const statusText = document.getElementById('status').options[document.getElementById('status').selectedIndex].text.trim();
@@ -411,7 +411,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 confirmMessage += `\nสต็อกสินค้าจะถูกลดลงตามจำนวนที่สั่งซื้อ (${<?php echo $order['Quantity']; ?>} ชิ้น)`;
             }
 
-            console.log('Form data before submit:', new FormData(form));
+            // console.log('Form data before submit:', new FormData(form));
             Swal.fire({
                 title: 'ยืนยันการเปลี่ยนสถานะ',
                 text: confirmMessage,
@@ -423,17 +423,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    console.log('Form submitted with status: ' + selectedStatus);
+                    // console.log('Form submitted with status: ' + selectedStatus);
                     form.submit();
                 } else {
-                    console.log('Form submission cancelled');
+                    // console.log('Form submission cancelled');
                 }
             });
         });
 
         // Show/hide message input based on status
         document.getElementById('status').addEventListener('change', function() {
-            console.log('Status changed to: ' + this.value);
+            // console.log('Status changed to: ' + this.value);
             const messageInput = document.getElementById('messageInput');
             messageInput.style.display = 'none';
             messageInput.required = false;
@@ -442,14 +442,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
 
         // Initial check for message input visibility
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded');
+            // console.log('DOM fully loaded');
             const messageInput = document.getElementById('messageInput');
             messageInput.style.display = 'none';
             messageInput.required = false;
         });
 
         <?php if (isset($_SESSION['success'])): ?>
-            console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
+            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -463,7 +463,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
+            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',

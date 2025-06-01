@@ -1166,3 +1166,95 @@
 [2025-06-01 13:26:06] Fetched order details: {"ID":4,"BookingNumber":3348875695,"UserEmail":"test@gmail.com","FlowerId":9,"Quantity":1,"DeliveryDate":"2025-06-08","Message":"","Image":"683b3af5d4fd3-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":4,"PostingDate":"2025-06-01 00:23:01","LastupdateDate":"2025-06-01 20:07:45","CustomerName":"testHee testJa","CustomerAddress":"\u0e1a\u0e49\u0e32\u0e19\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 11\/1 \u0e21.11 \u0e15.\u0e1a\u0e34\u0e07 \u0e2d.\u0e42\u0e19\u0e19\u0e2a\u0e39\u0e07 \u0e08.\u0e19\u0e04\u0e23\u0e23\u0e32\u0e0a\u0e2a\u0e35\u0e21\u0e32 30160","CustomerContact":"0931481480","flower_name":"\u0e14\u0e2d\u0e01\u0e04\u0e32\u0e23\u0e4c\u0e40\u0e19\u0e0a\u0e31\u0e48\u0e19\u0e0a\u0e21\u0e1e\u0e39","price":"100.00","image":"6839584499ed6.jpg","stock_quantity":24}
 [2025-06-01 13:26:08] Checking PDO connection
 [2025-06-01 13:26:08] Fetched 5 orders with filter status: all
+[2025-06-01 13:27:38] Checking PDO connection
+[2025-06-01 13:27:38] Fetched 1 orders with status 0
+[2025-06-01 13:27:40] Checking PDO connection
+[2025-06-01 13:27:40] Fetched 2 orders with status 1 or 2
+[2025-06-01 13:27:41] Checking PDO connection
+[2025-06-01 13:27:41] Fetched 1 orders with status 0
+[2025-06-01 13:28:40] Checking PDO connection
+[2025-06-01 13:28:40] Fetched 1 orders with status 0
+[2025-06-01 13:28:41] Checking PDO connection
+[2025-06-01 13:28:41] Fetched 2 orders with status 1 or 2
+[2025-06-01 13:28:42] Checking PDO connection
+[2025-06-01 13:28:42] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:28:42] Checking PDO connection
+[2025-06-01 13:28:42] Fetched 3 orders with status 1 or 3
+[2025-06-01 13:28:44] Checking PDO connection
+[2025-06-01 13:28:44] Fetched order details: {"ID":5,"BookingNumber":4660897143,"UserEmail":"test@gmail.com","FlowerId":8,"Quantity":2,"DeliveryDate":"2025-06-09","Message":"","Image":"683bbe3d4353a-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":1,"PostingDate":"2025-06-01 09:43:09","LastupdateDate":"2025-06-01 20:17:03","CustomerName":"testHee testJa","CustomerAddress":"\u0e1a\u0e49\u0e32\u0e19\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 11\/1 \u0e21.11 \u0e15.\u0e1a\u0e34\u0e07 \u0e2d.\u0e42\u0e19\u0e19\u0e2a\u0e39\u0e07 \u0e08.\u0e19\u0e04\u0e23\u0e23\u0e32\u0e0a\u0e2a\u0e35\u0e21\u0e32 30160","flower_name":"\u0e25\u0e34\u0e25\u0e25\u0e35\u0e48\u0e02\u0e32\u0e27","price":"180.00","stock_quantity":3}
+[2025-06-01 13:28:47] Checking PDO connection
+[2025-06-01 13:28:47] Fetched 3 orders with status 1 or 3
+[2025-06-01 13:28:48] Checking PDO connection
+[2025-06-01 13:28:48] Fetched 5 orders with filter status: all
+[2025-06-01 13:28:51] Checking PDO connection
+[2025-06-01 13:28:51] Fetched 1 orders with filter status: 0
+[2025-06-01 13:28:53] Checking PDO connection
+[2025-06-01 13:28:53] Fetched 5 orders with filter status: all
+[2025-06-01 13:28:55] Checking PDO connection
+[2025-06-01 13:28:55] Fetched order details: {"ID":2,"BookingNumber":9657998801,"UserEmail":"test@gmail.com","FlowerId":6,"Quantity":0,"DeliveryDate":"2025-06-08","Message":"","Image":"683b3a8203488-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":1,"PostingDate":"2025-06-01 00:21:06","LastupdateDate":"2025-06-01 20:12:38","CustomerName":"testHee testJa","CustomerAddress":"\u0e1a\u0e49\u0e32\u0e19\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 11\/1 \u0e21.11 \u0e15.\u0e1a\u0e34\u0e07 \u0e2d.\u0e42\u0e19\u0e19\u0e2a\u0e39\u0e07 \u0e08.\u0e19\u0e04\u0e23\u0e23\u0e32\u0e0a\u0e2a\u0e35\u0e21\u0e32 30160","CustomerContact":"0931481480","flower_name":"\u0e01\u0e38\u0e2b\u0e25\u0e32\u0e1a\u0e41\u0e14\u0e07","price":"150.00","image":"6839587379dc7.jpg","stock_quantity":20}
+[2025-06-01 13:28:56] Checking PDO connection
+[2025-06-01 13:28:56] Fetched 5 orders with filter status: all
+[2025-06-01 13:29:10] Checking PDO connection
+[2025-06-01 13:29:10] Fetched 2 orders with status 1 or 2
+[2025-06-01 13:29:12] Checking PDO connection
+[2025-06-01 13:29:12] Fetched 3 orders with status 1 or 3
+[2025-06-01 13:29:13] Checking PDO connection
+[2025-06-01 13:29:13] Fetched 1 orders with status 0
+[2025-06-01 13:29:13] Checking PDO connection
+[2025-06-01 13:29:13] Fetched 2 orders with status 1 or 2
+[2025-06-01 13:29:14] Checking PDO connection
+[2025-06-01 13:29:14] Fetched order details: {"ID":5,"BookingNumber":4660897143,"UserEmail":"test@gmail.com","FlowerId":8,"Quantity":2,"DeliveryDate":"2025-06-09","Message":"","Image":"683bbe3d4353a-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":1,"PostingDate":"2025-06-01 09:43:09","LastupdateDate":"2025-06-01 20:17:03","CustomerName":"testHee testJa","flower_name":"\u0e25\u0e34\u0e25\u0e25\u0e35\u0e48\u0e02\u0e32\u0e27","price":"180.00"}
+[2025-06-01 13:29:19] Checking PDO connection
+[2025-06-01 13:29:19] Fetched order details: {"ID":5,"BookingNumber":4660897143,"UserEmail":"test@gmail.com","FlowerId":8,"Quantity":2,"DeliveryDate":"2025-06-09","Message":"","Image":"683bbe3d4353a-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":1,"PostingDate":"2025-06-01 09:43:09","LastupdateDate":"2025-06-01 20:17:03","CustomerName":"testHee testJa","flower_name":"\u0e25\u0e34\u0e25\u0e25\u0e35\u0e48\u0e02\u0e32\u0e27","price":"180.00"}
+[2025-06-01 13:29:19] Received POST request: {"status":"2","message":"\u0e2a\u0e25\u0e34\u0e1b\u0e44\u0e21\u0e48\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07"}
+[2025-06-01 13:29:19] Current status: 1, New status: 2, Message: สลิปไม่ถูกต้อง
+[2025-06-01 13:29:19] Starting transaction
+[2025-06-01 13:29:19] Executing SQL for tbl_orders: UPDATE tbl_orders SET Status = :status, Message = :message, LastupdateDate = CURRENT_TIMESTAMP WHERE ID = :id with params [status: 2, message: สลิปไม่ถูกต้อง, id: 5]
+[2025-06-01 13:29:19] SQL execution result for tbl_orders: Success
+[2025-06-01 13:29:19] Transaction committed successfully
+[2025-06-01 13:29:19] Checking PDO connection
+[2025-06-01 13:29:19] Fetched order details: {"ID":5,"BookingNumber":4660897143,"UserEmail":"test@gmail.com","FlowerId":8,"Quantity":2,"DeliveryDate":"2025-06-09","Message":"\u0e2a\u0e25\u0e34\u0e1b\u0e44\u0e21\u0e48\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07","Image":"683bbe3d4353a-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":2,"PostingDate":"2025-06-01 09:43:09","LastupdateDate":"2025-06-01 20:29:19","CustomerName":"testHee testJa","flower_name":"\u0e25\u0e34\u0e25\u0e25\u0e35\u0e48\u0e02\u0e32\u0e27","price":"180.00"}
+[2025-06-01 13:29:20] Checking PDO connection
+[2025-06-01 13:29:20] Fetched 2 orders with status 1 or 2
+[2025-06-01 13:29:26] Checking PDO connection
+[2025-06-01 13:29:26] Fetched 1 orders with status 0
+[2025-06-01 13:29:27] Checking PDO connection
+[2025-06-01 13:29:27] Fetched 2 orders with status 1 or 3
+[2025-06-01 13:29:27] Checking PDO connection
+[2025-06-01 13:29:27] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:30:35] Checking PDO connection
+[2025-06-01 13:30:35] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:30:35] Checking PDO connection
+[2025-06-01 13:30:35] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:30:36] Checking PDO connection
+[2025-06-01 13:30:36] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:30:36] Checking PDO connection
+[2025-06-01 13:30:36] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:31:04] Checking PDO connection
+[2025-06-01 13:31:04] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:31:04] Checking PDO connection
+[2025-06-01 13:31:04] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:31:04] Checking PDO connection
+[2025-06-01 13:31:04] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:31:05] Checking PDO connection
+[2025-06-01 13:31:05] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:31:05] Checking PDO connection
+[2025-06-01 13:31:05] Fetched 2 orders with status 3 or 4
+[2025-06-01 13:31:07] Checking PDO connection
+[2025-06-01 13:31:07] Fetched 5 orders with filter status: all
+[2025-06-01 13:31:11] Checking PDO connection
+[2025-06-01 13:31:11] Fetched 1 orders with status 0
+[2025-06-01 13:31:13] Checking PDO connection
+[2025-06-01 13:31:13] Fetched 2 orders with status 1 or 2
+[2025-06-01 13:32:26] Checking PDO connection
+[2025-06-01 13:32:26] Fetched 2 orders with status 1 or 3
+[2025-06-01 13:32:28] Checking PDO connection
+[2025-06-01 13:32:28] Fetched order details: {"ID":3,"BookingNumber":9120249985,"UserEmail":"test@gmail.com","FlowerId":8,"Quantity":5,"DeliveryDate":"2025-06-08","Message":"","Image":"683b3ad6084aa-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":3,"PostingDate":"2025-06-01 00:22:30","LastupdateDate":"2025-06-01 20:12:26","CustomerName":"testHee testJa","CustomerAddress":"\u0e1a\u0e49\u0e32\u0e19\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 11\/1 \u0e21.11 \u0e15.\u0e1a\u0e34\u0e07 \u0e2d.\u0e42\u0e19\u0e19\u0e2a\u0e39\u0e07 \u0e08.\u0e19\u0e04\u0e23\u0e23\u0e32\u0e0a\u0e2a\u0e35\u0e21\u0e32 30160","flower_name":"\u0e25\u0e34\u0e25\u0e25\u0e35\u0e48\u0e02\u0e32\u0e27","price":"180.00","stock_quantity":3}
+[2025-06-01 13:32:33] Checking PDO connection
+[2025-06-01 13:32:33] Fetched 2 orders with status 1 or 3
+[2025-06-01 13:32:34] Checking PDO connection
+[2025-06-01 13:32:34] Fetched 2 orders with status 1 or 2
+[2025-06-01 13:32:35] Checking PDO connection
+[2025-06-01 13:32:35] Fetched order details: {"ID":5,"BookingNumber":4660897143,"UserEmail":"test@gmail.com","FlowerId":8,"Quantity":2,"DeliveryDate":"2025-06-09","Message":"\u0e2a\u0e25\u0e34\u0e1b\u0e44\u0e21\u0e48\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07","Image":"683bbe3d4353a-ChatGPT Image 31 \u0e1e.\u0e04. 2568 21_11_33.png","Status":2,"PostingDate":"2025-06-01 09:43:09","LastupdateDate":"2025-06-01 20:29:19","CustomerName":"testHee testJa","flower_name":"\u0e25\u0e34\u0e25\u0e25\u0e35\u0e48\u0e02\u0e32\u0e27","price":"180.00"}
+[2025-06-01 13:32:39] Checking PDO connection
+[2025-06-01 13:32:39] Fetched 2 orders with status 1 or 2
