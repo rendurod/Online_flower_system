@@ -95,12 +95,7 @@
                                 <span>เปลี่ยนรหัสผ่าน</span>
                             </a>
                         </li>
-                        <li>
-                            <a href="admin/index.php" class="dropdown-item">
-                                <i class="fas fa-key"></i>
-                                <span>Admin</span>
-                            </a>
-                        </li>
+                        
                         <li class="dropdown-divider"></li>
                         <li>
                             <a href="javascript:void(0);" class="dropdown-item logout-item" onclick="confirmLogout()">

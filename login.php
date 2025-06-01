@@ -59,7 +59,6 @@ if (isset($_SESSION['user_login'])) {
                         </div>
 
                         <button type="submit" class="btn-login mt-5">เข้าสู่ระบบ</button>
-                        <a href="admin/index.php" class="">admin</a>
                     </form>
 
                 </div>
