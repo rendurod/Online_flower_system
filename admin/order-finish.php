@@ -3,14 +3,6 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
-// ฟังก์ชันสำหรับบันทึก log
-function writeLog($message) {
-    $logFile = 'debug.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $logMessage = "[$timestamp] $message\n";
-    file_put_contents($logFile, $logMessage, FILE_APPEND);
-}
-
 // ตรวจสอบการเชื่อมต่อฐานข้อมูล
 writeLog("Checking PDO connection");
 if (!$conn) {

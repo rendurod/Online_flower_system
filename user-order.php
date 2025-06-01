@@ -234,6 +234,11 @@ if ($userEmail) {
             color: #fff;
         }
 
+        .status-new-slip {
+            background-color: #3498db;
+            color: #fff;
+        }
+
         .message-admin {
             background-color: #f8d7da;
             color: #721c24;
@@ -253,6 +258,7 @@ if ($userEmail) {
             cursor: pointer;
             transition: var(--transition);
             margin-top: 0.5rem;
+            text-decoration: none;
         }
 
         .btn-details:hover {
@@ -360,7 +366,7 @@ if ($userEmail) {
                 <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'edited' ? 'active' : ''); ?>" id="edited">
                     <h4 class="tab-title">แก้ไขการชำระเงิน</h4>
                     <?php if ($orders): ?>
-                        <?php $editedOrders = array_filter($orders, function($order) { return $order['Status'] == 2; }); ?>
+                        <?php $editedOrders = array_filter($orders, function($order) { return in_array($order['Status'], [2, 5]); }); ?>
                         <?php if (!empty($editedOrders)): ?>
                             <?php foreach ($editedOrders as $order): ?>
                                 <div class="order-item">
@@ -377,11 +383,18 @@ if ($userEmail) {
                                             <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
-                                            <p><strong>สถานะ:</strong> <span class="status-label status-edited"><i class="fas fa-edit me-1"></i>แก้ไขการชำระเงิน</span></p>
+                                            <p><strong>สถานะ:</strong> 
+                                                <span class="status-label <?php echo $order['Status'] == 2 ? 'status-edited' : 'status-new-slip'; ?>">
+                                                    <i class="fas <?php echo $order['Status'] == 2 ? 'fa-edit' : 'fa-upload'; ?> me-1"></i>
+                                                    <?php echo $order['Status'] == 2 ? 'แก้ไขการชำระเงิน' : 'แนบสลิปใหม่'; ?>
+                                                </span>
+                                            </p>
                                             <?php if (!empty($order['Message'])): ?>
                                                 <p class="message-admin"><strong>ข้อความจากแอดมิน:</strong> <?php echo htmlspecialchars($order['Message']); ?></p>
                                             <?php endif; ?>
-                                            <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
+                                            <a href="user-slip.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details">
+                                                <i class="fas fa-upload me-1"></i>อัปโหลดสลิปใหม่
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

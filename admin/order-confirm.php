@@ -3,53 +3,26 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
-// ฟังก์ชันสำหรับบันทึก log
-function writeLog($message)
-{
-    $logFile = 'debug.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $logMessage = "[$timestamp] $message\n";
-    file_put_contents($logFile, $logMessage, FILE_APPEND);
-}
-
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-writeLog("Checking PDO connection");
-if (!$conn) {
-    writeLog("Database connection failed");
-    $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
-    header("Location: login.php");
-    exit();
-}
-
-// ตรวจสอบว่ามี session adminid หรือไม่
+// Check if admin is logged in
 if (!isset($_SESSION['adminid'])) {
-    writeLog("No admin session found. Redirecting to login.php");
     header("Location: login.php");
     exit();
 }
 
-// ดึงข้อมูล username จากฐานข้อมูล
+// Fetch admin username
 $admin_id = $_SESSION['adminid'];
 try {
     $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
     $stmt->bindParam(':id', $admin_id, PDO::PARAM_INT);
     $stmt->execute();
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$admin) {
-        writeLog("Admin not found for ID: $admin_id. Redirecting to login.php");
-        $_SESSION['error'] = "ไม่พบข้อมูลผู้ดูแลระบบ";
-        header("Location: login.php");
-        exit();
-    }
 } catch (PDOException $e) {
-    writeLog("Error fetching admin data: " . $e->getMessage());
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ดูแลระบบ: " . htmlspecialchars($e->getMessage());
     header("Location: login.php");
     exit();
 }
 
-// Fetch orders with status 1 or 2
+// Fetch orders with status 0, 1, 2, or 5
 $orders = [];
 try {
     $stmt = $conn->prepare("
@@ -59,14 +32,12 @@ try {
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
-        WHERE o.Status IN (1, 2)
+        WHERE o.Status IN (0, 1, 2, 5)
         ORDER BY o.PostingDate DESC
     ");
     $stmt->execute();
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    writeLog("Fetched " . count($orders) . " orders with status 1 or 2");
 } catch (PDOException $e) {
-    writeLog("Error fetching orders: " . $e->getMessage());
     $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
 }
 ?>
@@ -78,18 +49,13 @@ try {
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
     <title>ยืนยันการชำระเงิน - FlowerShop</title>
-
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
-    <!-- Custom fonts for this template -->
+    <!-- Custom fonts -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
+    <!-- Custom styles -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
@@ -102,18 +68,12 @@ try {
             font-weight: 500;
         }
 
-        .status-paid {
-            background-color: #2ecc71;
-            color: #fff;
-        }
+        .status-awaiting { background-color: #95a5a6; color: #fff; }
+        .status-paid { background-color: #2ecc71; color: #fff; }
+        .status-edited { background-color: #e74c3c; color: #fff; }
+        .status-new-slip { background-color: #3498db; color: #fff; }
 
-        .status-edited {
-            background-color: #e74c3c;
-            color: #fff;
-        }
-
-        .table th,
-        .table td {
+        .table th, .table td {
             vertical-align: middle;
             font-size: 1rem;
         }
@@ -129,7 +89,6 @@ try {
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">ยืนยันการชำระเงิน</h1>
-
                     </div>
 
                     <div class="card shadow mb-4">
@@ -165,10 +124,12 @@ try {
                                                     <td>
                                                         <?php
                                                         $statusOptions = [
+                                                            0 => ['text' => 'รอแจ้งชำระเงิน', 'class' => 'status-awaiting', 'icon' => 'fa-clock'],
                                                             1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
-                                                            2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit']
+                                                            2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit'],
+                                                            5 => ['text' => 'แนบสลิปใหม่', 'class' => 'status-new-slip', 'icon' => 'fa-upload']
                                                         ];
-                                                        $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1;
+                                                        $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
                                                         ?>
                                                         <span class="status-label <?php echo $statusOptions[$status]['class']; ?>">
                                                             <i class="fas <?php echo $statusOptions[$status]['icon']; ?> me-1"></i>
@@ -177,14 +138,14 @@ try {
                                                     </td>
                                                     <td class="text-center">
                                                         <a href="order-payment-confirm.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-pink">
-                                                            <i class="fas fa-eye me-1"></i> ดูายรายละการ
+                                                            <i class="fas fa-eye me-1"></i> ดูรายละเอียด
                                                         </a>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อที่รอยืนยันการชำระเงิน</td>
+                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อที่รอการยืนยัน</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
@@ -211,14 +172,10 @@ try {
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
     <script src="js/demo/datatables-demo.js"></script>
     <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
-
         <?php if (isset($_SESSION['success'])): ?>
-            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -230,7 +187,6 @@ try {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',
@@ -242,5 +198,4 @@ try {
         <?php endif; ?>
     </script>
 </body>
-
 </html>
