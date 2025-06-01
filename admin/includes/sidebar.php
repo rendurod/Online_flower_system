@@ -58,19 +58,19 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <li class="nav-item <?= ($currentPage == 'orders.php') ? 'active' : '' ?>">
         <a class="nav-link" href="orders.php">
             <i class="fas fa-fw fa-table"></i>
-            <span>คำสั่งซื้อสินค้า</span>
+            <span>คำสั่งซื้อสินค้าเข้ามาใหม่</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-confirm.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-confirm.php">
             <i class="fas fa-fw fa-table"></i>
-            <span>คำสั่งซื้อที่ชำระเงินสำเร็จ</span>
+            <span>คำสั่งซื้อที่ชำระเงิน</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-success.php">
             <i class="fas fa-fw fa-table"></i>
-            <span>คำสั่งซื้อที่กำลังดำเนินการ</span>
+            <span>คำสั่งซื้อที่รอดำเนินการ</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-finish.php') ? 'active' : '' ?>">

@@ -4,7 +4,8 @@ require_once 'config/db.php';
 require_once 'includes/functions.php';
 
 // ฟังก์ชันสำหรับบันทึก log
-function writeLog($message) {
+function writeLog($message)
+{
     $logFile = 'debug.log';
     $timestamp = date('Y-m-d H:i:s');
     $logMessage = "[$timestamp] $message\n";
@@ -101,10 +102,18 @@ try {
             font-weight: 500;
         }
 
-        .status-paid { background-color: #2ecc71; color: #fff; }
-        .status-edited { background-color: #e74c3c; color: #fff; }
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
 
-        .table th, .table td {
+        .status-edited {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1rem;
         }
@@ -120,9 +129,7 @@ try {
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">ยืนยันการชำระเงิน</h1>
-                        <a href="orders.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังคำสั่งซื้อใหม่
-                        </a>
+
                     </div>
 
                     <div class="card shadow mb-4">
@@ -169,8 +176,8 @@ try {
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <a href="order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-pink">
-                                                            <i class="fas fa-eye me-1"></i> ดูรายละเอียด
+                                                        <a href="order-payment-confirm.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-pink">
+                                                            <i class="fas fa-eye me-1"></i> ดูายรายละการ
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -235,4 +242,5 @@ try {
         <?php endif; ?>
     </script>
 </body>
+
 </html>

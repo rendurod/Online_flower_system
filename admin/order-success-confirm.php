@@ -64,6 +64,7 @@ try {
     $stmt = $conn->prepare("
         SELECT o.*, 
                CONCAT(m.FirstName, ' ', m.LastName) AS CustomerName,
+               m.Address AS CustomerAddress,
                f.flower_name, f.price, f.stock_quantity
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
@@ -223,14 +224,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             color: #4e73df;
         }
 
-        .order-image img {
-            max-width: 200px;
-            max-height: 200px;
-            object-fit: cover;
-            border-radius: var(--border-radius);
-            border: 2px solid rgba(232, 67, 147, 0.2);
-        }
-
         .status-select {
             width: 100%;
             padding: 0.5rem;
@@ -310,6 +303,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                         <td><?php echo htmlspecialchars($order['CustomerName'] ?? 'ไม่ระบุ'); ?></td>
                                     </tr>
                                     <tr>
+                                        <th>ที่อยู่จัดส่ง</th>
+                                        <td><?php echo htmlspecialchars($order['CustomerAddress'] ?? 'ไม่ระบุ'); ?></td>
+                                    </tr>
+                                    <tr>
                                         <th>วันที่สั่งซื้อ</th>
                                         <td><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></td>
                                     </tr>
@@ -332,16 +329,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                     <tr>
                                         <th>สต็อกคงเหลือ</th>
                                         <td class="stock-highlight"><?php echo htmlspecialchars($order['stock_quantity'] ?? 'ไม่ระบุ'); ?> ชิ้น</td>
-                                    </tr>
-                                    <tr>
-                                        <th>สลิปการชำระเงิน</th>
-                                        <td>
-                                            <?php if (!empty($order['Image'])): ?>
-                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip" style="max-width: 200px; border-radius: var(--border-radius); border: 2px solid rgba(232, 67, 147, 0.2);">
-                                            <?php else: ?>
-                                                ไม่มีสลิป
-                                            <?php endif; ?>
-                                        </td>
                                     </tr>
                                     <?php if (!empty($order['Message'])): ?>
                                         <tr>
@@ -469,6 +456,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
                 timer: 3000,
                 showConfirmButton: false
+            }).then(() => {
+                window.location.href = 'order-success.php';
             });
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>

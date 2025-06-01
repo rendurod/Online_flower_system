@@ -48,24 +48,33 @@ try {
     exit();
 }
 
-// Handle status update to 4 (Completed)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
+// Handle status update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id']) && isset($_POST['new_status'])) {
     $order_id = intval($_POST['order_id']);
-    writeLog("Received POST request to update order $order_id to status 4");
+    $new_status = intval($_POST['new_status']);
+    writeLog("Received POST request to update order $order_id to status $new_status");
+
+    if (!in_array($new_status, [3, 4])) {
+        writeLog("Invalid status: $new_status");
+        $_SESSION['error'] = 'สถานะที่เลือกไม่ถูกต้อง';
+        header("Location: order-finish.php");
+        exit();
+    }
 
     try {
         $conn->beginTransaction();
 
         // Update order status
-        $sql = "UPDATE tbl_orders SET Status = 4, LastupdateDate = CURRENT_TIMESTAMP WHERE ID = :id";
+        $sql = "UPDATE tbl_orders SET Status = :status, LastupdateDate = CURRENT_TIMESTAMP WHERE ID = :id";
         $stmt = $conn->prepare($sql);
+        $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
         $result = $stmt->execute();
         writeLog("SQL execution result for tbl_orders: " . ($result ? 'Success' : 'Failed'));
 
         $conn->commit();
         writeLog("Transaction committed successfully for order $order_id");
-        $_SESSION['success'] = 'อัปเดตสถานะคำสั่งซื้อเป็นสำเร็จเรียบร้อยแล้ว';
+        $_SESSION['success'] = 'อัปเดตสถานะคำสั่งซื้อเรียบร้อยแล้ว';
         header("Location: order-finish.php");
         exit();
     } catch (PDOException $e) {
@@ -133,21 +142,14 @@ try {
         .status-processing { background-color: #f1c40f; color: #fff; }
         .status-completed { background-color: #7bed9f; color: #fff; }
 
-        .btn-finish {
-            background-color: #e74c3c;
-            color: #fff;
+        .btn-toggle-status {
             border: none;
             padding: 0.5rem 1rem;
             border-radius: var(--border-radius);
         }
 
-        .btn-completed {
-            background-color: #2ecc71;
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: var(--border-radius);
-        }
+        .btn-to-completed { background-color: #e74c3c; color: #fff; }
+        .btn-to-processing { background-color: #2ecc71; color: #fff; }
 
         .table th, .table td {
             vertical-align: middle;
@@ -214,18 +216,14 @@ try {
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <?php if ($order['Status'] == 3): ?>
-                                                            <form method="POST" class="finish-form" style="display:inline;">
-                                                                <input type="hidden" name="order_id" value="<?php echo htmlspecialchars($order['ID']); ?>">
-                                                                <button type="submit" class="btn btn-finish">
-                                                                    <i class="fas fa-times me-1"></i> ไม่สำเร็จ
-                                                                </button>
-                                                            </form>
-                                                        <?php else: ?>
-                                                            <button class="btn btn-completed" disabled>
-                                                                <i class="fas fa-check me-1"></i> สำเร็จ
+                                                        <form method="POST" class="status-form" style="display:inline;">
+                                                            <input type="hidden" name="order_id" value="<?php echo htmlspecialchars($order['ID']); ?>">
+                                                            <input type="hidden" name="new_status" value="<?php echo $order['Status'] == 3 ? 4 : 3; ?>">
+                                                            <button type="submit" class="btn btn-toggle-status <?php echo $order['Status'] == 3 ? 'btn-to-completed' : 'btn-to-processing'; ?>">
+                                                                <i class="fas <?php echo $order['Status'] == 3 ? 'fa-check' : 'fa-undo'; ?> me-1"></i>
+                                                                <?php echo $order['Status'] == 3 ? 'เปลี่ยนเป็นสำเร็จ' : 'เปลี่ยนเป็นกำลังดำเนินการ'; ?>
                                                             </button>
-                                                        <?php endif; ?>
+                                                        </form>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
@@ -264,16 +262,18 @@ try {
         console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
         console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
 
-        // SweetAlert2 confirmation for finishing order
-        document.querySelectorAll('.finish-form').forEach(form => {
+        // SweetAlert2 confirmation for status change
+        document.querySelectorAll('.status-form').forEach(form => {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                console.log('Finish form submit triggered');
+                console.log('Status form submit triggered');
                 const form = this;
+                const newStatus = form.querySelector('input[name="new_status"]').value;
+                const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังดำเนินการ';
 
                 Swal.fire({
-                    title: 'ยืนยันการเสร็จสิ้นคำสั่งซื้อ',
-                    text: 'คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "คำสั่งซื้อสำเร็จ"?',
+                    title: 'ยืนยันการเปลี่ยนสถานะ',
+                    text: `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#2ecc71',
@@ -282,7 +282,7 @@ try {
                     cancelButtonText: 'ยกเลิก'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        console.log('Form submitted to complete order');
+                        console.log('Form submitted to change status to: ' + newStatus);
                         form.submit();
                     } else {
                         console.log('Form submission cancelled');
