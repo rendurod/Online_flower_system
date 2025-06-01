@@ -3,7 +3,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 ?>
 
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-
     <!-- Sidebar - Brand -->
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
         <div class="sidebar-brand-icon">
@@ -37,14 +36,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Nav Item -->
     <li class="nav-item <?= ($currentPage == 'category.php') ? 'active' : '' ?>">
         <a class="nav-link" href="category.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-tags"></i>
             <span>ประเภทสินค้า</span>
         </a>
     </li>
 
     <li class="nav-item <?= ($currentPage == 'flowers.php') ? 'active' : '' ?>">
         <a class="nav-link" href="flowers.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-seedling"></i>
             <span>ข้อมูลสินค้า</span>
         </a>
     </li>
@@ -57,29 +56,28 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Nav Item -->
     <li class="nav-item <?= ($currentPage == 'orders.php') ? 'active' : '' ?>">
         <a class="nav-link" href="orders.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-cart-plus"></i>
             <span>คำสั่งซื้อสินค้าเข้ามาใหม่</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-confirm.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-confirm.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-money-check-alt"></i>
             <span>คำสั่งซื้อที่ชำระเงิน</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-success.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-hourglass-half"></i>
             <span>คำสั่งซื้อที่รอดำเนินการ</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-finish.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-finish.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-check-circle"></i>
             <span>คำสั่งซื้อสำเร็จ</span>
         </a>
     </li>
-
 
     <!-- Heading -->
     <div class="sidebar-heading mt-2">
@@ -89,14 +87,20 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Nav Item -->
     <li class="nav-item <?= ($currentPage == 'history.php') ? 'active' : '' ?>">
         <a class="nav-link" href="history.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-history"></i>
             <span>ประวัติคำสั่งซื้อทั้งหมด</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'members.php') ? 'active' : '' ?>">
         <a class="nav-link" href="members.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-users"></i>
             <span>ข้อมูลสมาชิก</span>
+        </a>
+    </li>
+    <li class="nav-item <?= ($currentPage == 'address-store.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="address-store.php">
+            <i class="fas fa-fw fa-store"></i>
+            <span>ที่อยู่ของร้านค้า</span>
         </a>
     </li>
 
@@ -111,19 +115,13 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <!-- Nav Item -->
     <li class="nav-item <?= ($currentPage == 'payment.php') ? 'active' : '' ?>">
         <a class="nav-link" href="payment.php">
-            <i class="fas fa-fw fa-table"></i>
+            <i class="fas fa-fw fa-credit-card"></i>
             <span>เพิ่มการชำระเงิน</span>
         </a>
     </li>
-
-
 
     <!-- Sidebar Toggler (Sidebar) -->
     <div class="text-center d-none d-md-inline">
         <button class="rounded-circle border-0" id="sidebarToggle"></button>
     </div>
-
-    <!-- Sidebar Message -->
-
-
 </ul>
