@@ -10,51 +10,136 @@ if (!isset($_SESSION['adminid'])) {
 
 // ดึงข้อมูล username จากฐานข้อมูล
 $admin_id = $_SESSION['adminid'];
-$stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
-$stmt->bindParam(':id', $admin_id);
-$stmt->execute();
-$admin = $stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
+    $stmt->bindParam(':id', $admin_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$admin) {
+        $_SESSION['error'] = "ไม่พบข้อมูลผู้ดูแลระบบ";
+        header("Location: login.php");
+        exit();
+    }
+} catch (PDOException $e) {
+    $_SESSION['error'] = "เกิดข้อผิดพลาด: " . htmlspecialchars($e->getMessage());
+    header("Location: login.php");
+    exit();
+}
 
 // ดึงจำนวนข้อมูลจากแต่ละตาราง
-// นับจำนวนหมวดหมู่
-$stmt_category = $conn->prepare("SELECT COUNT(*) as total FROM tbl_category");
-$stmt_category->execute();
-$total_categories = $stmt_category->fetch(PDO::FETCH_ASSOC)['total'];
+try {
+    // นับจำนวนหมวดหมู่
+    $stmt_category = $conn->prepare("SELECT COUNT(*) as total FROM tbl_category");
+    $stmt_category->execute();
+    $total_categories = $stmt_category->fetch(PDO::FETCH_ASSOC)['total'];
 
-// นับจำนวนดอกไม้
-$stmt_flowers = $conn->prepare("SELECT COUNT(*) as total FROM tbl_flowers");
-$stmt_flowers->execute();
-$total_flowers = $stmt_flowers->fetch(PDO::FETCH_ASSOC)['total'];
+    // นับจำนวนดอกไม้
+    $stmt_flowers = $conn->prepare("SELECT COUNT(*) as total FROM tbl_flowers");
+    $stmt_flowers->execute();
+    $total_flowers = $stmt_flowers->fetch(PDO::FETCH_ASSOC)['total'];
 
-// นับจำนวนสมาชิก
-$stmt_members = $conn->prepare("SELECT COUNT(*) as total FROM tbl_members");
-$stmt_members->execute();
-$total_members = $stmt_members->fetch(PDO::FETCH_ASSOC)['total'];
+    // นับจำนวนสมาชิก
+    $stmt_members = $conn->prepare("SELECT COUNT(*) as total FROM tbl_members");
+    $stmt_members->execute();
+    $total_members = $stmt_members->fetch(PDO::FETCH_ASSOC)['total'];
 
-// นับจำนวนคำสั่งซื้อ
-$stmt_orders = $conn->prepare("SELECT COUNT(*) as total FROM tbl_orders");
-$stmt_orders->execute();
-$total_orders = $stmt_orders->fetch(PDO::FETCH_ASSOC)['total'];
+    // นับจำนวนคำสั่งซื้อ
+    $stmt_orders = $conn->prepare("SELECT COUNT(*) as total FROM tbl_orders");
+    $stmt_orders->execute();
+    $total_orders = $stmt_orders->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // คำนวณยอดรวมรายได้ (จากคำสั่งซื้อที่มีสถานะ 1, 3, 4)
+    $stmt_revenue = $conn->prepare("
+        SELECT SUM(o.Quantity * f.price) as total_revenue
+        FROM tbl_orders o
+        JOIN tbl_flowers f ON o.FlowerId = f.ID
+        WHERE o.Status IN (1, 3, 4)
+    ");
+    $stmt_revenue->execute();
+    $total_revenue = $stmt_revenue->fetch(PDO::FETCH_ASSOC)['total_revenue'] ?? 0;
+
+    // นับจำนวนคำสั่งซื้อใหม่ (สถานะ 0: รอแจ้งชำระเงิน และ 1: การชำระเงินสำเร็จ)
+    $stmt_new_orders = $conn->prepare("
+        SELECT COUNT(*) as total
+        FROM tbl_orders
+        WHERE Status IN (0)
+    ");
+    $stmt_new_orders->execute();
+    $new_orders_count = $stmt_new_orders->fetch(PDO::FETCH_ASSOC)['total'];
+
+} catch (PDOException $e) {
+    $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <title>Admin - FlowerShop</title>
+    <meta name="description" content="แดชบอร์ดสำหรับจัดการ FlowerShop">
+    <meta name="author" content="FlowerShop Team">
+    <title>แดชบอร์ด - FlowerShop</title>
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
-    <!-- Custom fonts for this template-->
+    <!-- Custom fonts for this template -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-    <!-- Custom styles for this template-->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Custom styles for this template -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <style>
+        .dashboard-card {
+            transition: transform 0.3s;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #e84393, #ff6b6b);
+            color: white;
+        }
+        .new-orders-card {
+            background: linear-gradient(135deg, #ff6b6b, #e84393);
+            color: white;
+            border: none;
+            animation: pulse 2s infinite;
+            margin-bottom: 2rem;
+        }
+        .new-orders-card .card-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+        }
+        .new-orders-card h2 {
+            font-size: 3rem;
+            margin: 0;
+        }
+        .new-orders-card p {
+            font-size: 1.6rem;
+            margin: 0;
+        }
+        .new-orders-card .btn {
+            background-color: #fff;
+            color: #e84393;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            transition: transform 0.2s;
+        }
+        .new-orders-card .btn:hover {
+            transform: scale(1.05);
+            background-color: #f8f9fa;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(232, 67, 147, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(232, 67, 147, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(232, 67, 147, 0); }
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -76,20 +161,21 @@ $total_orders = $stmt_orders->fetch(PDO::FETCH_ASSOC)['total'];
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">แดชบอร์ด</h1>
                     </div>
+                   
                     <!-- Content Row -->
                     <div class="row">
                         <!-- Total Categories Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card border-left-primary shadow h-100 py-2 dashboard-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-md font-weight-bold text-primary text-uppercase mb-1">
-                                                ประเภทสินค้า ทั้งหมด</div>
+                                                ประเภทสินค้า</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($total_categories); ?></div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-list fa-2x text-gray-300"></i>
+                                            <i class="fas fa-tags fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -97,16 +183,16 @@ $total_orders = $stmt_orders->fetch(PDO::FETCH_ASSOC)['total'];
                         </div>
                         <!-- Total Flowers Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card border-left-success shadow h-100 py-2 dashboard-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-md font-weight-bold text-success text-uppercase mb-1">
-                                                ดอกไม้ ทั้งหมด</div>
+                                                ดอกไม้ทั้งหมด</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($total_flowers); ?></div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-leaf fa-2x text-gray-300"></i>
+                                            <i class="fas fa-seedling fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -114,12 +200,12 @@ $total_orders = $stmt_orders->fetch(PDO::FETCH_ASSOC)['total'];
                         </div>
                         <!-- Total Members Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card border-left-info shadow h-100 py-2 dashboard-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-md font-weight-bold text-info text-uppercase mb-1">
-                                                สมาชิกในระบบ ทั้งหมด</div>
+                                                สมาชิกที่มีในระบบ</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($total_members); ?></div>
                                         </div>
                                         <div class="col-auto">
@@ -129,99 +215,51 @@ $total_orders = $stmt_orders->fetch(PDO::FETCH_ASSOC)['total'];
                                 </div>
                             </div>
                         </div>
-                        <!-- Total Orders Card -->
+                       
+                        <!-- Total Revenue Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card border-left-danger shadow h-100 py-2 dashboard-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-md font-weight-bold text-warning text-uppercase mb-1">
-                                                คำสั่งซื้อเข้ามาใหม่!</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($total_orders); ?></div>
+                                            <div class="text-md font-weight-bold text-danger text-uppercase mb-1">
+                                                รายได้รวม</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">฿<?php echo number_format($total_revenue, 2); ?></div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Content Row -->
+                     <!-- New Orders Notification -->
                     <div class="row">
-                        <!-- Area Chart -->
-                        <div class="col-xl-8 col-lg-7">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Earnings Overview</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Dropdown Header:</div>
-                                            <a class="dropdown-item" href="#">Action</a>
-                                            <a class="dropdown-item" href="#">Another action</a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="#">Something else here</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Card Body -->
+                        <div class="col-lg-12">
+                            <div class="card new-orders-card shadow">
                                 <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas id="myAreaChart"></canvas>
+                                    <div>
+                                        <h2><?php echo number_format($new_orders_count); ?></h2>
+                                        <p>คำสั่งซื้อใหม่รอดำเนินการ</p>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Pie Chart -->
-                        <div class="col-xl-4 col-lg-5">
-                            <div class="card shadow mb-4">
-                                <!-- Card Header - Dropdown -->
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Revenue Sources</h6>
-                                    <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                                        </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Dropdown Header:</div>
-                                            <a class="dropdown-item" href="#">Action</a>
-                                            <a class="dropdown-item" href="#">Another action</a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item" href="#">Something else here</a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="chart-pie pt-4 pb-2">
-                                        <canvas id="myPieChart"></canvas>
-                                    </div>
-                                    <div class="mt-4 text-center small">
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-primary"></i> Direct
-                                        </span>
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-success"></i> Social
-                                        </span>
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle text-info"></i> Referral
-                                        </span>
-                                    </div>
+                                    <a href="orders.php" class="btn"><i class="fas fa-cart-plus me-2"></i>ดูคำสั่งซื้อ</a>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <!-- /.container-fluid -->
             </div>
             <!-- End of Main Content -->
             <!-- Footer -->
-            <?php include("includes/footer.php"); ?>
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>Copyright © FlowerShop <?php echo date('Y'); ?></span>
+                    </div>
+                </div>
+            </footer>
             <!-- End of Footer -->
         </div>
         <!-- End of Content Wrapper -->
@@ -238,11 +276,5 @@ $total_orders = $stmt_orders->fetch(PDO::FETCH_ASSOC)['total'];
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
-    <!-- Page level plugins -->
-    <script src="vendor/chart.js/Chart.min.js"></script>
-    <!-- Page level custom scripts -->
-    <script src="js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
 </body>
-
 </html>
