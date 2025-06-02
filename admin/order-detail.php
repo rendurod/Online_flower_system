@@ -73,14 +73,13 @@ try {
 }
 
 // Handle status update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $new_status = intval($_POST['status']);
-    $message = isset($_POST['message']) ? trim($_POST['message']) : ($order['Message'] ?? '');
+    $message = isset($_POST['message']) ? trim(htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8')) : ($order['Message'] ?? '');
     $current_status = $order['Status'];
 
     // ตรวจสอบสถานะใหม่
-    $valid_statuses = [0, 1, 2]; // จำกัดเฉพาะสถานะ 0, 1, 2
+    $valid_statuses = [0, 1, 2];
     if (!in_array($new_status, $valid_statuses)) {
         $_SESSION['error'] = 'สถานะที่เลือกไม่ถูกต้อง';
         header("Location: order-detail.php?order_id=" . $order_id);
@@ -94,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         exit();
     }
 
-
     try {
         $conn->beginTransaction();
 
@@ -104,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
         $stmt->bindValue(':message', $message, PDO::PARAM_STR);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
-        $result = $stmt->execute();
+        $stmt->execute();
 
         // Fetch current stock quantity with locking
         $sql = "SELECT stock_quantity FROM tbl_flowers WHERE ID = :flower_id FOR UPDATE";
@@ -114,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         $current_stock = $stmt->fetchColumn();
 
         // Define stock-affecting statuses
-        $stock_reducing_statuses = [1]; // เฉพาะการชำระเงินสำเร็จ
+        $stock_reducing_statuses = [1];
         $order_quantity = $order['Quantity'];
 
         // Handle stock adjustments
@@ -125,10 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 $stmt = $conn->prepare($sql);
                 $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
                 $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
-                $result = $stmt->execute();
+                $stmt->execute();
             } else {
                 $conn->rollBack();
-                $_SESSION['error'] = 'จำนวนสต็อกไม่เพียงพอสำหรับคำสั่งซื้อนี้';
+                $_SESSION['error'] = 'จำนวนสต็อกไม่เพียงกล';
                 header("Location: order-detail.php?order_id=" . $order_id);
                 exit();
             }
@@ -138,18 +136,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             $stmt = $conn->prepare($sql);
             $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
             $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
-            $result = $stmt->execute();
-        } else {
+            $stmt->execute();
         }
 
         $conn->commit();
         $_SESSION['success'] = 'อัปเดตสถานะและสต็อกเรียบร้อยแล้ว';
-        // แก้ไขจาก header redirect ไปใช้ SweetAlert2 ใน JavaScript
-        // header("Location: order-detail.php?order_id=" . $order_id);
-        // exit();
-    } catch (PDOException $e) {
+    } catch (PDOException $e) {  
         $conn->rollBack();
         $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' . htmlspecialchars($e->getMessage());
+        header("Location: order-detail.php?order_id=" . $order_id);
+        exit();
+    }
+}
+
+// Handle order cancellation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
+    $reason = trim(htmlspecialchars($_POST['reason'] ?? '', ENT_QUOTES, 'UTF-8'));
+    $current_status = $order['Status'];
+
+    if (empty($reason)) {
+        $_SESSION['error'] = 'กรุณาระบุเหตุผลในการยกเลิก';
+        header("Location: order-detail.php?order_id=" . $order_id);
+        exit();
+    }
+
+    if (!in_array($current_status, [0, 1, 2, 3, 5])) {
+        $_SESSION['error'] = 'ไม่สามารถยกเลิกคำสั่งซื้อในสถานะนี้ได้';
+        header("Location: order-detail.php?order_id=" . $order_id);
+        exit();
+    }
+
+    // เพิ่มข้อความ "- จากแอดมิน" ต่อท้ายเหตุผล
+    $reason .= " - จากแอดมิน";
+
+    try {
+        $conn->beginTransaction();
+
+        // Update order status to 6 (cancelled) and message
+        $sql = "UPDATE tbl_orders SET Status = :status, Message = :message, LastupdateDate = CURRENT_TIMESTAMP WHERE ID = :id";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue(':status', 6, PDO::PARAM_INT);
+        $stmt->bindValue(':message', $reason, PDO::PARAM_STR);
+        $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        // Restore stock if previously reduced
+        if (in_array($current_status, [1])) {
+            $sql = "SELECT stock_quantity FROM tbl_flowers WHERE ID = :flower_id FOR UPDATE";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
+            $stmt->execute();
+            $current_stock = $stmt->fetchColumn();
+
+            $new_stock = $current_stock + $order['Quantity'];
+            $sql = "UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
+            $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
+            $stmt->execute();
+        }
+
+        $conn->commit();
+        $_SESSION['success'] = 'ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว';
+    } catch (PDOException $e) {
+        $conn->rollBack();
+        $_SESSION['error'] = 'เกิดข้อผิดพลาดในการยกเลิกคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
         header("Location: order-detail.php?order_id=" . $order_id);
         exit();
     }
@@ -165,15 +216,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-
     <title>รายละเอียดคำสั่งซื้อ - FlowerShop</title>
-
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
     <!-- Custom fonts for this template -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
@@ -183,7 +233,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             padding: 2rem;
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1.4rem;
         }
@@ -199,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             max-width: 200px;
             max-height: 200px;
             object-fit: cover;
-            border-radius: var(--border-radius);
+            border-radius: inherit;
             border: 2px solid rgba(232, 67, 147, 0.2);
         }
 
@@ -208,14 +259,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             padding: 0.5rem;
             font-size: 1.2rem;
             border: 2px solid rgba(232, 67, 147, 0.2);
-            border-radius: var(--border-radius);
-            transition: var(--transition);
+            border-radius: inherit;
+            transition: all;
         }
 
         .status-select:focus {
             outline: none;
             border-color: var(--primary-pink);
-            box-shadow: 0 0 0 3px rgba(232, 67, 147, 0.1);
+            box-shadow: 0 0 0 3px rgba(232, 67, 67, 0.1);
         }
 
         .status-label {
@@ -226,9 +277,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             font-weight: 500;
         }
 
-        .status-awaiting { background-color: #95a5a6; color: #fff; }
-        .status-paid { background-color: #2ecc71; color: #fff; }
-        .status-edited { background-color: #e74c3c; color: #fff; }
+        .status-awaiting {
+            background-color: #95a5a6;
+            color: #fff;
+        }
+
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .status-edited {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .status-cancelled {
+            background-color: #dc3545;
+            color: #fff;
+        }
 
         .stock-highlight {
             color: #e74c3c;
@@ -236,24 +303,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             font-size: 1.6rem;
         }
 
-        .status-option-0 { background-color: #95a5a6; color: #fff; }
-        .status-option-1 { background-color: #2ecc71; color: #fff; }
-        .status-option-2 { background-color: #e74c3c; color: #fff; }
+        .status-option-0 {
+            background-color: #95a5a6;
+            color: #fff;
+        }
 
-        #messageInput {
+        .status-option-1 {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .status-option-2 {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        #message-input {
             display: none;
             width: 100%;
             padding: 0.5rem;
             font-size: 1.2rem;
             border: 2px solid rgba(232, 67, 147, 0.2);
-            border-radius: var(--border-radius);
+            border-radius: inherit;
             margin-top: 0.5rem;
         }
 
-        #messageInput:focus {
+        #message-input:focus {
             outline: none;
             border-color: var(--primary-pink);
-            box-shadow: 0 0 0 3px rgba(232, 67, 147, 0.1);
+            box-shadow: 0 0 0 3px rgba(232, 147, 147, 0.1);
+        }
+
+        .btn-cancel-order {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            font-size: 1.1rem;
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            margin-left: 1rem;
+        }
+
+        .btn-cancel-order:hover {
+            background-color: #c82333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -305,7 +398,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                     </tr>
                                     <tr>
                                         <th>สต็อกคงเหลือ</th>
-                                        <td class="stock-highlight"><?php echo htmlspecialchars($order['stock_quantity'] ?? 'ไม่ระบุ'); ?> ชิ้น</td>
+                                        <td class="stock-highlight"><?php echo htmlspecialchars($order['stock_quantity'] ?? '0'); ?> ชิ้น</td>
                                     </tr>
                                     <tr>
                                         <th>รูปภาพสินค้า</th>
@@ -317,8 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                         <th>สลิปการชำระเงิน</th>
                                         <td>
                                             <?php if (!empty($order['Image'])): ?>
-                                                                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip" style="max-width: 200px; border-radius: var(--border-radius); border: 2px solid rgba(232, 67, 147, 0.2);">
-
+                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip" style="max-width: 200px; border-radius: inherit; border: 2px solid rgba(232, 67, 147, 0.2);">
                                             <?php else: ?>
                                                 ไม่มีสลิป
                                             <?php endif; ?>
@@ -326,48 +418,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                     </tr>
                                     <?php if (!empty($order['Message'])): ?>
                                         <tr>
-                                            <th>ข้อความจากแอดมิน</th>
+                                            <th>ข้อความ</th>
                                             <td><?php echo htmlspecialchars($order['Message']); ?></td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
 
-                            <form method="POST" id="updateStatusForm" action="order-detail.php?order_id=<?php echo $order_id; ?>">
+                            <form method="POST" id="update-status-form" action="order-detail.php?order_id=<?php echo $order_id; ?>">
                                 <div class="form-group">
-                                    <label for="status" class="font-weight-bold text-gray-700">
+                                    <label for="status" class="font-weight-bold text-gray-800">
                                         <i class="fas fa-info-circle text-pink mr-2"></i>สถานะคำสั่งซื้อ
                                     </label>
                                     <?php
-                                    $statusOptions = [
+                                    $status_options = [
                                         0 => ['text' => 'รอแจ้งชำระเงิน', 'icon' => 'fa-clock', 'class' => 'status-awaiting', 'option_class' => 'status-option-0'],
                                         1 => ['text' => 'การชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid', 'option_class' => 'status-option-1'],
                                         2 => ['text' => 'แก้ไขการชำระเงิน', 'icon' => 'fa-edit', 'class' => 'status-edited', 'option_class' => 'status-option-2']
                                     ];
-
-                                    $currentStatus = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
+                                    $current_status = isset($status_options[$order['Status']]) ? $order['Status'] : 0;
                                     ?>
-                                    <p class="status-label <?php echo $statusOptions[$currentStatus]['class']; ?>">
-                                        <i class="fas <?php echo $statusOptions[$currentStatus]['icon']; ?> me-1"></i>
-                                        <?php echo $statusOptions[$currentStatus]['text']; ?>
+                                    <p class="status-label <?php echo $status_options[$current_status]['class']; ?>">
+                                        <i class="fas <?php echo $status_options[$current_status]['icon']; ?> me-1"></i>
+                                        <?php echo $status_options[$current_status]['text']; ?>
                                     </p>
                                     <select name="status" id="status" class="status-select" required>
-                                        <?php foreach ($statusOptions as $status => $details): ?>
-                                            <option value="<?php echo $status; ?>" class="<?php echo $details['option_class']; ?>" <?php echo $status == $currentStatus ? 'selected' : ''; ?>>
+                                        <?php foreach ($status_options as $status => $details): ?>
+                                            <option value="<?php echo $status; ?>" class="<?php echo $details['option_class']; ?>" <?php echo $status == $current_status ? 'selected' : ''; ?>>
                                                 <?php echo $details['text']; ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <input type="text" name="message" id="messageInput" placeholder="กรุณาระบุเหตุผลสำหรับการแก้ไขการชำระเงิน" value="<?php echo htmlspecialchars($order['Message'] ?? ''); ?>">
+                                    <input type="text" name="message" id="message-input" placeholder="กรุณาระบุเหตุผลสำหรับการแก้ไขการชำระเงิน" value="<?php echo htmlspecialchars($order['Message'] ?? ''); ?>">
                                 </div>
-
-                                <div class="form-group d-flex justify-content-end">
-                                    <button type="submit" name="update_status" value="1" class="btn btn-pink mr-2">
-                                        <i class="fas fa-save mr-2"></i>บันทึก
-                                    </button>
-                                    <a href="orders.php" class="btn btn-secondary">
-                                        <i class="fas fa-times mr-2"></i>ยกเลิก
-                                    </a>
+                                <div class="form-group d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <button type="submit" name="update_status" value="1" class="btn btn-primary mr-2">
+                                            <i class="fas fa-save mr-2"></i>บันทึก
+                                        </button>
+                                        <a href="orders.php" class="btn btn-secondary">
+                                            <i class="fas fa-times mr-2"></i>ยกเลิก
+                                        </a>
+                                    </div>
+                                    <?php if (in_array($order['Status'], [0, 1, 2, 3, 5])): ?>
+                                        <button type="button" class="btn btn-cancel-order" data-bs-toggle="modal" data-bs-target="#cancel-order-modal">
+                                            <i class="fas fa-times-circle mr-2"></i>ยกเลิกคำสั่งซื้อ
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </form>
                         </div>
@@ -375,6 +472,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 </div>
             </div>
             <?php include("includes/footer.php"); ?>
+        </div>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancel-order-modal" tabindex="-1" aria-labelledby="cancel-order-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancel-order-modal-label">ยกเลิกคำสั่งซื้อ #<?php echo htmlspecialchars($order['BookingNumber']); ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="order-detail.php?order_id=<?php echo $order_id; ?>">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="cancel-reason" class="form-label">เหตุผลในการยกเลิก <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="cancel-reason" name="reason" rows="4" required placeholder="กรุณาระบุเหตุผลในการยกเลิก"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                        <button type="submit" name="cancel_order" class="btn btn-danger">ยืนยันการยกเลิก</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -387,63 +508,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        // ตรวจสอบว่า jQuery และ SweetAlert2 โหลดสำเร็จ
-        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
-
-        // SweetAlert2 confirmation before updating status
-        document.getElementById('updateStatusForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // console.log('Form submit event triggered');
-            const form = this;
-            const selectedStatus = document.getElementById('status').value;
-            const statusText = document.getElementById('status').options[document.getElementById('status').selectedIndex].text.trim();
-            let confirmMessage = `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`;
-
-            if (selectedStatus === '1') {
-                confirmMessage += `\nสต็อกสินค้าจะถูกลดลงตามจำนวนที่สั่งซื้อ (${<?php echo $order['Quantity']; ?>} ชิ้น)`;
-            }
-
-            if (selectedStatus === '2' && !document.getElementById('messageInput').value.trim()) {
-                // console.log('Validation failed: Missing message for status 2');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ข้อผิดพลาด',
-                    text: 'กรุณาระบุเหตุผลสำหรับการแก้ไขการชำระเงิน',
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-                return;
-            }
-
-            // console.log('Form data before submit:', Object.fromEntries(new FormData(form)));
-            Swal.fire({
-                title: 'ยืนยันการเปลี่ยนสถานะ',
-                text: confirmMessage,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#e84393',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // console.log('Form submitted with status: ' + selectedStatus);
-                    form.submit();
-                } else {
-                    // console.log('Form submission cancelled');
-                }
-            });
-        });
-
         // Show/hide message input based on status
         document.getElementById('status').addEventListener('change', function() {
-            // console.log('Status changed to: ' + this.value);
-            const messageInput = document.getElementById('messageInput');
+            const messageInput = document.getElementById('message-input');
             if (this.value === '2') {
                 messageInput.style.display = 'block';
                 messageInput.required = true;
@@ -456,9 +529,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
 
         // Initial check for message input visibility
         document.addEventListener('DOMContentLoaded', function() {
-            // console.log('DOM fully loaded');
             const initialStatus = document.getElementById('status').value;
-            const messageInput = document.getElementById('messageInput');
+            const messageInput = document.getElementById('message-input');
             if (initialStatus === '2') {
                 messageInput.style.display = 'block';
                 messageInput.required = true;
@@ -468,9 +540,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             }
         });
 
+        // SweetAlert2 confirmation before updating status
+        document.getElementById('update-status-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const selectedStatus = document.getElementById('status').value;
+            const statusText = document.getElementById('status').options[document.getElementById('status').selectedIndex].text.trim();
+            let confirmMessage = `คุณต้องการเปลี่ยนสถานะเป็น "${statusText}" หรือไม่`;
+
+            if (selectedStatus === '1') {
+                confirmMessage += `\nสต็อกสินค้าจะถูกลดลงตามจำนวนที่สั่งซื้อ (${<?php echo $order['Quantity'] ?? 0; ?>} ชิ้น)`;
+            }
+
+            if (selectedStatus === '2' && !document.getElementById('message-input').value.trim()) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: 'กรุณาระบุเหตุผลสำหรับการแก้ไขการชำระเงิน',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'ยืนยันการเปลี่ยนสถานะ',
+                text: confirmMessage,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e84393',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonText: 'ยืนยัน'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+
         // Show SweetAlert2 for success/error messages
         <?php if (isset($_SESSION['success'])): ?>
-            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -484,7 +593,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',
@@ -496,4 +604,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <?php endif; ?>
     </script>
 </body>
+
 </html>

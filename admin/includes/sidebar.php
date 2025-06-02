@@ -78,6 +78,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>คำสั่งซื้อสำเร็จ</span>
         </a>
     </li>
+    <li class="nav-item <?= ($currentPage == 'order-cancel.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="order-cancel.php">
+            <i class="fas fa-fw fa-times-circle"></i>
+            <span>คำสั่งซื้อที่ยกเลิก</span>
+        </a>
+    </li>
 
     <!-- Heading -->
     <div class="sidebar-heading mt-2">

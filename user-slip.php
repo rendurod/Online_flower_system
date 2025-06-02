@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
                 timer: 3000,
                 showConfirmButton: false
             }).then(() => {
-                window.location.href = 'user-order.php?tab=tracking';
+                window.location.href = 'user-order.php?tab=edited';
             });
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>

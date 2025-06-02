@@ -4,7 +4,7 @@ include('config/db.php');
 
 // Check if user is logged in
 if (!isset($_SESSION['user_login'])) {
-    header("Location: login.php"); // Redirect to login page if not logged in
+    header("Location: login.php");
     exit();
 }
 
@@ -18,13 +18,11 @@ if (isset($_GET['id']) && !empty($_GET['id'])) {
     $flower = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$flower) {
-        // If no flower is found, redirect to products page with an error message
         $_SESSION['error'] = "ไม่พบสินค้าที่เลือก";
         header("Location: products.php");
         exit();
     }
 } else {
-    // If no ID is provided, redirect to products page
     $_SESSION['error'] = "กรุณาเลือกสินค้า";
     header("Location: products.php");
     exit();
@@ -80,9 +78,14 @@ $bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccount
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $flower_id = $flower['ID'];
-    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
+    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1; // Default to 1 if quantity is not set
     $user_email = $user_data['EmailId'];
     $delivery_date = isset($_POST['delivery_date']) ? $_POST['delivery_date'] : null;
+
+    // Ensure quantity is at least 1
+    if ($quantity < 1) {
+        $quantity = 1;
+    }
 
     // Validate quantity against stock
     if ($quantity > $flower['stock_quantity']) {
@@ -108,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle payment slip upload
     $slip_image = '';
     if (isset($_FILES['payment_slip']) && $_FILES['payment_slip']['error'] === UPLOAD_ERR_OK) {
-        $upload_dir = 'uploads/slips/';
+        $upload_dir = 'Uploads/slips/';
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
@@ -140,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($order_stmt->execute()) {
         $_SESSION['success'] = "สั่งซื้อสำเร็จ! รอการยืนยันจากแอดมิน";
-        header("Location: product-finish.php"); // Redirect to product-finish.php instead of products.php
+        header("Location: product-finish.php");
         exit();
     } else {
         $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ กรุณาลองใหม่";
@@ -172,7 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/css/productPHP.css">
     <link rel="stylesheet" href="assets/css/productDetail.css">
     <link rel="stylesheet" href="assets/css/productOrder.css">
-    
 </head>
 
 <body>
@@ -278,7 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
                     <!-- Hidden input for quantity -->
-                    <input type="hidden" name="quantity" id="quantity_hidden">
+                    <input type="hidden" name="quantity" id="quantity_hidden" value="1"> <!-- Set default value to 1 -->
                 </div>
             </form>
 
@@ -337,6 +339,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const maxQuantity = <?php echo $flower['stock_quantity']; ?>;
         const userAddress = "<?php echo $user_data['Address']; ?>";
         const addressValidate = "<?php echo $user_data['Validate']; ?>";
+
+        // Initialize quantity_hidden on page load
+        document.getElementById('quantity_hidden').value = 1; // Ensure hidden input starts at 1
+        document.getElementById('selected_quantity').textContent = 1; // Ensure display starts at 1
+        document.getElementById('total_item_price').textContent = `฿${pricePerItem.toFixed(2)}`; // Initialize total price
+        document.getElementById('total_price').textContent = `฿${pricePerItem.toFixed(2)}`; // Initialize total price
 
         // Update total price and selected quantity display
         document.getElementById('quantity').addEventListener('input', function() {
@@ -465,5 +473,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
-
 </html>
