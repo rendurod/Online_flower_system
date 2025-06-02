@@ -59,7 +59,7 @@ try {
     $stmt_revenue->execute();
     $total_revenue = $stmt_revenue->fetch(PDO::FETCH_ASSOC)['total_revenue'] ?? 0;
 
-    // นับจำนวนคำสั่งซื้อใหม่ (สถานะ 0: รอแจ้งชำระเงิน และ 1: การชำระเงินสำเร็จ)
+    // นับจำนวนคำสั่งซื้อใหม่ (สถานะ 0: รอแจ้งชำระเงิน)
     $stmt_new_orders = $conn->prepare("
         SELECT COUNT(*) as total
         FROM tbl_orders
@@ -67,6 +67,15 @@ try {
     ");
     $stmt_new_orders->execute();
     $new_orders_count = $stmt_new_orders->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // นับจำนวนสมาชิกที่ที่อยู่ยังไม่ได้รับการยืนยัน
+    $stmt_pending_members = $conn->prepare("
+        SELECT COUNT(*) as total
+        FROM tbl_members
+        WHERE Address IS NULL OR Address = '' OR Validate != 'ที่อยู่ถูกต้อง'
+    ");
+    $stmt_pending_members->execute();
+    $pending_members_count = $stmt_pending_members->fetch(PDO::FETCH_ASSOC)['total'];
 
 } catch (PDOException $e) {
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
@@ -102,35 +111,35 @@ try {
             background: linear-gradient(135deg, #e84393, #ff6b6b);
             color: white;
         }
-        .new-orders-card {
+        .notification-card {
             background: linear-gradient(135deg, #ff6b6b, #e84393);
             color: white;
             border: none;
             animation: pulse 2s infinite;
             margin-bottom: 2rem;
         }
-        .new-orders-card .card-body {
+        .notification-card .card-body {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 2rem;
         }
-        .new-orders-card h2 {
+        .notification-card h2 {
             font-size: 3rem;
             margin: 0;
         }
-        .new-orders-card p {
+        .notification-card p {
             font-size: 1.6rem;
             margin: 0;
         }
-        .new-orders-card .btn {
+        .notification-card .btn {
             background-color: #fff;
             color: #e84393;
             font-weight: bold;
             padding: 0.75rem 1.5rem;
             transition: transform 0.2s;
         }
-        .new-orders-card .btn:hover {
+        .notification-card .btn:hover {
             transform: scale(1.05);
             background-color: #f8f9fa;
         }
@@ -215,7 +224,6 @@ try {
                                 </div>
                             </div>
                         </div>
-                       
                         <!-- Total Revenue Card -->
                         <div class="col-xl-3 col-md-6 mb-4">
                             <div class="card border-left-danger shadow h-100 py-2 dashboard-card">
@@ -234,16 +242,30 @@ try {
                             </div>
                         </div>
                     </div>
-                     <!-- New Orders Notification -->
+                    <!-- New Orders Notification -->
                     <div class="row">
                         <div class="col-lg-12">
-                            <div class="card new-orders-card shadow">
+                            <div class="card notification-card shadow">
                                 <div class="card-body">
                                     <div>
                                         <h2><?php echo number_format($new_orders_count); ?></h2>
-                                        <p>คำสั่งซื้อใหม่รอดำเนินการ</p>
+                                        <p>คำสั่งซื้อใหม่ - รอจัดการ</p>
                                     </div>
                                     <a href="orders.php" class="btn"><i class="fas fa-cart-plus me-2"></i>ดูคำสั่งซื้อ</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Pending Members Notification -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card notification-card shadow">
+                                <div class="card-body">
+                                    <div>
+                                        <h2><?php echo number_format($pending_members_count); ?></h2>
+                                        <p>สมาชิกที่รอ - การยืนยันที่อยู่</p>
+                                    </div>
+                                    <a href="members.php" class="btn"><i class="fas fa-users me-2"></i>ดูสมาชิก</a>
                                 </div>
                             </div>
                         </div>
