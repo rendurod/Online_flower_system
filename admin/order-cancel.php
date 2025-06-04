@@ -40,6 +40,7 @@ $orders = [];
 try {
     $stmt = $conn->prepare("
         SELECT o.*, 
+               m.ID as MemberID,
                CONCAT(m.FirstName, ' ', m.LastName) AS CustomerName,
                f.flower_name, f.price
         FROM tbl_orders o
@@ -76,10 +77,12 @@ try {
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
     <style>
-        .table th, .table td {
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1.2rem;
         }
+
         .status-label {
             display: inline-block;
             padding: 6px 12px;
@@ -87,10 +90,12 @@ try {
             font-size: 1.2rem;
             font-weight: 500;
         }
+
         .status-cancelled {
             background-color: #dc3545;
             color: #fff;
         }
+
         .no-data-alert {
             text-align: center;
             padding: 2rem;
@@ -134,7 +139,13 @@ try {
                                             <?php foreach ($orders as $order): ?>
                                                 <tr>
                                                     <td><?php echo htmlspecialchars($order['BookingNumber']); ?></td>
-                                                    <td><?php echo htmlspecialchars($order['CustomerName'] ?? 'ไม่ระบุ'); ?></td>
+<td>
+    <a href="edit-member.php?id=<?php echo htmlspecialchars($order['MemberID']); ?>" 
+       class="text-primary" 
+       title="แก้ไขข้อมูลสมาชิก">
+        <?php echo htmlspecialchars($order['CustomerName']); ?>
+    </a>
+</td>
                                                     <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
                                                     <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
                                                     <td>฿<?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?></td>
@@ -185,4 +196,5 @@ try {
         <?php endif; ?>
     </script>
 </body>
+
 </html>

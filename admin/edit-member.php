@@ -101,6 +101,9 @@ if (isset($_POST['submit'])) {
         $_SESSION['error'] = implode('<br>', $errors);
     }
 }
+// เพิ่มการกำหนด path ที่ถูกต้องสำหรับรูปโปรไฟล์
+$profile_image_dir = "../Uploads/imgprofile/";
+
 ?>
 
 <!DOCTYPE html>
@@ -134,7 +137,7 @@ if (isset($_POST['submit'])) {
 
         .validate-radio-group {
             background-color: #fff5f5;
-            border: 2px solid #ff6f61;
+            border: 2px solid gray;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
@@ -314,25 +317,27 @@ if (isset($_POST['submit'])) {
                                             <i class="fas fa-check-circle"></i> ยืนยันที่อยู่ถูกต้อง
                                         </label>
                                     </div>
-                                    <small class="form-text">เลือกสถานะการตรวจสอบที่อยู่และระบุเหตุผลหากที่อยู่ไม่ถูกต้อง</small>
+                                    <small class="form-text">*เลือกสถานะการตรวจสอบที่อยู่และระบุเหตุผลหากที่อยู่ไม่ถูกต้อง</small>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="image" class="font-weight-bold text-gray-700">
                                         <i class="fas fa-image text-pink mr-2"></i>รูปโปรไฟล์
                                     </label>
-                                    <div class="mb-2">
-                                        <?php if (!empty($member['Image']) && file_exists($target_dir . $member['Image'])): ?>
-                                            <img src="<?php echo $target_dir . htmlspecialchars($member['Image']); ?>"
-                                                alt="<?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?>"
-                                                class="img-thumbnail"
-                                                style="max-width: 200px; max-height: 200px; object-fit: cover;">
-                                        <?php else: ?>
-                                            <img src="img/Notfound.jpg"
-                                                alt="No profile image"
-                                                class="img-thumbnail"
-                                                style="max-width: 200px; max-height: 200px; object-fit: cover;">
-                                        <?php endif; ?>
+                                    <div class="form-group">
+                                        <div class="mb-2">
+                                            <?php if (!empty($member['Image']) && file_exists($profile_image_dir . $member['Image'])): ?>
+                                                <img src="<?php echo $profile_image_dir . htmlspecialchars($member['Image']); ?>"
+                                                    alt="<?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?>"
+                                                    class="img-thumbnail"
+                                                    style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                            <?php else: ?>
+                                                <img src="img/Notfound.jpg"
+                                                    alt="No profile image"
+                                                    class="img-thumbnail"
+                                                    style="max-width: 200px; max-height: 200px; object-fit: cover;">
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -402,4 +407,5 @@ if (isset($_POST['submit'])) {
         });
     </script>
 </body>
+
 </html>
