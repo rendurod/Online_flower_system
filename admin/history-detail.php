@@ -151,7 +151,7 @@ try {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อ: #<?php echo htmlspecialchars($order['BookingNumber']); ?></h1>
+                        <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อ: <span class="text-primary">#<?php echo htmlspecialchars($order['BookingNumber']); ?></span></h1>
                         <!-- <a href="history.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังประวัติคำสั่งซื้อ
                         </a> -->
@@ -208,7 +208,7 @@ try {
                                                 0 => ['text' => 'รอแจ้งชำระเงิน', 'icon' => 'fa-clock', 'class' => 'status-awaiting'],
                                                 1 => ['text' => 'การชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid'],
                                                 2 => ['text' => 'แก้ไขการชำระเงิน', 'icon' => 'fa-edit', 'class' => 'status-edited'],
-                                                3 => ['text' => 'กำลังดำเนินการ', 'icon' => 'fa-cog', 'class' => 'status-processing'],
+                                                3 => ['text' => 'กำลังจัดส่งสินค้า', 'icon' => 'fa-truck', 'class' => 'status-processing'],
                                                 4 => ['text' => 'จัดส่งสำเร็จ', 'icon' => 'fa-check-circle', 'class' => 'status-completed']
                                             ];
 

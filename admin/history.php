@@ -40,7 +40,7 @@ $filter_status = isset($_GET['status']) ? $_GET['status'] : 'all';
 $where_clause = '';
 $params = [];
 
-if ($filter_status !== 'all' && in_array($filter_status, ['0', '1', '2', '3', '4'])) {
+if ($filter_status !== 'all' && in_array($filter_status, ['0', '1', '2', '3', '4', '5', '6'])) {
     $where_clause = "WHERE o.Status = :status";
     $params[':status'] = intval($filter_status);
 }
@@ -105,6 +105,8 @@ try {
         .status-edited { background-color: #e74c3c; color: #fff; }
         .status-processing { background-color: #f1c40f; color: #fff; }
         .status-completed { background-color: #7bed9f; color: #fff; }
+        .status-new-slip { background-color: #3498db; color: #fff; }
+        .status-cancel { background-color: #e74c3c; color: #000; }
 
         .table th, .table td {
             vertical-align: middle;
@@ -141,8 +143,10 @@ try {
                                         <option value="0" <?php echo $filter_status == '0' ? 'selected' : ''; ?>>รอแจ้งชำระเงิน</option>
                                         <option value="1" <?php echo $filter_status == '1' ? 'selected' : ''; ?>>การชำระเงินสำเร็จ</option>
                                         <option value="2" <?php echo $filter_status == '2' ? 'selected' : ''; ?>>แก้ไขการชำระเงิน</option>
-                                        <option value="3" <?php echo $filter_status == '3' ? 'selected' : ''; ?>>กำลังดำเนินการ</option>
+                                        <option value="3" <?php echo $filter_status == '3' ? 'selected' : ''; ?>>กำลังจัดส่งสินค้า</option>
                                         <option value="4" <?php echo $filter_status == '4' ? 'selected' : ''; ?>>คำสั่งซื้อสำเร็จ</option>
+                                        <option value="5" <?php echo $filter_status == '5' ? 'selected' : ''; ?>>แนบสลิปใหม่</option>
+                                        <option value="6" <?php echo $filter_status == '6' ? 'selected' : ''; ?>>ยกเลิกคำสั่งซื้อ</option>
                                     </select>
                                 </form>
                             </div>
@@ -178,8 +182,10 @@ try {
                                                             0 => ['text' => 'รอแจ้งชำระเงิน', 'class' => 'status-awaiting', 'icon' => 'fa-clock'],
                                                             1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
                                                             2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit'],
-                                                            3 => ['text' => 'กำลังดำเนินการ', 'class' => 'status-processing', 'icon' => 'fa-truck'],
-                                                            4 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle']
+                                                            3 => ['text' => 'กำลังจัดส่งสินค้า', 'class' => 'status-processing', 'icon' => 'fa-truck'],
+                                                            4 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle'],
+                                                            5 => ['text' => 'แนปสลิปใหม่', 'class' => 'status-new-slip', 'icon' => 'fa-upload'],
+                                                            6 => ['text' => 'ยกเลิกคำสั่งซื้อ', 'class' => 'status-cancel', 'icon' => 'fa-times-circle']
                                                         ];
                                                         $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
                                                         ?>

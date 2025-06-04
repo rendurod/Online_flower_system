@@ -57,25 +57,25 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <li class="nav-item <?= ($currentPage == 'orders.php') ? 'active' : '' ?>">
         <a class="nav-link" href="orders.php">
             <i class="fas fa-fw fa-cart-plus"></i>
-            <span>คำสั่งซื้อสินค้าเข้ามาใหม่</span>
+            <span>1: คำสั่งซื้อสินค้าเข้ามาใหม่</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-confirm.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-confirm.php">
             <i class="fas fa-fw fa-money-check-alt"></i>
-            <span>คำสั่งซื้อที่ชำระเงิน</span>
+            <span>2: คำสั่งซื้อที่ชำระเงิน</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-success.php">
             <i class="fas fa-fw fa-hourglass-half"></i>
-            <span>คำสั่งซื้อที่รอดำเนินการ</span>
+            <span>3: คำสั่งซื้อที่รอดำเนินการ</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-finish.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-finish.php">
             <i class="fas fa-fw fa-check-circle"></i>
-            <span>คำสั่งซื้อสำเร็จ</span>
+            <span>4: คำสั่งซื้อสำเร็จ</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-cancel.php') ? 'active' : '' ?>">

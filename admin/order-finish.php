@@ -128,8 +128,8 @@ try {
             border-radius: var(--border-radius);
         }
 
-        .btn-to-completed { background-color: #e74c3c; color: #fff; }
-        .btn-to-processing { background-color: #2ecc71; color: #fff; }
+        .btn-to-completed { background-color: #2ecc71; color: #fff; }
+        .btn-to-processing { background-color: #e74c3c; color: #fff; }
 
         .table th, .table td {
             vertical-align: middle;
@@ -186,7 +186,7 @@ try {
                                                     <td>
                                                         <?php
                                                         $statusOptions = [
-                                                            3 => ['text' => 'กำลังดำเนิน', 'class' => 'status-processing', 'icon' => 'fa-truck'],
+                                                            3 => ['text' => 'กำลังจัดส่ง', 'class' => 'status-processing', 'icon' => 'fa-truck'],
                                                             4 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle']
                                                         ];
                                                         $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 3;
@@ -202,7 +202,7 @@ try {
                                                             <input type="hidden" name="new_status" value="<?php echo $order['Status'] == 3 ? 4 : 3; ?>">
                                                             <button type="submit" class="btn btn-toggle-status <?php echo $order['Status'] == 3 ? 'btn-to-completed' : 'btn-to-processing'; ?>">
                                                                 <i class="fas <?php echo $order['Status'] == 3 ? 'fa-check' : 'fa-undo'; ?> me-1"></i>
-                                                                <?php echo $order['Status'] == 3 ? 'เปลี่ยนเป็นสำเร็จ' : 'เปลี่ยนเป็นกำลังดำเนิน'; ?>
+                                                                <?php echo $order['Status'] == 3 ? 'เปลี่ยนเป็นสำเร็จ' : 'เปลี่ยนเป็นกำลังจัดส่ง'; ?>
                                                             </button>
                                                         </form>
                                                     </td>
@@ -246,7 +246,7 @@ try {
                 e.preventDefault();
                 const form = this;
                 const newStatus = form.querySelector('input[name="new_status"]').value;
-                const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังดำเนิน';
+                const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังจัดส่ง';
 
                 Swal.fire({
                     title: 'ยืนยันการเปลี่ยนสถานะ',

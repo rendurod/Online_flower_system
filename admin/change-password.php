@@ -1,49 +1,46 @@
 <?php
-session_start();
 require_once('config/db.php');
 
 // Handle AJAX POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+  $username = $_POST['username']; // Added to identify the admin
   $currentPassword = $_POST['currentPassword'];
   $newPassword = $_POST['newPassword'];
 
-  if (!isset($_SESSION['adminid'])) {
-    echo json_encode([
-      'status' => 'error',
-      'message' => 'กรุณาเข้าสู่ระบบก่อน'
-    ]);
-    exit;
-  }
-
   try {
-    // ตรวจสอบรหัสผ่านปัจจุบัน
-    $stmt = $conn->prepare("SELECT * FROM admin WHERE id = :id");
-    $stmt->bindParam(':id', $_SESSION['adminid']);
+    // Verify admin by username and current password
+    $stmt = $conn->prepare("SELECT * FROM admin WHERE UserName = :username");
+    $stmt->bindParam(':username', $username);
     $stmt->execute();
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$admin || !password_verify($currentPassword, $admin['Password'])) {
       echo json_encode([
         'status' => 'error',
-        'message' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง'
+        'message' => 'ชื่อผู้ใช้หรือรหัสผ่านปัจจุบันไม่ถูกต้อง'
       ]);
       exit;
     }
 
-    // เปลี่ยนรหัสผ่านใหม่
+    // Update to new password
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
     $updateStmt = $conn->prepare("UPDATE admin SET Password = :password WHERE id = :id");
     $updateStmt->bindParam(':password', $hashedPassword);
-    $updateStmt->bindParam(':id', $_SESSION['adminid']);
+    $updateStmt->bindParam(':id', $admin['id']);
 
     if ($updateStmt->execute()) {
       echo json_encode([
         'status' => 'success',
-        'message' => 'เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
+        'message' => 'เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบใหม่'
+      ]);
+      exit;
+    } else {
+      echo json_encode([
+        'status' => 'error',
+        'message' => 'ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาลองอีกครั้ง'
       ]);
       exit;
     }
-    // ...existing error handling...
   } catch (PDOException $e) {
     echo json_encode([
       'status' => 'error',
@@ -52,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
     exit;
   }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
   <meta name="description" content="" />
   <meta name="author" content="" />
 
-  <title>SB Admin 2 - Forgot Password</title>
+  <title>SB Admin 2 - Change Password</title>
 
   <!-- LOGO -->
   <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
@@ -82,6 +78,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
   <!-- Custom styles for this template-->
   <link href="css/sb-admin-2.min.css" rel="stylesheet" />
   <link href="css/style.css" rel="stylesheet" />
+
+  <!-- Inline CSS for password toggle icons -->
+  <style>
+    .password-toggle {
+      position: relative;
+    }
+
+    .password-toggle .toggle-icon {
+      color: black;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body class="bg-gradient-pink">
@@ -101,28 +113,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                       เปลี่ยนแปลงรหัสผ่าน
                     </h1>
                     <p class="mb-4 text-gray-600">
-                      คุณสามารถเปลี่ยนรหัสผ่านของคุณได้โดยกรอกรหัสผ่านเดิมที่ลงทะเบียนไว้ในระบบ
+                      คุณสามารถเปลี่ยนรหัสผ่านของคุณได้โดยกรอกชื่อผู้ใช้ รหัสผ่านเดิมที่ลงทะเบียนไว้ในระบบ
                       และกรอกรหัสผ่านใหม่ที่ต้องการเปลี่ยนแปลง
                     </p>
                   </div>
                   <form class="user" id="changePasswordForm">
                     <div class="form-group">
-                      <input type="password"
+                      <input
+                        type="text"
+                        class="form-control form-control-user"
+                        id="username"
+                        name="username"
+                        placeholder="กรุณากรอกชื่อผู้ใช้"
+                        required />
+                    </div>
+                    <div class="form-group password-toggle">
+                      <input
+                        type="password"
                         class="form-control form-control-user"
                         id="currentPassword"
                         name="currentPassword"
                         placeholder="กรุณากรอกรหัสผ่านปัจจุบัน"
                         required />
-
-
+                      <i class="fas fa-eye toggle-icon" id="toggleCurrentPassword"></i>
                     </div>
-                    <div class="form-group">
-                      <input type="password"
+                    <div class="form-group password-toggle">
+                      <input
+                        type="password"
                         class="form-control form-control-user"
                         id="newPassword"
                         name="newPassword"
                         placeholder="กรุณากรอกรหัสผ่านใหม่"
                         required />
+                      <i class="fas fa-eye toggle-icon" id="toggleNewPassword"></i>
                     </div>
                     <div id="result" class="alert" style="display: none;"></div>
                     <button type="submit" class="btn btn-pink btn-user btn-block">
@@ -131,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                   </form>
                   <hr />
                   <div class="text-center">
-                    <a href="login.php">&larr; กลับไปยังหน้าล็อคอิน</a>
+                    <a href="login.php">← กลับไปยังหน้าล็อคอิน</a>
                   </div>
                 </div>
               </div>
@@ -153,16 +176,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
   <script src="js/sb-admin-2.min.js"></script>
   <script>
     $(document).ready(function() {
+      // Password visibility toggle
+      $('#toggleCurrentPassword').click(function() {
+        var input = $('#currentPassword');
+        var icon = $(this);
+        if (input.attr('type') === 'password') {
+          input.attr('type', 'text');
+          icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+          input.attr('type', 'password');
+          icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+      });
+
+      $('#toggleNewPassword').click(function() {
+        var input = $('#newPassword');
+        var icon = $(this);
+        if (input.attr('type') === 'password') {
+          input.attr('type', 'text');
+          icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+          input.attr('type', 'password');
+          icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+      });
+
+      // Form submission with confirmation
       $('#changePasswordForm').on('submit', function(e) {
         e.preventDefault();
 
+        var username = $('#username').val();
         var currentPassword = $('#currentPassword').val();
         var newPassword = $('#newPassword').val();
+
+        // Confirmation prompt
+        if (!confirm('คุณต้องการยืนยันการเปลี่ยนรหัสผ่านใช่หรือไม่?')) {
+          return;
+        }
 
         $.ajax({
           url: 'change-password.php',
           type: 'POST',
           data: {
+            username: username,
             currentPassword: currentPassword,
             newPassword: newPassword
           },
@@ -171,9 +227,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
             'X-Requested-With': 'XMLHttpRequest'
           },
           success: function(response) {
-
             if (response.status === 'success') {
-              $('#result').removeClass('alert-danger')
+              $('#result')
+                .removeClass('alert-danger')
                 .addClass('alert-success')
                 .html(response.message)
                 .show();
@@ -181,15 +237,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
                 window.location.href = 'login.php';
               }, 2000);
             } else {
-              $('#result').removeClass('alert-success')
+              $('#result')
+                .removeClass('alert-success')
                 .addClass('alert-danger')
                 .html(response.message)
                 .show();
             }
           },
           error: function(xhr, status, error) {
-            console.error(xhr.responseText); // เพิ่มการ log error
-            $('#result').removeClass('alert-success')
+            console.error(xhr.responseText);
+            $('#result')
+              .removeClass('alert-success')
               .addClass('alert-danger')
               .html('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')
               .show();
