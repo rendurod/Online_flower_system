@@ -22,7 +22,7 @@ try {
     exit();
 }
 
-// Fetch orders with status 0, 1, 2, or 5
+// Fetch orders with status 1 or 2
 $orders = [];
 try {
     $stmt = $conn->prepare("
@@ -32,7 +32,7 @@ try {
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
-        WHERE o.Status IN (0, 1, 2, 5)
+        WHERE o.Status IN (1, 2)
         ORDER BY o.PostingDate DESC
     ");
     $stmt->execute();
@@ -68,14 +68,16 @@ try {
             font-weight: 500;
         }
 
-        .status-awaiting { background-color: #95a5a6; color: #fff; }
         .status-paid { background-color: #2ecc71; color: #fff; }
         .status-edited { background-color: #e74c3c; color: #fff; }
-        .status-new-slip { background-color: #3498db; color: #fff; }
 
         .table th, .table td {
             vertical-align: middle;
             font-size: 1rem;
+        }
+
+        .filter-container {
+            margin-bottom: 1.5rem;
         }
     </style>
 </head>
@@ -96,6 +98,15 @@ try {
                             <h6 class="m-0 font-weight-bold text-primary">ตารางข้อมูลคำสั่งซื้อ</h6>
                         </div>
                         <div class="card-body">
+                            <!-- Status Filter -->
+                            <div class="filter-container">
+                                <label for="statusFilter">กรองตามสถานะ:</label>
+                                <select id="statusFilter" class="form-control" style="width: auto; display: inline-block;">
+                                    <option value="">ทั้งหมด</option>
+                                    <option value="1">การชำระเงินสำเร็จ</option>
+                                    <option value="2">แก้ไขการชำระเงิน</option>
+                                </select>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
@@ -124,12 +135,10 @@ try {
                                                     <td>
                                                         <?php
                                                         $statusOptions = [
-                                                            0 => ['text' => 'รอแจ้งชำระเงิน', 'class' => 'status-awaiting', 'icon' => 'fa-clock'],
                                                             1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
-                                                            2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit'],
-                                                            5 => ['text' => 'แนบสลิปใหม่', 'class' => 'status-new-slip', 'icon' => 'fa-upload']
+                                                            2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit']
                                                         ];
-                                                        $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
+                                                        $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1;
                                                         ?>
                                                         <span class="status-label <?php echo $statusOptions[$status]['class']; ?>">
                                                             <i class="fas <?php echo $statusOptions[$status]['icon']; ?> me-1"></i>
@@ -170,32 +179,54 @@ try {
     <script src="js/sb-admin-2.min.js"></script>
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
-    <script src="js/demo/datatables-demo.js"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        <?php if (isset($_SESSION['success'])): ?>
-            Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ',
-                text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
-                timer: 3000,
-                showConfirmButton: false
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#dataTable').DataTable({
+                "columnDefs": [
+                    { "orderable": false, "targets": "no-sort" }
+                ],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Thai.json"
+                }
             });
-            <?php unset($_SESSION['success']); ?>
-        <?php endif; ?>
 
-        <?php if (isset($_SESSION['error'])): ?>
-            Swal.fire({
-                icon: 'error',
-                title: 'ข้อผิดพลาด',
-                text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
-                timer: 3000,
-                showConfirmButton: false
+            // Status filter
+            $('#statusFilter').on('change', function() {
+                var status = $(this).val();
+                if (status === '') {
+                    table.column(6).search('').draw();
+                } else {
+                    table.column(6).search(status).draw();
+                }
             });
-            <?php unset($_SESSION['error']); ?>
-        <?php endif; ?>
+
+            // SweetAlert for success/error messages
+            <?php if (isset($_SESSION['success'])): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['error'])): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
+        });
     </script>
 </body>
 </html>
