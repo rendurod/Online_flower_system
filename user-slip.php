@@ -30,7 +30,7 @@ $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
 
 if ($order_id <= 0) {
     $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ระบุ";
-    header("Location: user-order.php?tab=edited");
+    header("Location: user-order.php");
     exit();
 }
 
@@ -50,7 +50,7 @@ try {
 
     if (!$order) {
         $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ระบุหรือคำสั่งซื้อไม่อยู่ในสถานะแก้ไขการชำระเงิน";
-        header("Location: user-order.php?tab=edited");
+        header("Location: user-order.php");
         exit();
     }
 } catch (PDOException $e) {
@@ -270,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
                 <button type="submit" name="submit" class="btn-submit">
                     <i class="fas fa-save me-2"></i>บันทึก
                 </button>
-                <a href="user-order.php?tab=edited" class="btn-back">
+                <a href="user-order.php" class="btn-back">
                     <i class="fas fa-arrow-left me-2"></i>ย้อนกลับ
                 </a>
             </div>
@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
                 timer: 3000,
                 showConfirmButton: false
             }).then(() => {
-                window.location.href = 'user-order.php?tab=edited';
+                window.location.href = 'user-order.php';
             });
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>

@@ -302,7 +302,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                             <?php foreach ($processingOrders as $order): ?>
                                 <div class="order-item <?php echo in_array($order['Status'], [2, 5]) ? 'urgent' : ''; ?>">
                                     <div class="order-image">
-                                        <img src="<?php echo !empty($order['image']) && file_exists("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                        <img src="<?php echo !empty($order['image']) && is_file("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
@@ -320,7 +320,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                                     <?php
                                                     $statusText = [
                                                         0 => 'รอแจ้งชำระเงิน',
-                                                        1 => 'การชำระเงินสำเร็จ',
+                                                        1 => 'ชำระเงินสำเร็จ',
                                                         2 => 'แก้ไขการชำระเงิน',
                                                         5 => 'แนบสลิปใหม่'
                                                     ];
@@ -331,7 +331,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <?php if (!empty($order['Message']) && in_array($order['Status'], [2, 5])): ?>
                                                 <p class="message-admin"><strong>ข้อความจากแอดมิน:</strong> <?php echo htmlspecialchars($order['Message']); ?></p>
                                             <?php endif; ?>
-                                            <?php if (in_array($order['Status'], [2, 5])): ?>
+                                            <?php if ($order['Status'] == 2): ?>
                                                 <a href="user-slip.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details">
                                                     <i class="fas fa-upload me-1"></i>อัปโหลดสลิปใหม่
                                                 </a>
@@ -360,7 +360,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                             <?php foreach ($paidOrders as $order): ?>
                                 <div class="order-item">
                                     <div class="order-image">
-                                        <img src="<?php echo !empty($order['image']) && file_exists("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                        <img src="<?php echo !empty($order['image']) && is_file("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
@@ -372,9 +372,8 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</p>
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
-                                            <p><strong>สถานะ:</strong> <span class="status-label status-paid"><i class="fas fa-check me-1"></i>การชำระเงินสำเร็จ</span></p>
+                                            <p><strong>สถานะ:</strong> <span class="status-label status-paid"><i class="fas fa-check me-1"></i>ชำระเงินสำเร็จ</span></p>
                                             <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
-                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setCancelOrder(<?php echo htmlspecialchars($order['ID']); ?>, '<?php echo htmlspecialchars($order['BookingNumber']); ?>')">ยกเลิกคำสั่งซื้อ</button>
                                         </div>
                                     </div>
                                 </div>
@@ -398,7 +397,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                             <?php foreach ($shippingOrders as $order): ?>
                                 <div class="order-item">
                                     <div class="order-image">
-                                        <img src="<?php echo !empty($order['image']) && file_exists("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                        <img src="<?php echo !empty($order['image']) && is_file("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
@@ -412,7 +411,6 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-processing"><i class="fas fa-truck me-1"></i>กำลังจัดส่งสินค้า</span></p>
                                             <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
-                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setCancelOrder(<?php echo htmlspecialchars($order['ID']); ?>, '<?php echo htmlspecialchars($order['BookingNumber']); ?>')">ยกเลิกคำสั่งซื้อ</button>
                                         </div>
                                     </div>
                                 </div>
@@ -436,7 +434,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                             <?php foreach ($completedOrders as $order): ?>
                                 <div class="order-item">
                                     <div class="order-image">
-                                        <img src="<?php echo !empty($order['image']) && file_exists("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                        <img src="<?php echo !empty($order['image']) && is_file("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
@@ -473,7 +471,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                             <?php foreach ($cancelledOrders as $order): ?>
                                 <div class="order-item">
                                     <div class="order-image">
-                                        <img src="<?php echo !empty($order['image']) && file_exists("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                        <img src="<?php echo !empty($order['image']) && is_file("admin/uploads/flowers/" . $order['image']) ? "admin/uploads/flowers/" . htmlspecialchars($order['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">

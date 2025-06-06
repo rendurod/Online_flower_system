@@ -311,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                     <?php
                                     $statusOptions = [
                                         1 => ['text' => 'การชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid', 'option_class' => 'status-option-1'],
-                                        3 => ['text' => 'กำลังดำเนินการ', 'icon' => 'fa-truck', 'class' => 'status-processing', 'option_class' => 'status-option-3']
+                                        3 => ['text' => 'กำลังจัดส่งสินค้า', 'icon' => 'fa-truck', 'class' => 'status-processing', 'option_class' => 'status-option-3']
                                     ];
                                     $currentStatus = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1;
                                     ?>

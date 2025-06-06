@@ -3,20 +3,13 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-if (!$conn) {
-    $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
-    header("Location: login.php");
-    exit();
-}
-
-// ตรวจสอบว่ามี session adminid หรือไม่
+// Check if adminid session exists
 if (!isset($_SESSION['adminid'])) {
     header("Location: login.php");
     exit();
 }
 
-// ดึงข้อมูล admin
+// Fetch admin data
 $admin_id = $_SESSION['adminid'];
 try {
     $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
@@ -73,8 +66,8 @@ $orders = [];
 try {
     $stmt = $conn->prepare("
         SELECT o.ID, o.BookingNumber, o.Quantity, o.DeliveryDate, o.Status, o.PostingDate,
-               CONCAT(m.FirstName, ' ', m.LastName) AS CustomerName,
-               f.flower_name
+               COALESCE(CONCAT(m.FirstName, ' ', m.LastName), 'ไม่ระบุชื่อ') AS CustomerName,
+               COALESCE(f.flower_name, 'ไม่ระบุสินค้า') AS flower_name
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
@@ -119,8 +112,15 @@ try {
             font-weight: 500;
         }
 
-        .status-processing { background-color: #f1c40f; color: #fff; }
-        .status-completed { background-color: #7bed9f; color: #fff; }
+        .status-processing {
+            background-color: #f1c40f;
+            color: #fff;
+        }
+
+        .status-completed {
+            background-color: #7bed9f;
+            color: #fff;
+        }
 
         .btn-toggle-status {
             border: none;
@@ -128,10 +128,18 @@ try {
             border-radius: var(--border-radius);
         }
 
-        .btn-to-completed { background-color: #2ecc71; color: #fff; }
-        .btn-to-processing { background-color: #e74c3c; color: #fff; }
+        .btn-to-completed {
+            background-color: #2ecc71;
+            color: #fff;
+        }
 
-        .table th, .table td {
+        .btn-to-processing {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1rem;
         }
@@ -154,6 +162,15 @@ try {
                             <h6 class="m-0 font-weight-bold text-primary">ตารางข้อมูลคำสั่งซื้อ</h6>
                         </div>
                         <div class="card-body">
+                            <!-- Status Filter -->
+                            <div class="filter-container">
+                                <label for="statusFilter" class="me-2">กรองตามสถานะ:</label>
+                                <select id="statusFilter" class="form-control" style="width: auto; display: inline-block;">
+                                    <option value="">ทั้งหมด</option>
+                                    <option value="3" <?php echo isset($_GET['status']) && $_GET['status'] === '3' ? 'selected' : ''; ?>>กำลังจัดส่ง</option>
+                                    <option value="4" <?php echo isset($_GET['status']) && $_GET['status'] === '4' ? 'selected' : ''; ?>>คำสั่งซื้อสำเร็จ</option>
+                                </select>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
@@ -179,10 +196,18 @@ try {
                                                             <?php echo htmlspecialchars($order['BookingNumber']); ?>
                                                         </a>
                                                     </td>
-                                                    <td><?php echo htmlspecialchars($order['CustomerName'] ?? 'ไม่ระบุ'); ?></td>
-                                                    <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
+                                                    <td><?php echo htmlspecialchars($order['CustomerName']); ?></td>
+                                                    <td><?php echo htmlspecialchars($order['flower_name']); ?></td>
                                                     <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
-                                                    <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
+                                                    <td>
+                                                        <?php
+                                                        if ($order['DeliveryDate'] && strtotime($order['DeliveryDate']) !== false) {
+                                                            echo date('d/m/Y', strtotime($order['DeliveryDate']));
+                                                        } else {
+                                                            echo 'ไม่ระบุวันที่';
+                                                        }
+                                                        ?>
+                                                    </td>
                                                     <td>
                                                         <?php
                                                         $statusOptions = [
@@ -235,32 +260,75 @@ try {
     <script src="js/sb-admin-2.min.js"></script>
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
-    <script src="js/demo/datatables-demo.js"></script>
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        // SweetAlert2 confirmation for status change
-        document.querySelectorAll('.status-form').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const form = this;
-                const newStatus = form.querySelector('input[name="new_status"]').value;
-                const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังจัดส่ง';
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#dataTable').DataTable({
+                "columnDefs": [{
+                    "orderable": false,
+                    "targets": "no-sort"
+                }],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Thai.json"
+                }
+            });
 
-                Swal.fire({
-                    title: 'ยืนยันการเปลี่ยนสถานะ',
-                    text: `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#2ecc71',
-                    cancelButtonColor: '#e74c3c',
-                    confirmButtonText: 'ยืนยัน',
-                    cancelButtonText: 'ยกเลิก'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
+            // Custom filtering function
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                var selectedStatus = $('#statusFilter').val();
+                var status = data[6]; // Status column
+
+                if (!selectedStatus) {
+                    return true; // Show all if no filter selected
+                }
+
+                if (selectedStatus === '3' && status.includes('กำลังจัดส่ง')) {
+                    return true;
+                }
+                if (selectedStatus === '4' && status.includes('คำสั่งซื้อสำเร็จ')) {
+                    return true;
+                }
+
+                return false;
+            });
+
+            // Event listener for status filter
+            $('#statusFilter').on('change', function() {
+                table.draw(); // Redraw the table with the filter
+            });
+
+            // Set initial filter if needed
+            var urlParams = new URLSearchParams(window.location.search);
+            var initialStatus = urlParams.get('status');
+            if (initialStatus && ['3', '4'].includes(initialStatus)) {
+                $('#statusFilter').val(initialStatus);
+                table.draw();
+            }
+
+            // SweetAlert2 confirmation for status change
+            document.querySelectorAll('.status-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const form = this;
+                    const newStatus = form.querySelector('input[name="new_status"]').value;
+                    const statusText = newStatus == 4 ? 'คำสั่งซื้อสำเร็จ' : 'กำลังจัดส่ง';
+
+                    Swal.fire({
+                        title: 'ยืนยันการเปลี่ยนสถานะ',
+                        text: `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#2ecc71',
+                        cancelButtonColor: '#e74c3c',
+                        confirmButtonText: 'ยืนยัน',
+                        cancelButtonText: 'ยกเลิก'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
                 });
             });
         });
@@ -288,4 +356,5 @@ try {
         <?php endif; ?>
     </script>
 </body>
+
 </html>

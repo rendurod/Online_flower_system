@@ -69,7 +69,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-success.php">
             <i class="fas fa-fw fa-hourglass-half"></i>
-            <span>3: คำสั่งซื้อที่รอดำเนินการ</span>
+            <span>3: คำสั่งซื้อที่รอจัดส่งสินค้า</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-finish.php') ? 'active' : '' ?>">

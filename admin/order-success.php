@@ -3,20 +3,13 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-if (!$conn) {
-    $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
-    header("Location: login.php");
-    exit();
-}
-
-// ตรวจสอบว่ามี session adminid หรือไม่
+// Check if adminid session exists
 if (!isset($_SESSION['adminid'])) {
     header("Location: login.php");
     exit();
 }
 
-// ดึงข้อมูล admin
+// Fetch admin data
 $admin_id = $_SESSION['adminid'];
 try {
     $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
@@ -40,8 +33,8 @@ $orders = [];
 try {
     $stmt = $conn->prepare("
         SELECT o.ID, o.BookingNumber, o.Quantity, o.DeliveryDate, o.Status, o.PostingDate,
-               CONCAT(m.FirstName, ' ', m.LastName) AS CustomerName,
-               f.flower_name
+               COALESCE(CONCAT(m.FirstName, ' ', m.LastName), 'ไม่ระบุชื่อ') AS CustomerName,
+               COALESCE(f.flower_name, 'ไม่ระบุสินค้า') AS flower_name
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
@@ -65,7 +58,7 @@ try {
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>คำสั่งซื้อที่รอดำเนินการ - FlowerShop</title>
+    <title>คำสั่งซื้อรอจัดส่งสินค้า - FlowerShop</title>
 
     <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
@@ -86,10 +79,18 @@ try {
             font-weight: 500;
         }
 
-        .status-paid { background-color: #2ecc71; color: #fff; }
-        .status-processing { background-color: #f1c40f; color: #fff; }
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
 
-        .table th, .table td {
+        .status-processing {
+            background-color: #f1c40f;
+            color: #fff;
+        }
+
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1rem;
         }
@@ -104,8 +105,7 @@ try {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อที่รอดำเนินการ</h1>
-                        
+                        <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อที่รอจัดส่งสินค้า</h1>
                     </div>
 
                     <div class="card shadow mb-4">
@@ -113,6 +113,15 @@ try {
                             <h6 class="m-0 font-weight-bold text-primary">ตารางข้อมูลคำสั่งซื้อ</h6>
                         </div>
                         <div class="card-body">
+                            <!-- Status Filter -->
+                            <div class="filter-container">
+                                <label for="statusFilter" class="me-2">กรองตามสถานะ:</label>
+                                <select id="statusFilter" class="form-control" style="width: auto; display: inline-block;">
+                                    <option value="">ทั้งหมด</option>
+                                    <option value="1" <?php echo isset($_GET['status']) && $_GET['status'] === '1' ? 'selected' : ''; ?>>การชำระเงินสำเร็จ</option>
+                                    <option value="3" <?php echo isset($_GET['status']) && $_GET['status'] === '3' ? 'selected' : ''; ?>>กำลังจัดส่งสินค้า</option>
+                                </select>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                     <thead>
@@ -134,15 +143,23 @@ try {
                                                 <tr>
                                                     <td><?php echo $index++; ?></td>
                                                     <td><?php echo htmlspecialchars($order['BookingNumber']); ?></td>
-                                                    <td><?php echo htmlspecialchars($order['CustomerName'] ?? 'ไม่ระบุ'); ?></td>
-                                                    <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
+                                                    <td><?php echo htmlspecialchars($order['CustomerName']); ?></td>
+                                                    <td><?php echo htmlspecialchars($order['flower_name']); ?></td>
                                                     <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
-                                                    <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
+                                                    <td>
+                                                        <?php
+                                                        if ($order['DeliveryDate'] && strtotime($order['DeliveryDate']) !== false) {
+                                                            echo date('d/m/Y', strtotime($order['DeliveryDate']));
+                                                        } else {
+                                                            echo 'ไม่ระบุวันที่';
+                                                        }
+                                                        ?>
+                                                    </td>
                                                     <td>
                                                         <?php
                                                         $statusOptions = [
                                                             1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
-                                                            3 => ['text' => 'กำลังดำเนินการ', 'class' => 'status-processing', 'icon' => 'fa-truck']
+                                                            3 => ['text' => 'กำลังจัดส่งสินค้า', 'class' => 'status-processing', 'icon' => 'fa-truck']
                                                         ];
                                                         $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1;
                                                         ?>
@@ -160,7 +177,7 @@ try {
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อที่รอดำเนินการ</td>
+                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อที่รอจัดส่งสินค้า</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
@@ -185,16 +202,55 @@ try {
     <script src="js/sb-admin-2.min.js"></script>
     <script src="vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
-    <script src="js/demo/datatables-demo.js"></script>
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#dataTable').DataTable({
+                "columnDefs": [{
+                    "orderable": false,
+                    "targets": "no-sort"
+                }],
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Thai.json"
+                }
+            });
+
+            // Custom filtering function
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                var selectedStatus = $('#statusFilter').val();
+                var status = data[6]; // Status column
+
+                if (!selectedStatus) {
+                    return true; // Show all if no filter selected
+                }
+
+                if (selectedStatus === '1' && status.includes('การชำระเงินสำเร็จ')) {
+                    return true;
+                }
+                if (selectedStatus === '3' && status.includes('กำลังจัดส่งสินค้า')) {
+                    return true;
+                }
+
+                return false;
+            });
+
+            // Event listener for status filter
+            $('#statusFilter').on('change', function() {
+                table.draw(); // Redraw the table with the filter
+            });
+
+            // Set initial filter if needed
+            var urlParams = new URLSearchParams(window.location.search);
+            var initialStatus = urlParams.get('status');
+            if (initialStatus && ['1', '3'].includes(initialStatus)) {
+                $('#statusFilter').val(initialStatus);
+                table.draw();
+            }
+        });
 
         <?php if (isset($_SESSION['success'])): ?>
-            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -206,7 +262,6 @@ try {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',
@@ -218,4 +273,5 @@ try {
         <?php endif; ?>
     </script>
 </body>
+
 </html>
