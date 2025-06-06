@@ -2,13 +2,13 @@
 session_start();
 require_once 'config/db.php';
 
-// ตรวจสอบว่ามี session adminid หรือไม่
+// ตรวจสอบว่าแอดมินล็อกอินหรือไม่
 if (!isset($_SESSION['adminid'])) {
     header("Location: login.php");
     exit();
 }
 
-// ดึงข้อมูล admin
+// ดึงข้อมูลแอดมิน
 $admin_id = $_SESSION['adminid'];
 try {
     $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
@@ -36,7 +36,7 @@ if ($order_id <= 0) {
     exit();
 }
 
-// Fetch order details with locking
+// ดึงข้อมูลคำสั่งซื้อพร้อมล็อก
 $order = [];
 try {
     $stmt = $conn->prepare("
@@ -65,72 +65,67 @@ try {
     exit();
 }
 
-// Handle status update
+// จัดการอัปเดตสถานะ
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
-
     $new_status = intval($_POST['status']);
     $message = isset($_POST['message']) ? trim($_POST['message']) : ($order['Message'] ?? '');
-    $current_status = $order['Status'];
+    $order_quantity = $order['Quantity'];
+    $flower_id = $order['FlowerId'];
 
     // ตรวจสอบสถานะใหม่
-    $valid_statuses = [1, 3]; // จำกัดเฉพาะสถานะ 1, 3
+    $valid_statuses = [1, 3]; // จำกัดเฉพาะสถานะ 1 (ชำระเงินสำเร็จ), 3 (กำลังจัดส่ง)
     if (!in_array($new_status, $valid_statuses)) {
         $_SESSION['error'] = 'สถานะที่เลือกไม่ถูกต้อง';
         header("Location: order-success-confirm.php?order_id=" . $order_id);
         exit();
     }
 
-
     try {
         $conn->beginTransaction();
 
-        // Update order status and message
-        $sql = "UPDATE tbl_orders SET Status = :status, Message = :message, LastupdateDate = CURRENT_TIMESTAMP WHERE ID = :id";
-        $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
-        $stmt->bindValue(':message', $message, PDO::PARAM_STR);
-        $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
-        $result = $stmt->execute();
-
-        // Fetch current stock quantity with locking
-        $sql = "SELECT stock_quantity FROM tbl_flowers WHERE ID = :flower_id FOR UPDATE";
-        $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
+        // ดึงสต็อกปัจจุบันพร้อมล็อก
+        $stmt = $conn->prepare("SELECT stock_quantity FROM tbl_flowers WHERE ID = :flower_id FOR UPDATE");
+        $stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
         $stmt->execute();
         $current_stock = $stmt->fetchColumn();
 
-        // Define stock-affecting statuses
-        $stock_reducing_statuses = [1, 3]; // Paid, Processing
-        $order_quantity = $order['Quantity'];
+        if ($current_stock === false) {
+            $conn->rollBack();
+            $_SESSION['error'] = 'ไม่พบข้อมูลสต็อกสินค้า';
+            header("Location: order-success-confirm.php?order_id=" . $order_id);
+            exit();
+        }
 
-        // Handle stock adjustments
-        if (!in_array($current_status, $stock_reducing_statuses) && in_array($new_status, $stock_reducing_statuses)) {
+        // ถ้าสถานะใหม่คือ 3 (กำลังจัดส่ง) ให้ลดสต็อก
+        if ($new_status == 3) {
             if ($current_stock >= $order_quantity) {
                 $new_stock = $current_stock - $order_quantity;
-                $sql = "UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id";
-                $stmt = $conn->prepare($sql);
+                $stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id");
                 $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
-                $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
-                $result = $stmt->execute();
+                $stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
+                $stmt->execute();
             } else {
                 $conn->rollBack();
-                $_SESSION['error'] = 'จำนวนสต็อกไม่เพียงพอสำหรับคำสั่งซื้อนี้';
+                $_SESSION['error'] = "สต็อกไม่เพียงพอ: คงเหลือ $current_stock ชิ้น, ต้องการ $order_quantity ชิ้น";
                 header("Location: order-success-confirm.php?order_id=" . $order_id);
                 exit();
             }
-        } elseif (in_array($current_status, $stock_reducing_statuses) && !in_array($new_status, $stock_reducing_statuses)) {
-            $new_stock = $current_stock + $order_quantity;
-            $sql = "UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id";
-            $stmt = $conn->prepare($sql);
-            $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
-            $stmt->bindValue(':flower_id', $order['FlowerId'], PDO::PARAM_INT);
-            $result = $stmt->execute();
-        } else {
         }
+
+        // อัปเดตสถานะและข้อความของคำสั่งซื้อ
+        $stmt = $conn->prepare("
+            UPDATE tbl_orders 
+            SET Status = :status, Message = :message, LastupdateDate = CURRENT_TIMESTAMP 
+            WHERE ID = :id
+        ");
+        $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
+        $stmt->bindValue(':message', $message, PDO::PARAM_STR);
+        $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
+        $stmt->execute();
 
         $conn->commit();
         $_SESSION['success'] = 'อัปเดตสถานะและสต็อกเรียบร้อยแล้ว';
-        header("Location: order-success-confirm.php?order_id=" . $order_id);
+        header("Location: order-success.php");
         exit();
     } catch (PDOException $e) {
         $conn->rollBack();
@@ -351,23 +346,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        // console.log('jQuery loaded:', typeof jQuery !== 'undefined' ? 'Yes' : 'No');
-        // console.log('SweetAlert2 loaded:', typeof Swal !== 'undefined' ? 'Yes' : 'No');
-
         // SweetAlert2 confirmation before updating status
         document.getElementById('updateStatusForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            // console.log('Form submit event triggered');
             const form = this;
             const selectedStatus = document.getElementById('status').value;
             const statusText = document.getElementById('status').options[document.getElementById('status').selectedIndex].text.trim();
             let confirmMessage = `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`;
 
             if (selectedStatus === '3') {
-                confirmMessage += `\nสต็อกสินค้าจะถูกลดลงตามจำนวนที่สั่งซื้อ (${<?php echo $order['Quantity']; ?>} ชิ้น)`;
+                confirmMessage += `\nสต็อกสินค้าจะถูกลดลงตามจำนวนที่สั่งซื้อ (${<?php echo htmlspecialchars($order['Quantity']); ?>} ชิ้น)`;
             }
 
-            // console.log('Form data before submit:', new FormData(form));
             Swal.fire({
                 title: 'ยืนยันการเปลี่ยนสถานะ',
                 text: confirmMessage,
@@ -379,17 +369,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // console.log('Form submitted with status: ' + selectedStatus);
                     form.submit();
-                } else {
-                    // console.log('Form submission cancelled');
                 }
             });
         });
 
         // Show/hide message input based on status
         document.getElementById('status').addEventListener('change', function() {
-            // console.log('Status changed to: ' + this.value);
             const messageInput = document.getElementById('messageInput');
             messageInput.style.display = 'none';
             messageInput.required = false;
@@ -398,14 +384,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
 
         // Initial check for message input visibility
         document.addEventListener('DOMContentLoaded', function() {
-            // console.log('DOM fully loaded');
             const messageInput = document.getElementById('messageInput');
             messageInput.style.display = 'none';
             messageInput.required = false;
         });
 
         <?php if (isset($_SESSION['success'])): ?>
-            // console.log('Showing success SweetAlert with message: <?php echo htmlspecialchars($_SESSION['success']); ?>');
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
@@ -419,7 +403,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <?php endif; ?>
 
         <?php if (isset($_SESSION['error'])): ?>
-            // console.log('Showing error SweetAlert with message: <?php echo htmlspecialchars($_SESSION['error']); ?>');
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',

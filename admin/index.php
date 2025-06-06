@@ -77,6 +77,16 @@ try {
     $stmt_pending_members->execute();
     $pending_members_count = $stmt_pending_members->fetch(PDO::FETCH_ASSOC)['total'];
 
+    // ดึงข้อมูลดอกไม้สำหรับแสดงสต็อก
+    $stmt_stock = $conn->prepare("
+        SELECT ID, flower_name, stock_quantity, image
+        FROM tbl_flowers
+        ORDER BY stock_quantity ASC
+        LIMIT 5
+    ");
+    $stmt_stock->execute();
+    $flowers = $stmt_stock->fetchAll(PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
 }
@@ -115,38 +125,48 @@ try {
             background: linear-gradient(135deg, #ff6b6b, #e84393);
             color: white;
             border: none;
-            animation: pulse 2s infinite;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
         }
         .notification-card .card-body {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 2rem;
         }
         .notification-card h2 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin: 0;
         }
         .notification-card p {
-            font-size: 1.6rem;
+            font-size: 1.2rem;
             margin: 0;
         }
         .notification-card .btn {
             background-color: #fff;
             color: #e84393;
             font-weight: bold;
-            padding: 0.75rem 1.5rem;
-            transition: transform 0.2s;
+            padding: 0.5rem 1rem;
         }
         .notification-card .btn:hover {
-            transform: scale(1.05);
             background-color: #f8f9fa;
         }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(232, 67, 147, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(232, 67, 147, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(232, 67, 147, 0); }
+        .stock-card {
+            background-color: #fff;
+            border: none;
+            margin-bottom: 2rem;
+        }
+        .stock-card .card-header {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+        .stock-card img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .stock-card .badge {
+            font-size: 1rem;
+            padding: 0.5rem;
         }
     </style>
 </head>
@@ -242,9 +262,10 @@ try {
                             </div>
                         </div>
                     </div>
-                    <!-- New Orders Notification -->
+                    <!-- Notifications Row -->
                     <div class="row">
-                        <div class="col-lg-12">
+                        <!-- New Orders Notification -->
+                        <div class="col-lg-6 mb-4">
                             <div class="card notification-card shadow">
                                 <div class="card-body">
                                     <div>
@@ -255,10 +276,8 @@ try {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <!-- Pending Members Notification -->
-                    <div class="row">
-                        <div class="col-lg-12">
+                        <!-- Pending Members Notification -->
+                        <div class="col-lg-6 mb-4">
                             <div class="card notification-card shadow">
                                 <div class="card-body">
                                     <div>
@@ -266,6 +285,61 @@ try {
                                         <p>สมาชิกที่รอ - การยืนยันที่อยู่</p>
                                     </div>
                                     <a href="members.php" class="btn"><i class="fas fa-users me-2"></i>ดูสมาชิก</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Stock Overview -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card stock-card shadow">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-white">ภาพรวมสต็อกดอกไม้ (แสดง 5 รายการที่มีสต็อกต่ำสุด)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>รูปภาพ</th>
+                                                    <th>ชื่อดอกไม้</th>
+                                                    <th>สต็อก</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php if (!empty($flowers)): ?>
+                                                    <?php foreach ($flowers as $flower): ?>
+                                                        <tr>
+                                                            <td class="text-center">
+                                                                <?php
+                                                                $target_dir = "Uploads/flowers/";
+                                                                if (!empty($flower['image']) && file_exists($target_dir . $flower['image'])): ?>
+                                                                    <img src="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>"
+                                                                         alt="<?php echo htmlspecialchars($flower['flower_name']); ?>"
+                                                                         class="img-thumbnail">
+                                                                <?php else: ?>
+                                                                    <div class="bg-light d-flex align-items-center justify-content-center"
+                                                                         style="width: 50px; height: 50px; border-radius: 5px;">
+                                                                        <i class="fas fa-image text-muted"></i>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                            <td><?php echo htmlspecialchars($flower['flower_name']); ?></td>
+                                                            <td class="text-center">
+                                                                <span class="badge badge-<?php echo $flower['stock_quantity'] > 0 ? 'success' : 'danger'; ?>">
+                                                                    <?php echo htmlspecialchars($flower['stock_quantity']); ?> ชิ้น
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="3" class="text-center">ไม่มีข้อมูลดอกไม้ในสต็อก</td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
