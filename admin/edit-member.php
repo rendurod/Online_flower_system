@@ -215,9 +215,9 @@ $profile_image_dir = "../Uploads/imgprofile/";
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">สมาชิก : <?php echo htmlspecialchars($member['FirstName'] . ' ' . $member['LastName']); ?></h1>
-                        <a href="members.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+                        <!-- <a href="members.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังรายการสมาชิก
-                        </a>
+                        </a> -->
                     </div>
 
                     <div class="card shadow mb-4">
