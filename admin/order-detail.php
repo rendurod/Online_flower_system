@@ -3,19 +3,6 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
-// เปิด debug (บันทึก log แต่ไม่แสดงผลในหน้าจอ)
-ini_set('display_errors', 0);
-ini_set('display_startup_errors', 0);
-error_reporting(E_ALL);
-
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-if (!$conn) {
-    error_log("Database connection failed");
-    $_SESSION['error_message'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
-    header("Location: login.php");
-    exit();
-}
-
 // ตรวจสอบ session adminid
 if (!isset($_SESSION['adminid'])) {
     error_log("No admin session found");
@@ -121,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         if ($row_count > 0) {
             error_log("Status updated successfully for order_id: $order_id, new_status: $new_status");
             $_SESSION['success_message'] = 'อัปเดตสถานะเรียบร้อยแล้ว';
-            header("Location: orders.php");
+            header("Location: order-confirm.php");
             exit();
         } else {
             error_log("No rows updated for order_id: $order_id");

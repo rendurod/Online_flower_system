@@ -32,7 +32,7 @@ try {
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
-        WHERE o.Status IN (1, 2)
+        WHERE o.Status IN (1, 2, 5)
         ORDER BY o.PostingDate DESC
     ");
     $stmt->execute();
@@ -68,10 +68,23 @@ try {
             font-weight: 500;
         }
 
-        .status-paid { background-color: #2ecc71; color: #fff; }
-        .status-edited { background-color: #e74c3c; color: #fff; }
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
 
-        .table th, .table td {
+        .status-edited {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .status-new-slip {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1rem;
         }
@@ -100,11 +113,12 @@ try {
                         <div class="card-body">
                             <!-- Status Filter -->
                             <div class="filter-container">
-                                <label for="statusFilter">กรองตามสถานะ:</label>
+                                <label for="statusFilter" class="me-2">กรองตามสถานะ:</label>
                                 <select id="statusFilter" class="form-control" style="width: auto; display: inline-block;">
                                     <option value="">ทั้งหมด</option>
-                                    <option value="1">การชำระเงินสำเร็จ</option>
-                                    <option value="2">แก้ไขการชำระเงิน</option>
+                                    <option value="1" <?php echo isset($_GET['status']) && $_GET['status'] == '1' ? 'selected' : ''; ?>>การชำระเงินสำเร็จ</option>
+                                    <option value="2" <?php echo isset($_GET['status']) && $_GET['status'] == '2' ? 'selected' : ''; ?>>แก้ไขการชำระเงิน</option>
+                                    <option value="5" <?php echo isset($_GET['status']) && $_GET['status'] == '5' ? 'selected' : ''; ?>>แนปสลิปใหม่</option>
                                 </select>
                             </div>
                             <div class="table-responsive">
@@ -136,7 +150,9 @@ try {
                                                         <?php
                                                         $statusOptions = [
                                                             1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
-                                                            2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit']
+                                                            2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit'],
+                                                            5 => ['text' => 'แนบสลิปใหม่', 'icon' => 'fa-upload', 'class' => 'status-new-slip', 'option_class' => '']
+
                                                         ];
                                                         $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1;
                                                         ?>
@@ -186,47 +202,53 @@ try {
         $(document).ready(function() {
             // Initialize DataTable
             var table = $('#dataTable').DataTable({
-                "columnDefs": [
-                    { "orderable": false, "targets": "no-sort" }
-                ],
+                "columnDefs": [{
+                    "orderable": false,
+                    "targets": "no-sort"
+                }],
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Thai.json"
                 }
             });
 
-            // Status filter
-            $('#statusFilter').on('change', function() {
-                var status = $(this).val();
-                if (status === '') {
-                    table.column(6).search('').draw();
-                } else {
-                    table.column(6).search(status).draw();
+            // Custom filtering function
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                var selectedStatus = $('#statusFilter').val();
+                var statusCell = $(table.cell(dataIndex, 6).node()).text().trim();
+
+                // ถ้าไม่ได้เลือกสถานะ (ทั้งหมด)
+                if (!selectedStatus) {
+                    return true;
                 }
+
+                // ตรวจสอบสถานะ
+                if (selectedStatus === '1' && statusCell.includes('การชำระเงินสำเร็จ')) {
+                    return true;
+                }
+                if (selectedStatus === '2' && statusCell.includes('แก้ไขการชำระเงิน')) {
+                    return true;
+                }
+                if (selectedStatus === '5' && statusCell.includes('แนบสลิปใหม่')) {
+                    return true;
+                }
+
+                return false;
             });
 
-            // SweetAlert for success/error messages
-            <?php if (isset($_SESSION['success'])): ?>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'สำเร็จ',
-                    text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-                <?php unset($_SESSION['success']); ?>
-            <?php endif; ?>
+            // Event listener for status filter
+            $('#statusFilter').on('change', function() {
+                table.draw(); // Redraw the table with the filter
+            });
 
-            <?php if (isset($_SESSION['error'])): ?>
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ข้อผิดพลาด',
-                    text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
-                    timer: 3000,
-                    showConfirmButton: false
-                });
-                <?php unset($_SESSION['error']); ?>
-            <?php endif; ?>
+            // Set initial filter if needed
+            var urlParams = new URLSearchParams(window.location.search);
+            var initialStatus = urlParams.get('status');
+            if (initialStatus) {
+                $('#statusFilter').val(initialStatus);
+                table.draw();
+            }
         });
     </script>
 </body>
+
 </html>

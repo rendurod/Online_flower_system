@@ -116,7 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             padding: 2rem;
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1.4rem;
         }
@@ -158,13 +159,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             font-weight: 500;
         }
 
-        .status-awaiting { background-color: #95a5a6; color: #fff; }
-        .status-paid { background-color: #2ecc71; color: #fff; }
-        .status-edited { background-color: #e74c3c; color: #fff; }
-        .status-new-slip { background-color: #3498db; color: #fff; }
+        .status-awaiting {
+            background-color: #95a5a6;
+            color: #fff;
+        }
 
-        .status-option-paid { background-color: #2ecc71; color: #fff; }
-        .status-option-edited { background-color: #e74c3c; color: #fff; }
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .status-edited {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .status-new-slip {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .status-option-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .status-option-edited {
+            background-color: #e74c3c;
+            color: #fff;
+        }
 
         .alert-new-slip {
             background-color: #e8f4f8;
@@ -265,7 +288,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                         <option value="1" class="status-option-paid" <?php echo $currentStatus == 1 ? 'selected' : ''; ?>>การชำระเงินสำเร็จ</option>
                                         <option value="2" class="status-option-edited" <?php echo $currentStatus == 2 ? 'selected' : ''; ?>>แก้ไขการชำระเงิน</option>
                                     </select>
-                                    <textarea name="message" id="messageInput" class="form-control mt-2" placeholder="ระบุข้อความถึงลูกค้า (ถ้ามี)"><?php echo htmlspecialchars($order['Message'] ?? ''); ?></textarea>
+                                    <textarea name="message" id="messageInput"
+                                        class="form-control mt-2"
+                                        style="display: none;"
+                                        placeholder="ระบุข้อความถึงลูกค้า (กรุณาระบุเหตุผลที่ต้องการให้แก้ไข)"><?php echo htmlspecialchars($order['Message'] ?? ''); ?></textarea>
                                 </div>
 
                                 <div class="form-group d-flex justify-content-end">
@@ -298,6 +324,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusSelect = document.getElementById('status');
+            const messageInput = document.getElementById('messageInput');
+
+            // ฟังก์ชันตรวจสอบการแสดง/ซ่อน textarea
+            function toggleMessageInput() {
+                if (statusSelect.value === '2') {
+                    messageInput.style.display = 'block';
+                    messageInput.required = true;
+                } else {
+                    messageInput.style.display = 'none';
+                    messageInput.required = false;
+                    messageInput.value = '';
+                }
+            }
+
+            // เรียกใช้ฟังก์ชันครั้งแรกเพื่อตั้งค่าเริ่มต้น
+            toggleMessageInput();
+
+            // เพิ่ม event listener สำหรับการเปลี่ยนแปลงค่า select
+            statusSelect.addEventListener('change', toggleMessageInput);
+        });
         document.getElementById('updateStatusForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const form = this;
@@ -320,13 +368,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             });
         });
 
+        // แก้ไขส่วนแสดง success message
         <?php if (isset($_SESSION['success'])): ?>
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ',
                 text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
-                timer: 3000,
-                showConfirmButton: false
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#e84393'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = 'order-confirm.php';
+                }
             });
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
@@ -343,4 +396,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <?php endif; ?>
     </script>
 </body>
+
 </html>

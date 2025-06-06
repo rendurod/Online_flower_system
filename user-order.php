@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     $accountNumber = trim(htmlspecialchars($_POST['account_number'] ?? '', ENT_QUOTES, 'UTF-8'));
 
     // If "อื่น ๆ" is selected, use the custom bank name
-    if ($_POST['bank_select'] === 'อื่น ๆ') {
+    if (isset($_POST['bank_select']) && $_POST['bank_select'] === 'อื่น ๆ') {
         $accountName = trim(htmlspecialchars($_POST['custom_bank'] ?? '', ENT_QUOTES, 'UTF-8'));
     }
 
@@ -173,7 +173,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
 
         .status-tab-link.active {
             background-color: #f8f9fa;
-            color: #dc3545;
+            color: #fff;
             border-bottom: 2px solid #dc3545;
             font-weight: bold;
         }
@@ -201,22 +201,9 @@ $cancelledCount = count(array_filter($orders, function ($order) {
             color: #dc3545;
         }
 
-        .refresh-button {
-            text-align: right;
-            margin-bottom: 1rem;
-        }
-
         .order-item.urgent {
             border-left: 4px solid #dc3545;
             background-color: #fff3f3;
-        }
-
-        .welcome-message {
-            background-color: #e9f7ef;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            color: #28a745;
         }
     </style>
 </head>
@@ -287,13 +274,6 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                 <i class="fas fa-spinner fa-spin"></i> กำลังโหลด...
             </div>
 
-            <!-- Refresh Button -->
-            <div class="refresh-button">
-                <button class="btn btn-primary" onclick="window.location.reload();">
-                    <i class="fas fa-sync-alt me-1"></i> รีเฟรช
-                </button>
-            </div>
-
             <!-- Order Content -->
             <div class="tab-content">
                 <!-- Toast Notification -->
@@ -314,12 +294,9 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                 <!-- Processing Tab (Status 0, 1, 2, 5) -->
                 <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'processing' ? 'active' : (!isset($_GET['tab']) ? 'active' : '')); ?>" id="processing">
                     <h4 class="tab-title">ดำเนินการ</h4>
-                    <div class="welcome-message">
-                        <p><strong>ยินดีต้อนรับ!</strong> ตรวจสอบคำสั่งซื้อที่กำลังดำเนินการของคุณด้านล่าง</p>
-                    </div>
                     <?php if ($orders): ?>
                         <?php $processingOrders = array_filter($orders, function ($order) {
-                            return in_array($order['Status'], [0, 1, 2, 5]);
+                            return in_array($order['Status'], [0, 2, 5]);
                         }); ?>
                         <?php if (!empty($processingOrders)): ?>
                             <?php foreach ($processingOrders as $order): ?>
@@ -444,7 +421,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                             <div class="no-data-alert">ไม่มีคำสั่งซื้อที่กำลังจัดส่ง</div>
                         <?php endif; ?>
                     <?php else: ?>
-                        <div class="no-data-alert">ไม่มีคำสั่งซื้อเล็กน้อยที่กำลังจัดส่ง</div>
+                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่กำลังจัดส่ง</div>
                     <?php endif; ?>
                 </div>
 
