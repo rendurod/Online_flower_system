@@ -139,13 +139,13 @@ try {
                                             <?php foreach ($orders as $order): ?>
                                                 <tr>
                                                     <td><?php echo htmlspecialchars($order['BookingNumber']); ?></td>
-<td>
-    <a href="edit-member.php?id=<?php echo htmlspecialchars($order['MemberID']); ?>" 
-       class="text-primary" 
-       title="แก้ไขข้อมูลสมาชิก">
-        <?php echo htmlspecialchars($order['CustomerName']); ?>
-    </a>
-</td>
+                                                    <td>
+                                                        <a href="edit-member.php?id=<?php echo htmlspecialchars($order['MemberID']); ?>"
+                                                            class="text-primary"
+                                                            title="แก้ไขข้อมูลสมาชิก">
+                                                            <?php echo htmlspecialchars($order['CustomerName']); ?>
+                                                        </a>
+                                                    </td>
                                                     <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
                                                     <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
                                                     <td>฿<?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?></td>
