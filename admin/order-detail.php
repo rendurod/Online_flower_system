@@ -71,12 +71,10 @@ try {
 
 // Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
-    // Debug ข้อมูลที่รับมา
     $new_status = isset($_POST['status']) ? intval($_POST['status']) : 0;
     $message = isset($_POST['message']) ? trim(htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8')) : null;
     error_log("Received POST data: status=$new_status, message=" . ($message ?? 'NULL') . ", order_id=$order_id");
 
-    // ตรวจสอบสถานะใหม่
     $valid_statuses = [1, 2];
     if (!in_array($new_status, $valid_statuses)) {
         error_log("Invalid status: $new_status");
@@ -85,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         exit();
     }
 
-    // ตรวจสอบข้อความสำหรับสถานะ 2
     if ($new_status == 2 && empty($message)) {
         error_log("Missing message for status 2");
         $_SESSION['error_message'] = 'กรุณาระบุข้อความสำหรับการแก้ไขการชำระเงิน';
@@ -94,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     }
 
     try {
-        // อัปเดตสถานะและข้อความ
         $sql = "UPDATE tbl_orders SET Status = :status, Message = :message WHERE ID = :id";
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
@@ -102,7 +98,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
         $stmt->execute();
 
-        // ตรวจสอบจำนวนแถวที่อัปเดต
         $row_count = $stmt->rowCount();
         error_log("Update query executed for order_id: $order_id, rows affected: $row_count");
         if ($row_count > 0) {
@@ -124,6 +119,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         exit();
     }
 }
+
+// Handle order cancellation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
+    $reason = isset($_POST['cancel_reason']) ? trim(htmlspecialchars($_POST['cancel_reason'], ENT_QUOTES, 'UTF-8')) : '';
+    if (empty($reason)) {
+        error_log("Missing cancellation reason for order_id: $order_id");
+        $_SESSION['error_message'] = 'กรุณาระบุเหตุผลในการยกเลิก';
+        header("Location: order-detail.php?order_id=$order_id");
+        exit();
+    }
+
+    try {
+        // Append suffix to cancellation reason
+        $reason_with_suffix = $reason . ' //จากFlowerTeam';
+        $sql = "UPDATE tbl_orders SET Status = 6, Message = :message WHERE ID = :id";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue(':message', $reason_with_suffix, PDO::PARAM_STR);
+        $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $row_count = $stmt->rowCount();
+        error_log("Cancellation query executed for order_id: $order_id, rows affected: $row_count");
+        if ($row_count > 0) {
+            error_log("Order cancelled successfully for order_id: $order_id");
+            $_SESSION['success_message'] = 'ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว';
+            header("Location: order-cancel.php");
+            exit();
+        } else {
+            error_log("No rows updated for order_id: $order_id");
+            $_SESSION['error_message'] = 'ไม่สามารถยกเลิกคำสั่งซื้อได้';
+            header("Location: order-detail.php?order_id=$order_id");
+            exit();
+        }
+    } catch (PDOException $e) {
+        $error_info = $stmt->errorInfo();
+        error_log("Error cancelling order: " . $e->getMessage() . " | SQLSTATE: " . $error_info[0] . " | Driver Error: " . $error_info[1] . " | Message: " . $error_info[2]);
+        $_SESSION['error_message'] = 'เกิดข้อผิดพลาดในการยกเลิกคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
+        header("Location: order-detail.php?order_id=$order_id");
+        exit();
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -136,14 +172,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     <meta name="description" content="">
     <meta name="author" content="">
     <title>รายละเอียดคำสั่งซื้อ - FlowerShop</title>
-    <!-- LOGO -->
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
-    <!-- Custom fonts for this template -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
     <style>
@@ -239,6 +271,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
             outline: none;
             border-color: var(--primary-pink);
             box-shadow: 0 0 0 3px rgba(232, 147, 147, 0.1);
+        }
+
+        .btn-cancel-order {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .btn-cancel-order:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-cancel-order:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
         }
     </style>
 </head>
@@ -351,11 +404,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                                     <button type="submit" name="update_status" class="btn btn-primary mr-2">
                                         <i class="fas fa-save mr-2"></i>บันทึก
                                     </button>
-                                    <a href="orders.php" class="btn btn-secondary">
+                                    <a href="orders.php" class="btn btn-secondary mr-2">
                                         <i class="fas fa-times mr-2"></i>ยกเลิก
                                     </a>
+                                    <!-- New Cancel Order Button -->
+                                    <button type="button" class="btn btn-cancel-order" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                                        <i class="fas fa-times-circle mr-2"></i>ยกเลิกคำสั่งซื้อ
+                                    </button>
                                 </div>
                             </form>
+
+                            <!-- Cancel Order Modal -->
+                            <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="cancelOrderModalLabel">ยกเลิกคำสั่งซื้อ #<?php echo htmlspecialchars($order['BookingNumber']); ?></h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form method="POST" action="order-detail.php?order_id=<?php echo $order_id; ?>">
+                                            <div class="modal-body">
+                                                <input type="hidden" name="cancel_order" value="1">
+                                                <div class="mb-3">
+                                                    <label for="cancel_reason" class="form-label">เหตุผลในการยกเลิก <span class="text-danger">*</span></label>
+                                                    <textarea class="form-control" id="cancel_reason" name="cancel_reason" rows="4" placeholder="กรุณาระบุเหตุผลในการยกเลิก" required></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                                                <button type="submit" class="btn btn-danger">ยืนยันการยกเลิก</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -368,16 +450,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Scripts -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
-    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        // Show/hide message input based on status
         const statusSelect = document.getElementById('status');
         const messageInput = document.getElementById('message-input');
         if (statusSelect && messageInput) {
@@ -392,7 +470,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
                 }
             });
 
-            // Initial check
             if (statusSelect.value === '2') {
                 messageInput.style.display = 'block';
                 messageInput.required = true;

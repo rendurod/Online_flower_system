@@ -3,13 +3,6 @@ session_start();
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-if (!$conn) {
-    $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
-    header("Location: login.php");
-    exit();
-}
-
 // ตรวจสอบว่ามี session adminid หรือไม่
 if (!isset($_SESSION['adminid'])) {
     header("Location: login.php");
@@ -101,7 +94,8 @@ try {
             padding: 2rem;
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1.4rem;
         }
@@ -129,11 +123,35 @@ try {
             font-weight: 500;
         }
 
-        .status-awaiting { background-color: #95a5a6; color: #fff; }
-        .status-paid { background-color: #2ecc71; color: #fff; }
-        .status-edited { background-color: #e74c3c; color: #fff; }
-        .status-processing { background-color: #f1c40f; color: #fff; }
-        .status-completed { background-color: #7bed9f; color: #fff; }
+        .status-awaiting {
+            background-color: #95a5a6;
+            color: #fff;
+        }
+
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .status-edited {
+            background-color: #e74c3c;
+            color: #fff;
+        }
+
+        .status-processing {
+            background-color: #f1c40f;
+            color: #fff;
+        }
+
+        .status-completed {
+            background-color: #7bed9f;
+            color: #fff;
+        }
+
+        .status-cancel {
+            background-color: #e74c3c;
+            color: #000;
+        }
 
         .stock-highlight {
             color: #e74c3c;
@@ -209,7 +227,9 @@ try {
                                                 1 => ['text' => 'การชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid'],
                                                 2 => ['text' => 'แก้ไขการชำระเงิน', 'icon' => 'fa-edit', 'class' => 'status-edited'],
                                                 3 => ['text' => 'กำลังจัดส่งสินค้า', 'icon' => 'fa-truck', 'class' => 'status-processing'],
-                                                4 => ['text' => 'จัดส่งสำเร็จ', 'icon' => 'fa-check-circle', 'class' => 'status-completed']
+                                                4 => ['text' => 'จัดส่งสำเร็จ', 'icon' => 'fa-check-circle', 'class' => 'status-completed'],
+                                                5 => ['text' => 'แนปสลิปใหม่', 'class' => 'status-new-slip', 'icon' => 'fa-upload'],
+                                                6 => ['text' => 'ยกเลิกคำสั่งซื้อ', 'class' => 'status-cancel', 'icon' => 'fa-times-circle']
                                             ];
 
                                             $currentStatus = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
@@ -295,4 +315,5 @@ try {
         <?php endif; ?>
     </script>
 </body>
+
 </html>

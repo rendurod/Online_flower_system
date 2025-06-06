@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
             $conn->commit();
 
             $_SESSION['success'] = 'อัปโหลดสลิปการชำระเงินใหม่เรียบร้อยแล้ว';
-            header("Location: user-order.php?tab=tracking");
+            header("Location: user-order.php");
             exit();
         } catch (PDOException $e) {
             $conn->rollBack();
