@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once 'config/db.php';
-require_once 'includes/functions.php';
 
 // ตรวจสอบการเชื่อมต่อฐานข้อมูล
 if (!$conn) {
