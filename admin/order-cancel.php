@@ -199,9 +199,17 @@ try {
                                                     <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
                                                     <td><?php echo date('d/m/Y H:i', strtotime($order['LastupdateDate'])); ?></td>
                                                     <td><?php echo htmlspecialchars($order['Message'] ?? 'ไม่ระบุ'); ?></td>
-                                                    <td>
-                                                        <?php echo strpos($order['Message'], '//จากFlowerTeam') !== false ? 'แอดมิน' : 'ลูกค้า'; ?>
-                                                    </td>
+<td class="text-center">
+    <?php if (strpos($order['Message'], '//จากFlowerTeam') !== false): ?>
+        <span class="badge bg-danger text-white">
+            <i class="fas fa-user-shield me-1"></i>แอดมิน
+        </span>
+    <?php else: ?>
+        <span class="badge bg-success text-white">
+            <i class="fas fa-user me-1"></i>ลูกค้า
+        </span>
+    <?php endif; ?>
+</td>
                                                     <td class="text-center">
                                                         <a href="order-cancel-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-view-details">
                                                             <i class="fas fa-eye mr-2"></i>เพิ่มเติม
