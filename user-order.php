@@ -261,7 +261,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                 </div>
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'cancelled' ? 'active' : ''); ?>" href="user-order.php?tab=cancelled">
-                        <i class="fas fa-times-circle me-1"></i> รายการยกเลิกสำเร็จ
+                        <i class="fas fa-times-circle me-1"></i> ยกเลิกคำสั่งซื้อ
                         <?php if ($cancelledCount > 0): ?>
                             <span class="badge-count"><?php echo $cancelledCount; ?></span>
                         <?php endif; ?>
@@ -524,7 +524,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                             <textarea class="form-control" id="reason" name="reason" rows="4" placeholder="กรุณาระบุเหตุผลในการยกเลิก" required></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="bank_select" class="form-label">ชื่อบัญชี <span class="text-danger">*</span></label>
+                            <label for="bank_select" class="form-label">ชื่อธนาคาร <span class="text-danger">*</span></label>
                             <select class="form-control" id="bank_select" name="account_name" required>
                                 <option value="" disabled selected>เลือกธนาคาร</option>
                                 <option value="ธนาคารกรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
