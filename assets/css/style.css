@@ -604,13 +604,13 @@ section {
     overflow: hidden;
 }
 
-.home .swiper-container {
+.home .swiper {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: 1;
 }
 
 .home .swiper-slide {
@@ -622,11 +622,12 @@ section {
 .home .content {
     max-width: 50rem;
     position: relative;
-    z-index: 1;
+    z-index: 3;
     padding: 2rem;
     background: rgba(255, 255, 255, 0.8);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-light);
+    pointer-events: auto;
 }
 
 .home .content h3 {
@@ -651,11 +652,15 @@ section {
 /* Swiper Pagination and Navigation for Home Slider */
 .home .swiper-pagination {
     bottom: 20px;
+    z-index: 2;
+    pointer-events: auto;
 }
 
 .home .swiper-pagination-bullet {
     background: var(--white);
     opacity: 0.7;
+    width: 10px;
+    height: 10px;
 }
 
 .home .swiper-pagination-bullet-active {
@@ -666,16 +671,33 @@ section {
 .home .swiper-button-prev,
 .home .swiper-button-next {
     color: var(--white);
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    margin: 0 10px;
+    width: 50px;
+    height: 50px;
+    margin: 0 30px;
+    z-index: 2;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: auto;
+    opacity: 0.8;
+    transition: opacity 0.3s, background 0.3s;
+}
+
+.home .swiper-button-prev:hover,
+.home .swiper-button-next:hover {
+    background: var(--primary-pink);
+    opacity: 1;
 }
 
 .home .swiper-button-prev:after,
 .home .swiper-button-next:after {
-    font-size: 18px;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 /* 9. About Section */
@@ -1048,6 +1070,13 @@ section {
     
     .footer-title {
         margin-top: 1.5rem;
+    }
+
+    .home .swiper-button-prev,
+    .home .swiper-button-next {
+        width: 40px;
+        height: 40px;
+        margin: 0 10px;
     }
 }
 
