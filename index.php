@@ -2,8 +2,9 @@
 session_start();
 include('config/db.php');
 
+// ตรวจสอบว่าผู้ใช้ล็อกินแล้วหรือยัง
 if (isset($_SESSION['user_login'])) {
-    header("location: login.php");
+    header("location: user.php");
     exit;
 }
 
@@ -21,6 +22,7 @@ try {
     $messageType = "danger";
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -50,6 +52,17 @@ try {
 
     <!-- home section starts-->
     <section class="home" id="home">
+        <div class="swiper-container home-slider">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" style="background-image: url('assets/img/flower2.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower3.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower4.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower5.jpg');"></div>
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+        </div>
         <div class="content">
             <h3>Indira Gift flowers Shop</h3>
             <span>I will always be your flower.</span>
@@ -132,6 +145,29 @@ try {
     <!-- Initialize Swiper -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Home Slider
+            const homeSlider = new Swiper('.home-slider', {
+                slidesPerView: 1,
+                loop: true,
+                autoplay: {
+                    delay: 5000,
+                    disableOnInteraction: false,
+                },
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                effect: 'fade',
+                fadeEffect: {
+                    crossFade: true,
+                },
+            });
+
+            // Initialize Flower Slider
             const flowerSlider = new Swiper('.flower-slider', {
                 slidesPerView: 'auto',
                 spaceBetween: 30,
