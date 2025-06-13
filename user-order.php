@@ -491,7 +491,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                                 <p><strong>ชื่อบัญชี:</strong> <?php echo htmlspecialchars($order['AccountName']); ?></p>
                                                 <p><strong>เลขที่บัญชี:</strong> <?php echo htmlspecialchars($order['AccountNumber']); ?></p>
                                             <?php endif; ?>
-                                            <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
+                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                         </div>
                                     </div>
                                 </div>

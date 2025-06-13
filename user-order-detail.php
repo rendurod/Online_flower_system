@@ -103,6 +103,32 @@ $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1; // Def
             margin-bottom: 1rem;
             color: #333;
         }
+        .back-button {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background-color: #dc3545;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+        }
+        .back-button:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
+        }
+        .back-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+        }
+        .order-finish-container {
+            position: relative;
+            padding-top: 3rem; /* Space for back button */
+        }
     </style>
 </head>
 
@@ -114,6 +140,11 @@ $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1; // Def
     <!-- Order Detail Section -->
     <section class="order-finish-section">
         <div class="order-finish-container">
+            <!-- Back Button -->
+            <a href="user-order.php" class="back-button">
+                <i class="fas fa-arrow-left me-1"></i> ย้อนกลับ
+            </a>
+
             <!-- Status Icon -->
             <div class="success-icon status-icon">
                 <i class="fas <?php echo htmlspecialchars($statusOptions[$status]['icon']); ?>"></i>
@@ -193,7 +224,7 @@ $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1; // Def
                 <?php if (!empty($order['Image'])): ?>
                     <div class="payment-slip">
                         <span>สลิปการชำระเงิน</span>
-                        <img src="uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip">
+                        <img src="Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip">
                     </div>
                 <?php else: ?>
                     <p>ยังไม่มีสลิปการชำระเงิน</p>
@@ -224,16 +255,6 @@ $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1; // Def
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <a href="products.php" class="btn-continue">
-                    <i class="fas fa-shopping-bag"></i> ซื้อสินค้าต่อ
-                </a>
-                <a href="user-order.php" class="btn-view-orders">
-                    <i class="fas fa-list"></i> กลับสู่คำสั่งซื้อ
-                </a>
-            </div>
         </div>
     </section>
 
