@@ -24,12 +24,7 @@ try {
             <!-- Shop Info -->
             <div class="col-lg-4 col-md-6">
                 <h5 class="footer-title">Flower Shop</h5>
-                <p class="text-white">ร้านดอกไม้ที่คุณไว้วางใจ บริการจัดส่งทั่วประเทศ</p>
-                <div class="social-links mt-3">
-                    <a href="#" class="btn btn-outline-light btn-sm me-2"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="btn btn-outline-light btn-sm me-2"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="btn btn-outline-light btn-sm me-2"><i class="fab fa-line"></i></a>
-                </div>
+                <p class="text-white">ร้านดอกไม้ที่คุณไว้วางใจ บริการจัดส่งในพื้นที่</p>
             </div>
 
             <!-- Quick Links -->

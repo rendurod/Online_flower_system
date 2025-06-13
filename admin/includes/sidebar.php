@@ -81,7 +81,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <li class="nav-item <?= ($currentPage == 'order-cancel.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-cancel.php">
             <i class="fas fa-fw fa-times-circle"></i>
-            <span>คำสั่งซื้อที่ยกเลิก</span>
+            <span>5: คำสั่งซื้อที่ยกเลิก</span>
         </a>
     </li>
 
