@@ -373,7 +373,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-paid"><i class="fas fa-check me-1"></i>ชำระเงินสำเร็จ</span></p>
-                                            <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
+                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                         </div>
                                     </div>
                                 </div>
@@ -410,7 +410,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-processing"><i class="fas fa-truck me-1"></i>กำลังจัดส่งสินค้า</span></p>
-                                            <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
+                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                         </div>
                                     </div>
                                 </div>
@@ -447,7 +447,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-completed"><i class="fas fa-check-circle me-1"></i>จัดส่งสำเร็จ</span></p>
-                                            <button class="btn-details" onclick="alert('ฟังก์ชันนี้อยู่ในระหว่างการพัฒนา')">ดูรายละเอียด</button>
+                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                         </div>
                                     </div>
                                 </div>
