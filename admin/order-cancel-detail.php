@@ -2,15 +2,9 @@
 session_start();
 require_once 'config/db.php';
 
-// ตรวจสอบการเชื่อมต่อฐานข้อมูล
-if (!$conn) {
-    $_SESSION['error'] = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
-    header("Location: login.php");
-    exit();
-}
-
 // ตรวจสอบว่ามี session adminid หรือไม่
 if (!isset($_SESSION['adminid'])) {
+    error_log("No admin session found");
     header("Location: login.php");
     exit();
 }
@@ -24,11 +18,13 @@ try {
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$admin) {
+        error_log("Admin not found for id: $admin_id");
         $_SESSION['error'] = "ไม่พบข้อมูลผู้ดูแลระบบ";
         header("Location: login.php");
         exit();
     }
 } catch (PDOException $e) {
+    error_log("Error fetching admin: " . $e->getMessage());
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ดูแลระบบ: " . htmlspecialchars($e->getMessage());
     header("Location: login.php");
     exit();
@@ -130,6 +126,16 @@ try {
             color: #fff;
         }
 
+        .status-refunded {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .status-not-refunded {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
         /* สไตล์สำหรับตารางข้อมูลบัญชี */
         .account-info-card {
             border-left: 4px solid #4e73df;
@@ -171,6 +177,26 @@ try {
             font-weight: bold;
             color: #dc3545;
         }
+
+        .btn-return {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-return:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-return:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+        }
     </style>
 </head>
 
@@ -183,9 +209,16 @@ try {
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อที่ยกเลิก: #<?php echo htmlspecialchars($order['BookingNumber']); ?></h1>
-                        <a href="order-cancel.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังรายการคำสั่งซื้อที่ยกเลิก
-                        </a>
+                        <div>
+                            <?php if (strpos($order['Message'], '//RefundedByAdmin') === false): ?>
+                                <a href="order-return.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-return mr-2">
+                                    <i class="fas fa-money-check-alt mr-2"></i>อัปเดตการคืนเงิน
+                                </a>
+                            <?php endif; ?>
+                            <a href="order-cancel.php" class="btn btn-sm btn-secondary shadow-sm">
+                                <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังรายการคำสั่งซื้อที่ยกเลิก
+                            </a>
+                        </div>
                     </div>
 
                     <!-- ตารางข้อมูลบัญชี -->
@@ -205,10 +238,10 @@ try {
                                         <td><?php echo htmlspecialchars($order['AccountNumber'] ?? 'ไม่ระบุ'); ?></td>
                                     </tr>
                                     <tr>
-                                        <th>สลิปการชำระเงิน</th>
+                                        <th>สลิปการชำระเงิน/คืนเงิน</th>
                                         <td>
                                             <?php if (!empty($order['Image'])): ?>
-                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip" style="max-width: 200px; border-radius: inherit; border: 2px solid rgba(232, 67, 147, 0.2);">
+                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Slip" style="max-width: 200px; border-radius: inherit; border: 2px solid rgba(232, 67, 147, 0.2);">
                                             <?php else: ?>
                                                 ไม่มีสลิป
                                             <?php endif; ?>
@@ -285,7 +318,7 @@ try {
                                         <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
                                     </tr>
                                     <tr>
-                                        <th>เหตุผลการยกเลิก</th>
+                                        <th>เหตุผลการยกเลิก/ข้อความคืนเงิน</th>
                                         <td><?php echo htmlspecialchars($order['Message'] ?? 'ไม่ระบุ'); ?></td>
                                     </tr>
                                     <tr>
@@ -293,17 +326,23 @@ try {
                                         <td><?php echo strpos($order['Message'], '//จากFlowerTeam') !== false ? 'แอดมิน' : 'ลูกค้า'; ?></td>
                                     </tr>
                                     <tr>
-                                        <th>สถานะ</th>
+                                        <th>สถานะการคืนเงิน</th>
                                         <td>
-                                            <span class="status-label status-cancelled">
-                                                <i class="fas fa-times-circle me-1"></i>ยกเลิกคำสั่งซื้อ
-                                            </span>
+                                            <?php if (strpos($order['Message'], '//RefundedByAdmin') !== false): ?>
+                                                <span class="status-label status-refunded">
+                                                    <i class="fas fa-check-circle me-1"></i>โอนเงินคืนแล้ว
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="status-label status-not-refunded">
+                                                    <i class="fas fa-times-circle me-1"></i>ยังไม่โอนเงินคืน
+                                                </span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>รูปภาพสินค้า</th>
                                         <td class="order-image">
-                                            <img src="<?php echo !empty($order['image']) && file_exists("uploads/flowers/" . $order['image']) ? "uploads/flowers/" . htmlspecialchars($order['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                            <img src="<?php echo !empty($order['image']) && file_exists("Uploads/flowers/" . $order['image']) ? "Uploads/flowers/" . htmlspecialchars($order['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
                                         </td>
                                     </tr>
                                 </tbody>
