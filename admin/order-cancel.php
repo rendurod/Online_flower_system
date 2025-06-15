@@ -36,7 +36,7 @@ $filter_params = [];
 if ($filter === 'admin') {
     $filter_query = " AND o.Message LIKE '%//จากFlowerTeam'";
 } elseif ($filter === 'user') {
-    $filter_query = " AND (o.AccountName IS NOT NULL AND o.AccountNumber IS NOT NULL)";
+    $filter_query = " AND (o.AccountName IS NOT NULL AND o.AccountNumber IS NOT NULL AND o.Message NOT LIKE '%//จากFlowerTeam')";
 }
 
 // Fetch cancelled orders
@@ -93,6 +93,16 @@ try {
         }
 
         .status-cancelled {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .status-refunded {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .status-not-refunded {
             background-color: #dc3545;
             color: #fff;
         }
@@ -212,6 +222,17 @@ try {
                                                         <?php endif; ?>
                                                     </td>
                                                     <td class="text-center">
+                                                        <?php if (strpos($order['Message'], '//RefundedByAdmin') !== false): ?>
+                                                            <span class="status-label status-refunded">
+                                                                <i class="fas fa-check-circle me-1"></i>โอนเงินคืนแล้ว
+                                                            </span>
+                                                        <?php else: ?>
+                                                            <span class="status-label status-not-refunded">
+                                                                <i class="fas fa-times-circle me-1"></i>ยังไม่โอนเงินคืน
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="text-center">
                                                         <a href="order-cancel-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-pink btn-sm">
                                                             <i class="fas fa-eye mr-2"></i>ดู
                                                         </a>
@@ -220,7 +241,7 @@ try {
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อที่ถูกยกเลิก</td>
+                                                <td colspan="9" class="text-center">ไม่มีคำสั่งซื้อที่ถูกยกเลิก</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>

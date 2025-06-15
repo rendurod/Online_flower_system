@@ -226,7 +226,7 @@ try {
                                                             <input type="hidden" name="new_status" value="<?php echo $order['Status'] == 3 ? 4 : 3; ?>">
                                                             <button type="submit" class="btn btn-toggle-status <?php echo $order['Status'] == 3 ? 'btn-to-completed' : 'btn-to-processing'; ?>">
                                                                 <i class="fas <?php echo $order['Status'] == 3 ? 'fa-check' : 'fa-undo'; ?> me-1"></i>
-                                                                <?php echo $order['Status'] == 3 ? 'เปลี่ยนเป็นสำเร็จ' : 'เปลี่ยนเป็นกำลังจัดส่ง'; ?>
+                                                                <?php echo $order['Status'] == 3 ? 'เปลี่ยนเป็นสำเร็จ' : 'ย้อนกลับเป็นค่าเดิม'; ?>
                                                             </button>
                                                         </form>
                                                     </td>
