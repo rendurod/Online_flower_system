@@ -380,7 +380,7 @@ $imageExists = $imagePath && file_exists($imagePath);
     </section>
 
     <!-- footer -->
-    <?php include("footer.php"); ?>
+    <?php include("includes/footer.php"); ?>
     <!-- footer ends -->
 
     <!-- Bootstrap 5 JS Bundle -->

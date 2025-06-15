@@ -141,92 +141,6 @@ $cancelledCount = count(array_filter($orders, function ($order) {
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/user-profile.css">
     <link rel="stylesheet" href="assets/css/userOrder.css">
-    <style>
-        .status-cancelled {
-            background-color: #dc3545;
-        }
-
-        .status-refunded {
-            background-color: #28a745;
-            color: #fff;
-        }
-
-        .status-not-refunded {
-            background-color: #dc3545;
-            color: #fff;
-        }
-
-        .btn-cancel {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            margin-top: 0.5rem;
-            border-radius: 50px;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
-        }
-
-        .btn-cancel:hover {
-            background-color: #c82333;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
-        }
-
-        .btn-cancel:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
-        }
-
-        .status-tab-link {
-            position: relative;
-        }
-
-        .status-tab-link.active {
-            background-color: #f8f9fa;
-            color: #fff;
-            border-bottom: 2px solid #dc3545;
-            font-weight: bold;
-        }
-
-        .badge-count {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 50%;
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        #custom_bank_container {
-            display: none;
-        }
-
-        .loader {
-            text-align: center;
-            padding: 1rem;
-            font-size: 1.2rem;
-            color: #dc3545;
-        }
-
-        .order-item.urgent {
-            border-left: 4px solid #dc3545;
-            background-color: #fff3f3;
-        }
-
-        .refund-status {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-top: 0.5rem;
-        }
-    </style>
 </head>
 
 <body class="profile">
@@ -282,7 +196,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                 </div>
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'cancelled' ? 'active' : ''); ?>" href="user-order.php?tab=cancelled">
-                        <i class="fas fa-times-circle me-1"></i> ยกเลิกคำสั่งซื้อ
+                        <i class="fas fa-times-circle the-1"></i> ยกเลิกคำสั่งซื้อ
                         <?php if ($cancelledCount > 0): ?>
                             <span class="badge-count"><?php echo $cancelledCount; ?></span>
                         <?php endif; ?>
@@ -327,7 +241,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
                                             <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
                                         </div>
                                         <div class="order-details">
@@ -357,7 +271,8 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                                     <i class="fas fa-upload me-1"></i>อัปโหลดสลิปใหม่
                                                 </a>
                                             <?php endif; ?>
-                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setCancelOrder(<?php echo htmlspecialchars($order['ID']); ?>, '<?php echo htmlspecialchars($order['BookingNumber']); ?>')">ยกเลิกคำสั่งซื้อ</button>
+                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" data-order-id="<?php echo htmlspecialchars($order['ID']); ?>" data-booking-number="<?php echo htmlspecialchars($order['BookingNumber']); ?>">ยกเลิกคำสั่งซื้อ</button>
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -385,7 +300,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
                                             <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
                                         </div>
                                         <div class="order-details">
@@ -394,7 +309,9 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-paid"><i class="fas fa-check me-1"></i>ชำระเงินสำเร็จ</span></p>
-                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
+                                            <div class="order-details-footer">
+                                                <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -422,7 +339,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
                                             <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
                                         </div>
                                         <div class="order-details">
@@ -431,7 +348,9 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-processing"><i class="fas fa-truck me-1"></i>กำลังจัดส่งสินค้า</span></p>
-                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
+                                            <div class="order-details-footer">
+                                                <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -459,7 +378,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
                                             <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
                                         </div>
                                         <div class="order-details">
@@ -468,7 +387,9 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>ราคารวม:</strong> <?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?> บาท</p>
                                             <p><strong>วันที่จัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-completed"><i class="fas fa-check-circle me-1"></i>จัดส่งสำเร็จ</span></p>
-                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
+                                            <div class="order-details-footer">
+                                                <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -496,7 +417,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                     </div>
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span>Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?></span>
                                             <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
                                         </div>
                                         <div class="order-details">
@@ -507,7 +428,6 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                             <p><strong>สถานะ:</strong> <span class="status-label status-cancelled"><i class="fas fa-times-circle me-1"></i>ยกเลิกคำสั่งซื้อ</span></p>
                                             <?php if (!empty($order['Message'])): ?>
                                                 <?php
-                                                // แยกเหตุผลการยกเลิกและข้อความคืนเงิน
                                                 $messageParts = explode('//RefundedByAdmin', $order['Message']);
                                                 $cancelReason = trim($messageParts[0]);
                                                 $refundMessage = isset($messageParts[1]) ? trim($messageParts[1]) : '';
@@ -524,7 +444,9 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                                     <?php echo strpos($order['Message'], '//RefundedByAdmin') !== false ? 'โอนเงินคืนแล้ว' : 'รอการโอนเงินคืน'; ?>
                                                 </span>
                                             </p>
-                                            <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fa fa-info-circle me-circle-1"></i>ดูรายละเอียด</a>
+                                            <div class="order-details-footer">
+                                                <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -544,47 +466,48 @@ $cancelledCount = count(array_filter($orders, function ($order) {
     <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <h5 class="modal-title" id="cancelModalLabel">ยกเลิกคำสั่งซื้อ</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">ยกเลิกคำสั่งซื้อ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" id="cancelForm">
+                    <div class="modal-body">
+                        <input type="hidden" name="cancel_order" value="1">
+                        <input type="hidden" name="order_id" id="cancelOrderId">
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">เหตุผลในการยกเลิก <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="reason" name="reason" rows="4" placeholder="กรุณาระบุเหตุผลในการยกเลิก" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bank_select" class="form-label">ชื่อธนาคาร <span class="text-danger">*</span></label>
+                            <select class="form-control" id="bank_select" name="account_name" required>
+                                <option value="" disabled selected>เลือกธนาคาร</option>
+                                <option value="ธนาคารกรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
+                                <option value="ธนาคารกสิกรไทย (KBank)">ธนาคารกสิกรไทย (KBank)</option>
+                                <option value="ธนาคารกรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
+                                <option value="ธนาคารไทยพานิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
+                                <option value="ธนาคารกรุงศรีอยุธยา (Krungsri / BAY)">ธนาคารกรุงศรีอยุธยา (Krungsri / BAY)</option>
+                                <option value="ธนาคารทหารไทยธนชาต (TTB)">ธนาคารทหารไทยธนชาต (TTB)</option>
+                                <option value="ธนาคารออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
+                                <option value="ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (BAAC)">ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (BAAC)</option>
+                                <option value="อื่น ๆ">อื่น ๆ</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="custom_bank_container">
+                            <label for="custom_bank" class="form-label">ชื่อธนาคารอื่น ๆ <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="custom_bank" name="custom_bank" placeholder="กรุณาระบุชื่อธนาคาร">
+                        </div>
+                        <div class="mb-3">
+                            <label for="account_number" class="form-label">เลขที่บัญชี <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="account_number" name="account_number" placeholder="กรุณาระบุเลขที่บัญชี" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                        <button type="submit" class="btn btn-danger">ยืนยันการยกเลิก</button>
+                    </div>
+                </form>
             </div>
-            <form method="POST" id="cancelForm">
-                <div class="modal-body">
-                    <input type="hidden" name="cancel_order" value="1">
-                    <input type="hidden" name="order_id" id="cancelOrderId">
-                    <div class="mb-3">
-                        <label for="reason" class="form-label">เหตุผลในการยกเลิก <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="reason" name="reason" rows="4" placeholder="กรุณาระบุเหตุผลในการยกเลิก" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="bank_select" class="form-label">ชื่อธนาคาร <span class="text-danger">*</span></label>
-                        <select class="form-control" id="bank_select" name="account_name" required>
-                            <option value="" disabled selected>เลือกธนาคาร</option>
-                            <option value="ธนาคารกรุงเทพ (BBL)">ธนาคารกรุงเทพ (BBL)</option>
-                            <option value="ธนาคารกสิกรไทย (KBank)">ธนาคารกสิกรไทย (KBank)</option>
-                            <option value="ธนาคารกรุงไทย (KTB)">ธนาคารกรุงไทย (KTB)</option>
-                            <option value="ธนาคารไทยพานิชย์ (SCB)">ธนาคารไทยพาณิชย์ (SCB)</option>
-                            <option value="ธนาคารกรุงศรีอยุธยา (Krungsri / BAY)">ธนาคารกรุงศรีอยุธยา (Krungsri / BAY)
-                            </option>
-                            <option value="ธนาคารทหารไทยธนชาต (TTB)">ธนาคารทหารไท่ยธนชาต (TTB)</option>
-                            <option value="ธนาคารออมสิน (GSB)">ธนาคารออมสิน (GSB)</option>
-                            <option value="ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (BAAC)">ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร (BAAC)</option>
-                            <option value="อื่น ๆ">อื่น ๆ</option>
-                        </select>
-                    </div>
-                    <div class="mb-3" id="custom_bank_container">
-                        <label for="custom_bank" class="form-label">ชื่อธนาคารอื่น ๆ <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="custom_bank" name="custom_bank" placeholder="กรุณาระบุชื่อธนาคาร">
-                    </div>
-                    <div class="mb-3">
-                        <label for="account_number" class="form-label">เลขที่บัญชี <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="account_number" name="account_number" placeholder="กรุณาระบุเลขที่บัญชี" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
-                    <button type="submit" class="btn btn-danger">ยืนยันการยกเลิก</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -629,13 +552,17 @@ $cancelledCount = count(array_filter($orders, function ($order) {
         });
 
         // Function to set order ID in modal
-        function setCancelOrder(orderId, bookingNumber) {
-            document.getElementById('cancelOrderId').value = orderId;
-            document.getElementById('cancelModalLabel').textContent = 'ยกเลิกคำสั่งซื้อ #' + bookingNumber;
-            document.getElementById('bank_select').value = '';
-            document.getElementById('custom_bank_container').style.display = 'none';
-            document.getElementById('custom_bank').value = '';
-        }
+        document.querySelectorAll('.btn-cancel').forEach(button => {
+            button.addEventListener('click', function() {
+                const orderId = this.getAttribute('data-order-id');
+                const bookingNumber = this.getAttribute('data-booking-number');
+                document.getElementById('cancelOrderId').value = orderId;
+                document.getElementById('cancelModalLabel').textContent = 'ยกเลิกคำสั่งซื้อ #' + bookingNumber;
+                document.getElementById('bank_select').value = '';
+                document.getElementById('custom_bank_container').style.display = 'none';
+                document.getElementById('custom_bank').value = '';
+            });
+        });
 
         // Show/hide custom bank input based on dropdown selection
         document.getElementById('bank_select').addEventListener('change', function() {
