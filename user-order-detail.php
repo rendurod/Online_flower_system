@@ -98,13 +98,13 @@ try {
 
 // Status options for icon and text
 $statusOptions = [
-    0 => ['text' => 'รอแจ้งชำระเงิน', 'class' => 'status-awaiting', 'icon' => 'fa-clock'],
-    1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
-    2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit'],
-    3 => ['text' => 'กำลังจัดส่งสินค้า', 'class' => 'status-processing', 'icon' => 'fa-truck'],
-    4 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle'],
-    5 => ['text' => 'แนบสลิปใหม่', 'class' => 'status-new-slip', 'icon' => 'fa-upload'],
-    6 => ['text' => 'ยกเลิกคำสั่งซื้อ', 'class' => 'status-cancel', 'icon' => 'fa-times-circle']
+    0 => ['text' => 'รอแจ้งชำระเงิน', 'class' => 'status-awaiting', 'icon' => 'fa-clock', 'icon_color' => 'text-secondary'],
+    1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check', 'icon_color' => 'text-success'],
+    2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit', 'icon_color' => 'text-warning'],
+    3 => ['text' => 'กำลังจัดส่งสินค้า', 'class' => 'status-processing', 'icon' => 'fa-truck', 'icon_color' => 'text-warning'],
+    4 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle', 'icon_color' => 'text-success'],
+    5 => ['text' => 'แนบสลิปใหม่', 'class' => 'status-new-slip', 'icon' => 'fa-upload', 'icon_color' => 'text-info'],
+    6 => ['text' => 'ยกเลิกคำสั่งซื้อ', 'class' => 'status-cancel', 'icon' => 'fa-times-circle', 'icon_color' => 'text-danger']
 ];
 $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
 
@@ -237,7 +237,7 @@ $imageExists = $imagePath && file_exists($imagePath);
 
             <!-- Status Icon -->
             <div class="success-icon status-icon">
-                <i class="fas <?php echo htmlspecialchars($statusOptions[$status]['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
+                <i class="fas <?php echo htmlspecialchars($statusOptions[$status]['icon'], ENT_QUOTES, 'UTF-8'); ?> <?php echo htmlspecialchars($statusOptions[$status]['icon_color'], ENT_QUOTES, 'UTF-8'); ?>"></i>
             </div>
             <!-- Status Title -->
             <h1 class="success-title status-title"><?php echo htmlspecialchars($statusOptions[$status]['text'], ENT_QUOTES, 'UTF-8'); ?></h1>
@@ -271,7 +271,7 @@ $imageExists = $imagePath && file_exists($imagePath);
                     <span>วันที่สั่งซื้อ</span>
                     <span><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
                 </div>
-                <div class="order-item">
+                <div class="order-summary-item">
                     <span>วันที่จัดส่ง</span>
                     <span><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></span>
                 </div>
