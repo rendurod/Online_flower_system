@@ -2,12 +2,13 @@
 session_start();
 include('config/db.php');
 
+// ตรวจสอบว่าผู้ใช้ล็อกอินแล้วหรือยัง
 if (isset($_SESSION['user_login'])) {
-    header("location: login.php");
+    header("Location: user.php");
     exit;
 }
 
-// Fetch flower data from tbl_flowers
+// ดึงข้อมูลดอกไม้จาก tbl_flowers
 $flowers = [];
 $message = '';
 $messageType = '';
@@ -21,8 +22,9 @@ try {
     $messageType = "danger";
 }
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 
 <head>
     <meta charset="UTF-8">
@@ -48,18 +50,27 @@ try {
     <?php include("includes/navbar.php"); ?>
     <!-- header section ends -->
 
-    <!-- home section starts-->
+    <!-- home section starts -->
     <section class="home" id="home">
+        <div class="swiper home-slider">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" style="background-image: url('assets/img/flower2.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower3.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower4.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower5.jpg');"></div>
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+        </div>
         <div class="content">
-            <h3>Indira Gift flowers Shop</h3>
-            <span>I will always be your flower.</span>
-            <p>The most presented scents are often many. People think of the time when they want to find a gift on a
-                special day, each type of fragrance has a different meaning, different flowers for that special person can be used to
-                give.</p>
-            <a href="#flower" class="btn">shop now</a>
+            <h3>Indira Gift Flowers Shop</h3>
+            <span>ฉันจะเป็นดอกไม้ของคุณตลอดไป</span>
+            <p>กลิ่นหอมที่ถูกนำเสนอมากที่สุดมักมีหลากหลาย ผู้คนมักนึกถึงช่วงเวลาที่ต้องการหาของขวัญในวันพิเศษ กลิ่นแต่ละประเภทมีความหมายที่แตกต่างกัน ดอกไม้ที่แตกต่างกันสามารถใช้มอบให้กับคนพิเศษนั้นได้</p>
+            <a href="#flower" class="btn">ช็อปเลย</a>
         </div>
     </section>
-    <!-- home section ends-->
+    <!-- home section ends -->
 
     <!-- Flower Section -->
     <section class="flower-section" id="flower">
@@ -67,9 +78,9 @@ try {
             <h2 class="section-title text-center mb-4">ดอกไม้แนะนำ</h2>
 
             <?php if (!empty($message)): ?>
-                <div class="alert alert-<?php echo $messageType; ?>" role="alert">
-                    <i class="fas fa-<?php echo $messageType == 'success' ? 'check-circle' : 'exclamation-triangle'; ?> me-2"></i>
-                    <?php echo $message; ?>
+                <div class="alert alert-<?php echo htmlspecialchars($messageType); ?>" role="alert">
+                    <i class="fas fa-<?php echo $messageType === 'success' ? 'check-circle' : 'exclamation-triangle'; ?> me-2"></i>
+                    <?php echo htmlspecialchars($message); ?>
                 </div>
             <?php endif; ?>
 
@@ -86,7 +97,7 @@ try {
                                             class="flower-image">
                                         <div class="flower-overlay">
                                             <button class="select-shop-btn"
-                                                onclick="window.location.href='product-detail.php?id=<?php echo $flower['ID']; ?>'"
+                                                onclick="window.location.href='product-detail.php?id=<?php echo htmlspecialchars($flower['ID']); ?>'"
                                                 aria-label="เลือกซื้อ <?php echo htmlspecialchars($flower['flower_name']); ?>">
                                                 <i class="fas fa-shopping-cart"></i>
                                             </button>
@@ -121,7 +132,7 @@ try {
 
     <!-- footer -->
     <?php include("includes/footer.php"); ?>
-    <!-- footer ends-->
+    <!-- footer ends -->
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -131,23 +142,77 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <!-- Initialize Swiper -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            // Debug: Check if Swiper is loaded
+            if (typeof Swiper === 'undefined') {
+                console.error('Swiper library is not loaded');
+                return;
+            }
+
+            // Initialize Home Slider
+            const homeSlider = new Swiper('.home-slider', {
+                slidesPerView: 1,
+                loop: true,
+                autoplay: {
+                    delay: 5000,
+                    disableOnInteraction: false,
+                },
+                pagination: {
+                    el: '.home-slider .swiper-pagination',
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: '.home-slider .swiper-button-next',
+                    prevEl: '.home-slider .swiper-button-prev',
+                },
+                effect: 'fade',
+                fadeEffect: {
+                    crossFade: true,
+                },
+                on: {
+                    init: function () {
+                        console.log('Home Slider initialized');
+                    },
+                    slideChange: function () {
+                        console.log('Home Slider changed to slide', this.activeIndex);
+                    },
+                },
+            });
+
+            // Debug: Check navigation buttons
+            const nextButton = document.querySelector('.home-slider .swiper-button-next');
+            const prevButton = document.querySelector('.home-slider .swiper-button-prev');
+            if (nextButton && prevButton) {
+                console.log('Navigation buttons found');
+                nextButton.addEventListener('click', () => {
+                    console.log('Next button clicked');
+                    homeSlider.slideNext();
+                });
+                prevButton.addEventListener('click', () => {
+                    console.log('Prev button clicked');
+                    homeSlider.slidePrev();
+                });
+            } else {
+                console.error('Navigation buttons not found');
+            }
+
+            // Initialize Flower Slider
             const flowerSlider = new Swiper('.flower-slider', {
                 slidesPerView: 'auto',
                 spaceBetween: 30,
-                loop: true,
+                loop: <?php echo count($flowers) > 1 ? 'true' : 'false'; ?>, // ปิด loop ถ้ามีแค่ 1 รายการ
                 autoplay: {
                     delay: 3500,
                     disableOnInteraction: false,
                 },
                 pagination: {
-                    el: '.swiper-pagination',
+                    el: '.flower-slider .swiper-pagination',
                     clickable: true,
                     dynamicBullets: true,
                 },
                 navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
+                    nextEl: '.flower-slider .swiper-button-next',
+                    prevEl: '.flower-slider .swiper-button-prev',
                 },
                 breakpoints: {
                     576: {
@@ -161,6 +226,11 @@ try {
                     },
                 },
                 slideToClickedSlide: true,
+                on: {
+                    init: function () {
+                        console.log('Flower Slider initialized');
+                    },
+                },
             });
         });
     </script>
