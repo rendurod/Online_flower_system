@@ -54,8 +54,8 @@ try {
     <section class="home" id="home">
         <div class="swiper home-slider">
             <div class="swiper-wrapper">
-                <div class="swiper-slide" style="background-image: url('assets/img/flower2.jpg');"></div>
-                <div class="swiper-slide" style="background-image: url('assets/img/flower3.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower22.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower33.jpg');"></div>
                 <div class="swiper-slide" style="background-image: url('assets/img/flower4.jpg');"></div>
                 <div class="swiper-slide" style="background-image: url('assets/img/flower5.jpg');"></div>
             </div>
@@ -154,7 +154,7 @@ try {
                 slidesPerView: 1,
                 loop: true,
                 autoplay: {
-                    delay: 5000,
+                    delay: 3000,
                     disableOnInteraction: false,
                 },
                 pagination: {
