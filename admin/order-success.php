@@ -94,23 +94,38 @@ try {
             font-size: 1rem;
         }
 
-        .stock-warning {
+        .stock-warning-btn {
             background: linear-gradient(135deg, #ff6b6b, #e84393);
             color: white;
             border: none;
-            margin-bottom: 2rem;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .stock-warning-btn:hover {
+            background: linear-gradient(135deg, #e84393, #ff6b6b);
+        }
+
+        .stock-warning-content {
+            background: linear-gradient(135deg, #ff6b6b, #e84393);
+            color: white;
+            border: none;
             padding: 1.5rem;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
         }
 
-        .stock-warning h4 {
+        .stock-warning-content h4 {
             margin: 0 0 0.5rem;
             font-size: 1.5rem;
             font-weight: bold;
         }
 
-        .stock-warning p {
+        .stock-warning-content p {
             margin: 0;
             font-size: 1.1rem;
             line-height: 1.5;
@@ -126,15 +141,21 @@ try {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อที่รอจัดส่งสินค้า</h1>
+                        <h1 class="h3 mb-0 text-gray-800">
+                            คำสั่งซื้อที่รอจัดส่งสินค้า
+                            <button type="button" class="stock-warning-btn ml-2" data-toggle="collapse" data-target="#stockWarningContent">
+                                <i class="fas fa-exclamation-triangle mr-1"></i> คำเตือนสต็อก
+                            </button>
+                        </h1>
                     </div>
 
-                    <!-- Stock Warning Notification -->
-                    <div class="stock-warning">
+                    <!-- Stock Warning Content (Collapsible) -->
+                    <div id="stockWarningContent" class="collapse stock-warning-content">
                         <h4><i class="fas fa-exclamation-triangle mr-2"></i> คำเตือนเกี่ยวกับระบบสต็อก</h4>
                         <p>หน้านี้จัดการคำสั่งซื้อที่รอจัดส่ง การเปลี่ยนสถานะเป็น <strong>"กำลังจัดส่งสินค้า"</strong> จะลดสต็อกสินค้าในระบบทันทีตามจำนวนที่สั่งซื้อ กรุณาตรวจสอบสต็อกก่อนดำเนินการเพื่อป้องกันข้อผิดพลาด</p>
                     </div>
 
+                    <!-- Orders Table -->
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">ตารางข้อมูลคำสั่งซื้อ</h6>

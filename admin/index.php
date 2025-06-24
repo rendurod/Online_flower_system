@@ -72,7 +72,7 @@ try {
     $stmt_pending_members = $conn->prepare("
         SELECT COUNT(*) as total
         FROM tbl_members
-        WHERE Address IS NULL OR Address = '' OR Validate != 'ที่อยู่ถูกต้อง'
+        WHERE Validate != 'ที่อยู่ถูกต้อง' OR Validate IS NULL
     ");
     $stmt_pending_members->execute();
     $pending_members_count = $stmt_pending_members->fetch(PDO::FETCH_ASSOC)['total'];

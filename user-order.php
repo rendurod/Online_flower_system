@@ -106,7 +106,7 @@ try {
 
 // Calculate order counts for each tab
 $processingCount = count(array_filter($orders, function ($order) {
-    return in_array($order['Status'], [0, 1, 2, 5]);
+    return in_array($order['Status'], [0, 2, 5]);
 }));
 $paidCount = count(array_filter($orders, function ($order) {
     return $order['Status'] == 1;

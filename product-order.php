@@ -63,7 +63,7 @@ if (!$user_data) {
 }
 
 // Fetch payment details from tbl_payment
-$payment_query = "SELECT QRCodeImage, AccountName, BankAccountNumber FROM tbl_payment ORDER BY CreatedAt DESC LIMIT 1";
+$payment_query = "SELECT QRCodeImage, AccountName, BankName, BankAccountNumber FROM tbl_payment ORDER BY CreatedAt DESC LIMIT 1";
 $payment_stmt = $conn->prepare($payment_query);
 $payment_stmt->execute();
 $payment_data = $payment_stmt->fetch(PDO::FETCH_ASSOC);
@@ -72,6 +72,7 @@ $payment_data = $payment_stmt->fetch(PDO::FETCH_ASSOC);
 $qrCodeImagePath = !empty($payment_data['QRCodeImage']) && file_exists("admin/uploads/qrcodes/" . $payment_data['QRCodeImage'])
     ? "admin/uploads/qrcodes/" . htmlspecialchars($payment_data['QRCodeImage'])
     : "assets/img/default-qrcode.jpg";
+$bankName = $payment_data ? htmlspecialchars($payment_data['BankName']) : 'ชื่อธนาคาร (ไม่พบข้อมูล)';
 $accountName = $payment_data ? htmlspecialchars($payment_data['AccountName']) : 'ชื่อบัญชี (ไม่พบข้อมูล)';
 $bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccountNumber']) : 'เลขบัญชี (ไม่พบข้อมูล)';
 
@@ -265,9 +266,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h3>4. ชำระเงิน</h3>
                         <div class="payment-section">
                             <img src="<?php echo $qrCodeImagePath; ?>" alt="QR Code Payment">
-                            <p><strong>ชื่อบัญชี:</strong> <?php echo $accountName; ?></p>
+                            <p><strong>ชื่อธนาคาร:</strong> <?php echo $bankName; ?></p>
                             <p><strong>เลขที่บัญชี:</strong> <?php echo $bankAccountNumber; ?></p>
-                            <button type="button" class="copy-btn" onclick="copyText('<?php echo $bankAccountNumber; ?>')">คัดลอกเลขบัญชี</button>
+                            <p><strong>ชื่อบัญชี:</strong> <?php echo $accountName; ?></p>
+                            <button type="button" class="copy-btn" onclick="copyText('<?php echo $bankAccountNumber; ?>')">คัดลอกเลขที่บัญชี</button>
                             <div class="upload-slip">
                                 <label for="payment_slip" class="upload-btn">
                                     <i class="fas fa-upload"></i> อัพโหลดสลิปโอนเงิน
@@ -441,7 +443,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Swal.fire({
                     icon: 'error',
                     title: 'กรุณาแนบสลิปโอนเงิน',
-                    text: 'คุณต้องแนบรูปภาพสลิปโอนเงินก่อนดำเนินการสั่งซื้อ',
+                    text: 'ต้องแนบรูปภาพสลิปโอนเงินก่อนดำเนินการสั่งซื้อ',
                 });
                 return;
             }

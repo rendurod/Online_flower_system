@@ -2,13 +2,13 @@
 session_start();
 require_once 'config/db.php';
 
-// ตรวจสอบว่าแอดมินล็อกอินหรือไม่
+// ตรวจสอบว่า admin login
 if (!isset($_SESSION['adminid'])) {
     header("Location: login.php");
     exit();
 }
 
-// ดึงข้อมูลแอดมิน
+// ดึงข้อมูล admin
 $admin_id = $_SESSION['adminid'];
 try {
     $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
@@ -22,7 +22,7 @@ try {
         exit();
     }
 } catch (PDOException $e) {
-    $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ดูแลระบบ: " . htmlspecialchars($e->getMessage());
+    $_SESSION['error'] = "เกิดข้อผิดพลาด: " . htmlspecialchars($e->getMessage());
     header("Location: login.php");
     exit();
 }
@@ -68,9 +68,9 @@ try {
 // จัดการอัปเดตสถานะ
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     $new_status = intval($_POST['status']);
-    $message = isset($_POST['message']) ? trim($_POST['message']) : ($order['Message'] ?? '');
     $order_quantity = $order['Quantity'];
     $flower_id = $order['FlowerId'];
+    $current_status = $order['Status'];
 
     // ตรวจสอบสถานะใหม่
     $valid_statuses = [1, 3]; // จำกัดเฉพาะสถานะ 1 (ชำระเงินสำเร็จ), 3 (กำลังจัดส่ง)
@@ -96,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             exit();
         }
 
-        // ถ้าสถานะใหม่คือ 3 (กำลังจัดส่ง) ให้ลดสต็อก
-        if ($new_status == 3) {
+        // กรณีเปลี่ยนจากสถานะอื่นเป็นสถานะ 3 (กำลังจัดส่ง)
+        if ($new_status == 3 && $current_status != 3) {
             if ($current_stock >= $order_quantity) {
                 $new_stock = $current_stock - $order_quantity;
                 $stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id");
@@ -111,20 +111,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 exit();
             }
         }
+        // กรณีเปลี่ยนจากสถานะ 3 (กำลังจัดส่ง) กลับไปสถานะ 1 (ชำระเงินสำเร็จ)
+        elseif ($new_status == 1 && $current_status == 3) {
+            $new_stock = $current_stock + $order_quantity;
+            $stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id");
+            $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
+            $stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
 
-        // อัปเดตสถานะและข้อความของคำสั่งซื้อ
+        // อัปเดตสถานะของคำสั่งซื้อ
         $stmt = $conn->prepare("
             UPDATE tbl_orders 
-            SET Status = :status, Message = :message, LastupdateDate = CURRENT_TIMESTAMP 
+            SET Status = :status, LastupdateDate = CURRENT_TIMESTAMP 
             WHERE ID = :id
         ");
         $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
-        $stmt->bindValue(':message', $message, PDO::PARAM_STR);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
         $stmt->execute();
 
         $conn->commit();
-        $_SESSION['success'] = 'อัปเดตสถานะและสต็อกเรียบร้อยแล้ว';
+
+        // ตั้งข้อความแจ้งเตือนตามสถานะ
+        $success_message = 'อัปเดตสถานะและสต็อกเรียบร้อยแล้ว';
+        if ($new_status == 1 && $current_status == 3) {
+            $success_message .= " และคืนสต็อกจำนวน $order_quantity ชิ้น";
+        } elseif ($new_status == 3 && $current_status != 3) {
+            $success_message .= " และลดสต็อกจำนวน $order_quantity ชิ้น";
+        }
+
+        $_SESSION['success'] = $success_message;
         header("Location: order-success.php");
         exit();
     } catch (PDOException $e) {
@@ -209,22 +225,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
 
         .status-option-1 { background-color: #2ecc71; color: #fff; }
         .status-option-3 { background-color: #f1c40f; color: #fff; }
-
-        #messageInput {
-            display: none;
-            width: 100%;
-            padding: 0.5rem;
-            font-size: 1.2rem;
-            border: 2px solid rgba(232, 67, 147, 0.2);
-            border-radius: var(--border-radius);
-            margin-top: 0.5rem;
-        }
-
-        #messageInput:focus {
-            outline: none;
-            border-color: var(--primary-pink);
-            box-shadow: 0 0 0 3px rgba(232, 67, 147, 0.1);
-        }
     </style>
 </head>
 
@@ -281,12 +281,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                         <th>สต็อกคงเหลือ</th>
                                         <td class="stock-highlight"><?php echo htmlspecialchars($order['stock_quantity'] ?? 'ไม่ระบุ'); ?> ชิ้น</td>
                                     </tr>
-                                    <?php if (!empty($order['Message'])): ?>
-                                        <tr>
-                                            <th>ข้อความจากแอดมิน</th>
-                                            <td><?php echo htmlspecialchars($order['Message']); ?></td>
-                                        </tr>
-                                    <?php endif; ?>
                                 </tbody>
                             </table>
 
@@ -313,11 +307,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <input type="text" name="message" id="messageInput" placeholder="กรุณาระบุเหตุผล" value="<?php echo htmlspecialchars($order['Message'] ?? ''); ?>">
                                 </div>
 
                                 <div class="form-group d-flex justify-content-end">
-                                    <button type="submit" name="update_status" value="1" class="btn btn-pink mr-2">
+                                    <button type="submit" name="update_status" class="btn btn-pink mr-2">
                                         <i class="fas fa-save mr-2"></i>บันทึก
                                     </button>
                                     <a href="order-success.php" class="btn btn-secondary">
@@ -356,6 +349,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
 
             if (selectedStatus === '3') {
                 confirmMessage += `\nสต็อกสินค้าจะถูกลดลงตามจำนวนที่สั่งซื้อ (${<?php echo htmlspecialchars($order['Quantity']); ?>} ชิ้น)`;
+            } else if (selectedStatus === '1' && '<?php echo $order['Status']; ?>' === '3') {
+                confirmMessage += `\nสต็อกสินค้าจะถูกคืนจำนวน ${<?php echo htmlspecialchars($order['Quantity']); ?>} ชิ้น`;
             }
 
             Swal.fire({
@@ -372,21 +367,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                     form.submit();
                 }
             });
-        });
-
-        // Show/hide message input based on status
-        document.getElementById('status').addEventListener('change', function() {
-            const messageInput = document.getElementById('messageInput');
-            messageInput.style.display = 'none';
-            messageInput.required = false;
-            messageInput.value = '';
-        });
-
-        // Initial check for message input visibility
-        document.addEventListener('DOMContentLoaded', function() {
-            const messageInput = document.getElementById('messageInput');
-            messageInput.style.display = 'none';
-            messageInput.required = false;
         });
 
         <?php if (isset($_SESSION['success'])): ?>
@@ -414,4 +394,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <?php endif; ?>
     </script>
 </body>
+
 </html>

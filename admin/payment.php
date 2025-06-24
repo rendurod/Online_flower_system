@@ -31,7 +31,7 @@ try {
 $payment_data = [];
 $existing_qr_image = '';
 try {
-    $stmt = $conn->prepare("SELECT QRCodeImage, AccountName, BankAccountNumber FROM tbl_payment ORDER BY CreatedAt DESC LIMIT 1");
+    $stmt = $conn->prepare("SELECT QRCodeImage, AccountName, BankName, BankAccountNumber FROM tbl_payment ORDER BY CreatedAt DESC LIMIT 1");
     $stmt->execute();
     $payment_data = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($payment_data && !empty($payment_data['QRCodeImage']) && file_exists('uploads/qrcodes/' . $payment_data['QRCodeImage'])) {
@@ -44,6 +44,7 @@ try {
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accountName = trim($_POST['account_name']);
+    $bankName = trim($_POST['bank_name']);
     $bankAccountNumber = trim($_POST['bank_account_number']);
     $qrCodeImage = '';
 
@@ -51,6 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     if (empty($accountName)) {
         $errors[] = 'กรุณากรอกชื่อบัญชี';
+    }
+    if (empty($bankName)) {
+        $errors[] = 'กรุณากรอกชื่อธนาคาร';
     }
     if (empty($bankAccountNumber)) {
         $errors[] = 'กรุณากรอกเลขที่บัญชีธนาคาร';
@@ -85,9 +89,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Insert or update into tbl_payment if no errors
     if (empty($errors)) {
         try {
-            $stmt = $conn->prepare("INSERT INTO tbl_payment (QRCodeImage, AccountName, BankAccountNumber) VALUES (:qr_code_image, :account_name, :bank_account_number)");
+            $stmt = $conn->prepare("INSERT INTO tbl_payment (QRCodeImage, AccountName, BankName, BankAccountNumber) VALUES (:qr_code_image, :account_name, :bank_name, :bank_account_number)");
             $stmt->bindValue(':qr_code_image', $qrCodeImage ?: ($payment_data['QRCodeImage'] ?? ''), PDO::PARAM_STR);
             $stmt->bindValue(':account_name', $accountName, PDO::PARAM_STR);
+            $stmt->bindValue(':bank_name', $bankName, PDO::PARAM_STR);
             $stmt->bindValue(':bank_account_number', $bankAccountNumber, PDO::PARAM_STR);
             $stmt->execute();
 
@@ -215,6 +220,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="form-group">
                                     <label for="account_name"><i class="fas fa-user"></i> ชื่อบัญชี</label>
                                     <input type="text" class="form-control" id="account_name" name="account_name" value="<?php echo htmlspecialchars($payment_data['AccountName'] ?? ''); ?>" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="bank_name"><i class="fas fa-university"></i> ชื่อธนาคาร</label>
+                                    <input type="text" class="form-control" id="bank_name" name="bank_name" value="<?php echo htmlspecialchars($payment_data['BankName'] ?? ''); ?>" required>
                                 </div>
 
                                 <div class="form-group">
