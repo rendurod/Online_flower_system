@@ -2,7 +2,7 @@
 session_start();
 include('config/db.php');
 
-// Check if user is logged in
+// ตรวจสอบว่าผู้ใช้ได้เข้าสู่ระบบแล้วหรือไม่
 if (!isset($_SESSION['user_login'])) {
     header("Location: login.php");
     exit();
