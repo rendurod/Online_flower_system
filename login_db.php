@@ -1,5 +1,5 @@
 <?php
-ob_start(); // ⭐ ป้องกัน output ที่ทำให้ JSON พัง
+ob_start(); 
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 require 'config/db.php';

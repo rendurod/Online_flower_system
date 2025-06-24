@@ -142,7 +142,7 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <!-- Initialize Swiper -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Debug: Check if Swiper is loaded
             if (typeof Swiper === 'undefined') {
                 console.error('Swiper library is not loaded');
@@ -170,10 +170,10 @@ try {
                     crossFade: true,
                 },
                 on: {
-                    init: function () {
+                    init: function() {
                         console.log('Home Slider initialized');
                     },
-                    slideChange: function () {
+                    slideChange: function() {
                         console.log('Home Slider changed to slide', this.activeIndex);
                     },
                 },
@@ -227,7 +227,7 @@ try {
                 },
                 slideToClickedSlide: true,
                 on: {
-                    init: function () {
+                    init: function() {
                         console.log('Flower Slider initialized');
                     },
                 },
