@@ -201,9 +201,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                 font-size: 1rem;
                 padding: 10px 12px;
             }
+
             .address-status i {
                 font-size: 1.2rem;
             }
+
             .status-incorrect-text {
                 font-size: 0.9rem;
             }
@@ -481,4 +483,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
         });
     </script>
 </body>
+
 </html>
