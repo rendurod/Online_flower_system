@@ -91,7 +91,7 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/productPHP.css">
-    
+
 </head>
 
 <body>
@@ -119,58 +119,58 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="filter-row">
                     <div class="filter-group">
                         <label for="search">ค้นหาสินค้า</label>
-                        <input type="text" 
-                               id="search" 
-                               name="search" 
-                               class="filter-input" 
-                               placeholder="ชื่อดอกไม้ หรือคำอธิบาย..."
-                               value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                        <input type="text"
+                            id="search"
+                            name="search"
+                            class="filter-input"
+                            placeholder="ชื่อดอกไม้ หรือคำอธิบาย..."
+                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
                     </div>
-                    
+
                     <div class="filter-group">
                         <label for="category">หมวดหมู่</label>
                         <select id="category" name="category" class="filter-input">
                             <option value="">ทั้งหมด</option>
                             <?php foreach ($categories_result as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category['flower_category']); ?>" 
-                                        <?php echo (isset($_GET['category']) && $_GET['category'] == $category['flower_category']) ? 'selected' : ''; ?>>
+                                <option value="<?php echo htmlspecialchars($category['flower_category']); ?>"
+                                    <?php echo (isset($_GET['category']) && $_GET['category'] == $category['flower_category']) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($category['flower_category']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    
+
                     <div class="filter-group">
                         <label for="min_price">ราคาต่ำสุด</label>
-                        <input type="number" 
-                               id="min_price" 
-                               name="min_price" 
-                               class="filter-input" 
-                               placeholder="0"
-                               min="0"
-                               step="0.01"
-                               value="<?php echo isset($_GET['min_price']) ? htmlspecialchars($_GET['min_price']) : ''; ?>">
+                        <input type="number"
+                            id="min_price"
+                            name="min_price"
+                            class="filter-input"
+                            placeholder="0"
+                            min="0"
+                            step="0.01"
+                            value="<?php echo isset($_GET['min_price']) ? htmlspecialchars($_GET['min_price']) : ''; ?>">
                     </div>
-                    
+
                     <div class="filter-group">
                         <label for="max_price">ราคาสูงสุด</label>
-                        <input type="number" 
-                               id="max_price" 
-                               name="max_price" 
-                               class="filter-input" 
-                               placeholder="5000"
-                               min="0"
-                               step="0.01"
-                               value="<?php echo isset($_GET['max_price']) ? htmlspecialchars($_GET['max_price']) : ''; ?>">
+                        <input type="number"
+                            id="max_price"
+                            name="max_price"
+                            class="filter-input"
+                            placeholder="5000"
+                            min="0"
+                            step="0.01"
+                            value="<?php echo isset($_GET['max_price']) ? htmlspecialchars($_GET['max_price']) : ''; ?>">
                     </div>
-                    
+
                     <div class="filter-group">
                         <button type="submit" class="filter-btn">
                             <i class="fas fa-search"></i>
                             ค้นหา
                         </button>
                     </div>
-                    
+
                     <div class="filter-group">
                         <a href="products.php" class="clear-btn">
                             <i class="fas fa-times"></i>
@@ -184,15 +184,15 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Products Section -->
     <section class="container">
-        <?php 
+        <?php
         $total_products = count($result);
         ?>
-        
+
         <div class="results-info">
             <div class="results-count">
                 <strong><?php echo $total_products; ?></strong> สินค้าที่พบ
             </div>
-            
+
             <div class="sort-section">
                 <form method="GET" style="display: inline;">
                     <!-- เก็บ parameter เดิม -->
@@ -201,7 +201,7 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <input type="hidden" name="<?php echo htmlspecialchars($key); ?>" value="<?php echo htmlspecialchars($value); ?>">
                         <?php endif; ?>
                     <?php endforeach; ?>
-                    
+
                     <select name="sort" class="sort-select" onchange="this.form.submit()">
                         <option value="newest" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'newest') ? 'selected' : ''; ?>>ใหม่ล่าสุด</option>
                         <option value="oldest" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'oldest') ? 'selected' : ''; ?>>เก่าที่สุด</option>
@@ -219,32 +219,32 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php foreach ($result as $flower): ?>
                     <div class="product-card">
                         <div class="product-image">
-                            <img src="<?php echo !empty($flower['image']) && file_exists("admin/uploads/flowers/" . $flower['image']) ? "admin/uploads/flowers/" . htmlspecialchars($flower['image']) : "assets/img/default-flower.jpg"; ?>" 
-                                 alt="<?php echo htmlspecialchars($flower['flower_name']); ?>">
+                            <img src="<?php echo !empty($flower['image']) && file_exists("admin/uploads/flowers/" . $flower['image']) ? "admin/uploads/flowers/" . htmlspecialchars($flower['image']) : "assets/img/default-flower.jpg"; ?>"
+                                alt="<?php echo htmlspecialchars($flower['flower_name']); ?>">
                         </div>
-                        
+
                         <div class="product-info">
                             <div class="product-category"><?php echo htmlspecialchars($flower['flower_category']); ?></div>
                             <h3 class="product-name"><?php echo htmlspecialchars($flower['flower_name']); ?></h3>
-                            
+
                             <?php if (!empty($flower['flower_description'])): ?>
                                 <p class="product-description">
-                                    <?php 
+                                    <?php
                                     $description = htmlspecialchars($flower['flower_description']);
                                     echo strlen($description) > 50 ? substr($description, 0, 50) . '...' : $description;
                                     ?>
                                 </p>
                             <?php endif; ?>
-                            
+
                             <div class="product-price">฿<?php echo number_format($flower['price'], 2); ?></div>
-                            
+
                             <div class="product-actions">
                                 <?php if ($flower['stock_quantity'] > 0): ?>
                                     <button class="select-btn" onclick="window.location.href='product-detail.php?id=<?php echo $flower['ID']; ?>'">
                                         <i class="fas fa-shopping-cart"></i>
                                         เลือกซื้อ
                                     </button>
-                                    
+
                                     <?php if ($flower['stock_quantity'] <= 5): ?>
                                         <span class="stock-status low-stock">เหลือน้อย</span>
                                     <?php else: ?>
@@ -298,4 +298,5 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
         });
     </script>
 </body>
+
 </html>
