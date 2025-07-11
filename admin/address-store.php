@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once('config/db.php');
-require_once('includes/functions.php');
 
 // ตรวจสอบว่ามี session adminid หรือไม่
 if (!isset($_SESSION['adminid'])) {
