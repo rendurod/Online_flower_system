@@ -1,3 +1,63 @@
+<?php
+// It's a good practice to start the session if it's not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+// Assuming you have a db_connect.php or similar for your database connection
+// require_once 'db_connect.php'; 
+?>
+
+<!-- 
+  NOTE: For best practice, this <style> block should be moved to your main CSS file.
+  I've placed it here for demonstration purposes to make the cart icon look good immediately.
+-->
+<style>
+    .icons {
+        display: flex;
+        align-items: center;
+    }
+
+    .cart-icon-container {
+        position: relative;
+        color: #333;
+        font-size: 1.8rem; /* Make icon larger */
+        margin-left: 20px; /* Space between the cart and the previous element */
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .cart-icon-container:hover {
+        color: #e84393; /* Same hover color as other icons */
+    }
+
+    .cart-counter {
+        position: absolute;
+        top: -8px;   /* Further adjusted position */
+        right: -12px; /* Further adjusted position */
+        background-color: #ff4d4d;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 2px solid #fff; /* White border to stand out */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* Style for when the navbar is scrolled */
+    .modern-navbar.scrolled .cart-icon-container {
+        color: #fff;
+    }
+
+    .modern-navbar.scrolled .cart-icon-container:hover {
+        color: #f0f0f0; 
+    }
+</style>
+
 <header class="modern-navbar">
     <input type="checkbox" name="" id="toggler">
     <label for="toggler" class="fas fa-bars navbar-toggler-custom"></label>
@@ -35,15 +95,19 @@
         </a>
     </nav>
 
-    <!-- User Profile / Login -->
+    <!-- Icons Section: User Profile / Login / Cart -->
     <div class="icons">
         <?php if (isset($_SESSION['user_login'])): ?>
             <?php
-            $userId = $_SESSION['user_login'];
-            $stmt = $conn->prepare("SELECT * FROM tbl_members WHERE id = ?");
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            $userImage = $user['profile_img'] ?? 'default.png';
+            // This part assumes $conn is available. If not, you should include your DB connection file.
+            if (isset($conn)) {
+                $userId = $_SESSION['user_login'];
+                $stmt = $conn->prepare("SELECT * FROM tbl_members WHERE id = ?");
+                $stmt->execute([$userId]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            } else {
+                $user = []; // Define user as empty array if no connection
+            }
             ?>
             <div class="profile-dropdown">
                 <div class="profile-btn" onclick="toggleProfileDropdown()">
@@ -112,6 +176,12 @@
                 <span style="font-weight: 500;">Sign up for free/Log In</span>
             </a>
         <?php endif; ?>
+
+        <!-- Shopping Cart Icon - This will appear after login button or user profile -->
+        <a href="cart.php" class="cart-icon-container" aria-label="Shopping Cart">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-counter">0</span> <!-- Placeholder for item count -->
+        </a>
     </div>
 </header>
 
@@ -210,3 +280,5 @@
         });
     }
 </script>
+
+
