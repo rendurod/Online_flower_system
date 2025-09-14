@@ -48,13 +48,13 @@ if (session_status() == PHP_SESSION_NONE) {
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    /* Style for when the navbar is scrolled */
+    /* CORRECTED: Style for when the navbar is scrolled */
     .modern-navbar.scrolled .cart-icon-container {
-        color: #fff;
+        color: #333; /* This now correctly keeps the icon dark on the white background */
     }
 
     .modern-navbar.scrolled .cart-icon-container:hover {
-        color: #f0f0f0; 
+        color: #e84393; /* Ensure hover effect also works on scrolled nav */
     }
 </style>
 
@@ -280,5 +280,4 @@ if (session_status() == PHP_SESSION_NONE) {
         });
     }
 </script>
-
 
