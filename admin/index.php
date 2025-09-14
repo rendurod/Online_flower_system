@@ -86,7 +86,6 @@ try {
     ");
     $stmt_stock->execute();
     $flowers = $stmt_stock->fetchAll(PDO::FETCH_ASSOC);
-
 } catch (PDOException $e) {
     $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
 }
@@ -114,13 +113,16 @@ try {
         .dashboard-card {
             transition: transform 0.3s;
         }
+
         .dashboard-card:hover {
             transform: translateY(-5px);
         }
+
         .card-header {
             background: linear-gradient(135deg, #e84393, #ff6b6b);
             color: white;
         }
+
         .notification-card {
             background: linear-gradient(135deg, #ff6b6b, #e84393);
             color: white;
@@ -128,42 +130,51 @@ try {
             margin-bottom: 1rem;
             padding: 1.5rem;
         }
+
         .notification-card .card-body {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .notification-card h2 {
             font-size: 2.5rem;
             margin: 0;
         }
+
         .notification-card p {
             font-size: 1.2rem;
             margin: 0;
         }
+
         .notification-card .btn {
             background-color: #fff;
             color: #e84393;
             font-weight: bold;
             padding: 0.5rem 1rem;
         }
+
         .notification-card .btn:hover {
             background-color: #f8f9fa;
         }
+
         .stock-card {
             background-color: #fff;
             border: none;
             margin-bottom: 2rem;
         }
+
         .stock-card .card-header {
             background: linear-gradient(135deg, #6b7280, #4b5563);
         }
+
         .stock-card img {
             width: 50px;
             height: 50px;
             object-fit: cover;
             border-radius: 5px;
         }
+
         .stock-card .badge {
             font-size: 1rem;
             padding: 0.5rem;
@@ -190,7 +201,7 @@ try {
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
                         <h1 class="h3 mb-0 text-gray-800">แดชบอร์ด</h1>
                     </div>
-                   
+
                     <!-- Content Row -->
                     <div class="row">
                         <!-- Total Categories Card -->
@@ -315,18 +326,30 @@ try {
                                                                 $target_dir = "Uploads/flowers/";
                                                                 if (!empty($flower['image']) && file_exists($target_dir . $flower['image'])): ?>
                                                                     <img src="<?php echo $target_dir . htmlspecialchars($flower['image']); ?>"
-                                                                         alt="<?php echo htmlspecialchars($flower['flower_name']); ?>"
-                                                                         class="img-thumbnail">
+                                                                        alt="<?php echo htmlspecialchars($flower['flower_name']); ?>"
+                                                                        class="img-thumbnail">
                                                                 <?php else: ?>
                                                                     <div class="bg-light d-flex align-items-center justify-content-center"
-                                                                         style="width: 50px; height: 50px; border-radius: 5px;">
+                                                                        style="width: 50px; height: 50px; border-radius: 5px;">
                                                                         <i class="fas fa-image text-muted"></i>
                                                                     </div>
                                                                 <?php endif; ?>
                                                             </td>
                                                             <td><?php echo htmlspecialchars($flower['flower_name']); ?></td>
                                                             <td class="text-center">
-                                                                <span class="badge badge-<?php echo $flower['stock_quantity'] > 0 ? 'success' : 'danger'; ?>">
+                                                                <?php
+                                                                $badgeClass = '';
+                                                                $stock = (int)$flower['stock_quantity'];
+
+                                                                if ($stock < 5) {
+                                                                    $badgeClass = 'danger';  // แดง
+                                                                } elseif ($stock < 10) {
+                                                                    $badgeClass = 'warning';  // เหลือง
+                                                                } else {
+                                                                    $badgeClass = 'success';  // เขียว
+                                                                }
+                                                                ?>
+                                                                <span class="badge badge-<?php echo $badgeClass; ?>">
                                                                     <?php echo htmlspecialchars($flower['stock_quantity']); ?> ชิ้น
                                                                 </span>
                                                             </td>
@@ -373,4 +396,5 @@ try {
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 </body>
+
 </html>
