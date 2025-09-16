@@ -1,6 +1,12 @@
 <?php
 session_start();
 include('config/db.php');
+// ตรวจสอบว่าผู้ใช้เข้าสู่ระบบแล้วหรือไม่
+
+// if (isset($_SESSION['user_login'])) {
+//     header("Location: user.php");
+//     exit();
+// }
 
 // ดึงข้อมูลดอกไม้จาก tbl_flowers
 $flowers = [];
