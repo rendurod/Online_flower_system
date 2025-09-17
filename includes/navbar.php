@@ -1,62 +1,29 @@
 <?php
-// It's a good practice to start the session if it's not already started
+// Start the session if not already started
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-// Assuming you have a db_connect.php or similar for your database connection
-// require_once 'db_connect.php'; 
+include_once 'config/db.php'; // Ensure database connection is included
+
+// Fetch cart count for logged-in user
+$cart_count = 0;
+if (isset($_SESSION['user_login'])) {
+    try {
+        $user_id = $_SESSION['user_login'];
+        $stmt = $conn->prepare("SELECT SUM(quantity) as total FROM tbl_cart WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $cart_count = $result['total'] ?? 0;
+    } catch (PDOException $e) {
+        // Log error if needed, but don't disrupt the page
+        error_log("Cart count error: " . $e->getMessage());
+    }
+}
 ?>
 
-<!-- 
-  NOTE: For best practice, this <style> block should be moved to your main CSS file.
-  I've placed it here for demonstration purposes to make the cart icon look good immediately.
--->
-<style>
-    .icons {
-        display: flex;
-        align-items: center;
-    }
-
-    .cart-icon-container {
-        position: relative;
-        color: #333;
-        font-size: 1.8rem; /* Make icon larger */
-        margin-left: 20px; /* Space between the cart and the previous element */
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .cart-icon-container:hover {
-        color: #e84393; /* Same hover color as other icons */
-    }
-
-    .cart-counter {
-        position: absolute;
-        top: -8px;   /* Further adjusted position */
-        right: -12px; /* Further adjusted position */
-        background-color: #ff4d4d;
-        color: white;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 2px solid #fff; /* White border to stand out */
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    /* CORRECTED: Style for when the navbar is scrolled */
-    .modern-navbar.scrolled .cart-icon-container {
-        color: #333; /* This now correctly keeps the icon dark on the white background */
-    }
-
-    .modern-navbar.scrolled .cart-icon-container:hover {
-        color: #e84393; /* Ensure hover effect also works on scrolled nav */
-    }
-</style>
+<div class="top-bar">
+    <span class="top-bar-text">สินค้าทุกแบบส่งฟรี (จัดส่งแค่เฉพาะ อำเภอเมืองนครราชสีมา)</span>
+</div>
 
 <header class="modern-navbar">
     <input type="checkbox" name="" id="toggler">
@@ -99,14 +66,14 @@ if (session_status() == PHP_SESSION_NONE) {
     <div class="icons">
         <?php if (isset($_SESSION['user_login'])): ?>
             <?php
-            // This part assumes $conn is available. If not, you should include your DB connection file.
-            if (isset($conn)) {
+            try {
                 $userId = $_SESSION['user_login'];
-                $stmt = $conn->prepare("SELECT * FROM tbl_members WHERE id = ?");
+                $stmt = $conn->prepare("SELECT FirstName, LastName, EmailId, Image FROM tbl_members WHERE ID = ?");
                 $stmt->execute([$userId]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            } else {
-                $user = []; // Define user as empty array if no connection
+            } catch (PDOException $e) {
+                $user = []; // Define user as empty array if query fails
+                error_log("User fetch error: " . $e->getMessage());
             }
             ?>
             <div class="profile-dropdown">
@@ -135,7 +102,7 @@ if (session_status() == PHP_SESSION_NONE) {
                             <?php endif; ?>
                             <div>
                                 <div class="user-name"><?php echo htmlspecialchars($user['FirstName'] ?? 'ผู้ใช้'); ?> <?php echo htmlspecialchars($user['LastName'] ?? 'นามสกุล'); ?></div>
-                                <div class="user-email"><?php echo htmlspecialchars($user['EmailId'] ?? 'อีเมลผู้ใช้?'); ?></div>
+                                <div class="user-email"><?php echo htmlspecialchars($user['EmailId'] ?? 'อีเมลผู้ใช้'); ?></div>
                             </div>
                         </div>
                     </div>
@@ -159,7 +126,6 @@ if (session_status() == PHP_SESSION_NONE) {
                                 <span>เปลี่ยนรหัสผ่าน</span>
                             </a>
                         </li>
-                        
                         <li class="dropdown-divider"></li>
                         <li>
                             <a href="javascript:void(0);" class="dropdown-item logout-item" onclick="confirmLogout()">
@@ -177,10 +143,10 @@ if (session_status() == PHP_SESSION_NONE) {
             </a>
         <?php endif; ?>
 
-        <!-- Shopping Cart Icon - This will appear after login button or user profile -->
+        <!-- Shopping Cart Icon -->
         <a href="cart.php" class="cart-icon-container" aria-label="Shopping Cart">
             <i class="fas fa-shopping-cart"></i>
-            <span class="cart-counter">0</span> <!-- Placeholder for item count -->
+            <span class="cart-counter"><?php echo $cart_count; ?></span>
         </a>
     </div>
 </header>
@@ -219,10 +185,13 @@ if (session_status() == PHP_SESSION_NONE) {
     // Navbar scroll effect
     window.addEventListener('scroll', function() {
         const navbar = document.querySelector('.modern-navbar');
+        const topBar = document.querySelector('.top-bar');
         if (window.scrollY > 50) {
             navbar.classList.add('scrolled');
+            topBar.classList.add('scrolled');
         } else {
             navbar.classList.remove('scrolled');
+            topBar.classList.remove('scrolled');
         }
     });
 
@@ -280,4 +249,3 @@ if (session_status() == PHP_SESSION_NONE) {
         });
     }
 </script>
-

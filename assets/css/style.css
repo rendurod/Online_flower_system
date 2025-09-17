@@ -180,10 +180,35 @@ section {
     text-transform: none;
 }
 
+/* Top Bar */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+    background: var(--primary-pink);
+    color: var(--white);
+    text-align: center;
+    padding: 0.5rem 0;
+    font-size: 1.4rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.top-bar.scrolled {
+    background: var(--dark-pink);
+}
+
+.top-bar-text {
+    display: inline-block;
+    padding: 0 9%;
+}
+
 /* 5. Navbar */
 .modern-navbar {
     position: fixed;
-    top: 0;
+    top: 2.4rem; /* Adjusted to account for top bar height */
     left: 0;
     right: 0;
     z-index: 1000;
@@ -357,7 +382,49 @@ section {
 .navbar-toggler.active .navbar-toggler-icon span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -6px);
 }
+.icons {
+    display: flex;
+    align-items: center;
+}
 
+.cart-icon-container {
+    position: relative;
+    color: #333;
+    font-size: 1.8rem;
+    margin-left: 20px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.cart-icon-container:hover {
+    color: #e84393;
+}
+
+.cart-counter {
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    background-color: #ff4d4d;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.modern-navbar.scrolled .cart-icon-container {
+    color: #333;
+}
+
+.modern-navbar.scrolled .cart-icon-container:hover {
+    color: #e84393;
+}
 /* 6. Auth Button (Modern) */
 .auth-btn {
     position: relative;

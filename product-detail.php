@@ -27,12 +27,6 @@ $related_stmt->bindValue(':category', $flower['flower_category'], PDO::PARAM_STR
 $related_stmt->bindValue(':id', $id, PDO::PARAM_INT);
 $related_stmt->execute();
 $related_flowers = $related_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Fetch all flowers with available stock
-$all_flowers_query = "SELECT ID, flower_name, flower_description, price, image, stock_quantity FROM tbl_flowers WHERE stock_quantity > 0 ORDER BY creation_date DESC";
-$all_flowers_stmt = $conn->prepare($all_flowers_query);
-$all_flowers_stmt->execute();
-$all_flowers = $all_flowers_stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -146,42 +140,6 @@ $all_flowers = $all_flowers_stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                 </div>
             <?php endif; ?>
-
-            <!-- All Flowers Slider -->
-            <?php if (!empty($all_flowers)): ?>
-                <div class="mt-5">
-                    <h2 class="section-title text-center mb-4">ดอกไม้ทั้งหมด</h2>
-                    <div class="swiper all-slider">
-                        <div class="swiper-wrapper">
-                            <?php foreach ($all_flowers as $all_flower): ?>
-                                <div class="swiper-slide">
-                                    <div class="flower-card">
-                                        <div class="flower-image">
-                                            <img src="<?php echo !empty($all_flower['image']) && file_exists("admin/uploads/flowers/" . $all_flower['image']) ? "admin/uploads/flowers/" . htmlspecialchars($all_flower['image']) : "assets/img/default-flower.jpg"; ?>"
-                                                alt="<?php echo htmlspecialchars($all_flower['flower_name']); ?>">
-                                        </div>
-                                        <div class="flower-content">
-                                            <h3 class="flower-name"><?php echo htmlspecialchars($all_flower['flower_name']); ?></h3>
-                                            <div class="flower-price">฿<?php echo number_format($all_flower['price'], 2); ?></div>
-                                            <?php if ($all_flower['stock_quantity'] <= 5 && $all_flower['stock_quantity'] > 0): ?>
-                                                <span class="stock-status low-stock">เหลือน้อย</span>
-                                            <?php elseif ($all_flower['stock_quantity'] > 5): ?>
-                                                <span class="stock-status in-stock">มีสินค้า</span>
-                                            <?php endif; ?>
-                                            <button class="buy-btn mt-2" onclick="window.location.href='product-detail.php?id=<?php echo $all_flower['ID']; ?>'">
-                                                <i class="fas fa-eye"></i> ดูรายละเอียด
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="swiper-pagination"></div>
-                        <div class="swiper-button-prev"></div>
-                        <div class="swiper-button-next"></div>
-                    </div>
-                </div>
-            <?php endif; ?>
         </div>
     </section>
 
@@ -201,41 +159,6 @@ $all_flowers = $all_flowers_stmt->fetchAll(PDO::FETCH_ASSOC);
             // Initialize Related Slider
             if (document.querySelector('.related-slider')) {
                 new Swiper('.related-slider', {
-                    slidesPerView: 'auto',
-                    spaceBetween: 30,
-                    loop: true,
-                    autoplay: {
-                        delay: 3500,
-                        disableOnInteraction: false,
-                        pauseOnMouseEnter: true, // Pause autoplay on hover
-                    },
-                    pagination: {
-                        el: '.swiper-pagination',
-                        clickable: true,
-                        dynamicBullets: true,
-                    },
-                    navigation: {
-                        nextEl: '.swiper-button-next',
-                        prevEl: '.swiper-button-prev',
-                    },
-                    breakpoints: {
-                        576: {
-                            spaceBetween: 20
-                        },
-                        768: {
-                            spaceBetween: 30
-                        },
-                        1200: {
-                            spaceBetween: 40
-                        },
-                    },
-                    slideToClickedSlide: true,
-                });
-            }
-
-            // Initialize All Slider
-            if (document.querySelector('.all-slider')) {
-                new Swiper('.all-slider', {
                     slidesPerView: 'auto',
                     spaceBetween: 30,
                     loop: true,

@@ -2,11 +2,13 @@
 session_start();
 include('config/db.php');
 
-// ตรวจสอบว่าผู้ใช้เข้าสู่ระบบแล้วหรือไม่
+// Check if user is logged in
 if (!isset($_SESSION['user_login'])) {
     header("location: login.php");
     exit;
 }
+
+$user_id = $_SESSION['user_login'];
 
 // Fetch flower data from tbl_flowers
 $flowers = [];
@@ -21,6 +23,18 @@ try {
     $message = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
     $messageType = "danger";
 }
+
+// Count cart items from tbl_cart
+$cartCount = 0;
+try {
+    $stmt = $conn->prepare("SELECT SUM(quantity) as total FROM tbl_cart WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $cartCount = $result['total'] ?? 0;
+} catch (PDOException $e) {
+    $message = "เกิดข้อผิดพลาดในการนับตะกร้า: " . htmlspecialchars($e->getMessage());
+    $messageType = "danger";
+}
 ?>
 
 <!DOCTYPE html>
@@ -30,17 +44,11 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ยินดีต้อนรับ - FlowerShop</title>
-    <!-- LOGO -->
     <link rel="icon" href="assets/img/LOGO_FlowerShopp.png" type="image/x-icon">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Swiper Slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <!-- Sweetalert 2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/flowerPHP.css">
 </head>
@@ -85,7 +93,6 @@ try {
             <?php endif; ?>
 
             <?php if (!empty($flowers)): ?>
-                <!-- Swiper Slider -->
                 <div class="swiper flower-slider">
                     <div class="swiper-wrapper">
                         <?php foreach ($flowers as $flower): ?>
@@ -95,13 +102,6 @@ try {
                                         <img src="<?php echo !empty($flower['image']) && file_exists("admin/uploads/flowers/" . $flower['image']) ? "admin/uploads/flowers/" . htmlspecialchars($flower['image']) : "assets/img/default-flower.jpg"; ?>"
                                             alt="<?php echo htmlspecialchars($flower['flower_name']); ?>"
                                             class="flower-image">
-                                        <div class="flower-overlay">
-                                            <button class="select-shop-btn"
-                                                onclick="window.location.href='product-detail.php?id=<?php echo $flower['ID']; ?>'"
-                                                aria-label="เลือกซื้อ <?php echo htmlspecialchars($flower['flower_name']); ?>">
-                                                <i class="fas fa-shopping-cart"></i>
-                                            </button>
-                                        </div>
                                     </div>
                                     <div class="flower-content">
                                         <div class="flower-id">A<?php echo htmlspecialchars($flower['ID']); ?></div>
@@ -113,14 +113,20 @@ try {
                                         <?php elseif ($flower['stock_quantity'] > 5): ?>
                                             <span class="stock-status in-stock">มีสินค้า</span>
                                         <?php endif; ?>
+                                        <div class="flower-buttons">
+                                            <a href="product-detail.php?id=<?php echo htmlspecialchars($flower['ID']); ?>" class="btn" aria-label="ดูสินค้า <?php echo htmlspecialchars($flower['flower_name']); ?>" title="ดูสินค้า">
+                                                <i class="fas fa-search me-2"></i> ดูสินค้า
+                                            </a>
+                                            <button class="btn add-to-cart-btn" data-id="<?php echo htmlspecialchars($flower['ID']); ?>" aria-label="เพิ่มลงตะกร้า <?php echo htmlspecialchars($flower['flower_name']); ?>" title="ตะกร้า">
+                                                <i class="fas fa-cart-plus me-2"></i> ตะกร้า
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
-                    <!-- Add Pagination -->
                     <div class="swiper-pagination"></div>
-                    <!-- Add Navigation -->
                     <div class="swiper-button-prev"></div>
                     <div class="swiper-button-next"></div>
                 </div>
@@ -140,19 +146,16 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <!-- Initialize Swiper -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Debug: Check if Swiper is loaded
             if (typeof Swiper === 'undefined') {
                 console.error('Swiper library is not loaded');
                 return;
             }
 
-            // Initialize Home Slider
             const homeSlider = new Swiper('.home-slider', {
                 slidesPerView: 1,
-                loop: false, // Disable loop to avoid warning
+                loop: false,
                 autoplay: {
                     delay: 3000,
                     disableOnInteraction: false,
@@ -169,38 +172,12 @@ try {
                 fadeEffect: {
                     crossFade: true,
                 },
-                on: {
-                    init: function () {
-                        console.log('Home Slider initialized');
-                    },
-                    slideChange: function () {
-                        console.log('Home Slider changed to slide', this.activeIndex);
-                    },
-                },
             });
 
-            // Debug: Check navigation buttons
-            const nextButton = document.querySelector('.home-slider .swiper-button-next');
-            const prevButton = document.querySelector('.home-slider .swiper-button-prev');
-            if (nextButton && prevButton) {
-                console.log('Navigation buttons found');
-                nextButton.addEventListener('click', () => {
-                    console.log('Next button clicked');
-                    homeSlider.slideNext();
-                });
-                prevButton.addEventListener('click', () => {
-                    console.log('Prev button clicked');
-                    homeSlider.slidePrev();
-                });
-            } else {
-                console.error('Navigation buttons not found');
-            }
-
-            // Initialize Flower Slider
             const flowerSlider = new Swiper('.flower-slider', {
                 slidesPerView: 'auto',
                 spaceBetween: 30,
-                loop: true, // Keep loop for flower slider as it has more slides
+                loop: <?php echo count($flowers) > 1 ? 'true' : 'false'; ?>,
                 autoplay: {
                     delay: 3500,
                     disableOnInteraction: false,
@@ -215,22 +192,70 @@ try {
                     prevEl: '.flower-slider .swiper-button-prev',
                 },
                 breakpoints: {
-                    576: {
-                        spaceBetween: 20,
-                    },
-                    768: {
-                        spaceBetween: 30,
-                    },
-                    1200: {
-                        spaceBetween: 40,
-                    },
+                    576: { spaceBetween: 20 },
+                    768: { spaceBetween: 30 },
+                    1200: { spaceBetween: 40 },
                 },
-                slideToClickedSlide: true,
                 on: {
-                    init: function () {
-                        console.log('Flower Slider initialized');
-                    },
-                },
+                    click: function (e) {
+                        if (e.target.closest('.btn') || e.target.closest('.add-to-cart-btn')) {
+                            e.preventDefault();
+                        }
+                    }
+                }
+            });
+
+            // SweetAlert2 ป็อปอัปกลางจอ
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const flowerId = this.getAttribute('data-id');
+                    fetch('add_to_cart.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `flower_id=${flowerId}&quantity=1`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const cartCounter = document.querySelector('.cart-counter');
+                            if (cartCounter) {
+                                cartCounter.innerText = data.cartCount;
+                            }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'เพิ่มสินค้าสำเร็จ!',
+                                text: data.message,
+                                confirmButtonText: 'ตกลง',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'ไม่สามารถเพิ่มสินค้าได้',
+                                text: data.message,
+                                confirmButtonText: 'ตกลง'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: 'ไม่สามารถเพิ่มสินค้าลงตะกร้าได้',
+                            confirmButtonText: 'ปิด'
+                        });
+                    });
+                });
+            });
+
+            // ปุ่มดูรายละเอียดสินค้า
+            document.querySelectorAll('.btn[href^="product-detail.php"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = this.getAttribute('href');
+                });
             });
         });
     </script>

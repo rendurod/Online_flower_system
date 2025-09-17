@@ -3,10 +3,10 @@ session_start();
 include('config/db.php');
 // ตรวจสอบว่าผู้ใช้เข้าสู่ระบบแล้วหรือไม่
 
-// if (isset($_SESSION['user_login'])) {
-//     header("Location: user.php");
-//     exit();
-// }
+if (isset($_SESSION['user_login'])) {
+    header("Location: user.php");
+    exit();
+}
 
 // ดึงข้อมูลดอกไม้จาก tbl_flowers
 $flowers = [];
@@ -251,26 +251,41 @@ try {
                 fadeEffect: { crossFade: true },
             });
 
-            const flowerSlider = new Swiper('.flower-slider', {
-                slidesPerView: 'auto',
-                spaceBetween: 30,
-                loop: <?php echo count($flowers) > 1 ? 'true' : 'false'; ?>,
-                pagination: { el: '.flower-slider .swiper-pagination', clickable: true, dynamicBullets: true },
-                navigation: { nextEl: '.flower-slider .swiper-button-next', prevEl: '.flower-slider .swiper-button-prev' },
-                breakpoints: {
-                    576: { spaceBetween: 20 },
-                    768: { spaceBetween: 30 },
-                    1200: { spaceBetween: 40 },
-                },
-                // Prevent auto-scrolling on button click
-                on: {
-                    click: function (e) {
-                        if (e.target.closest('.btn') || e.target.closest('.add-to-cart-btn')) {
-                            e.preventDefault(); // Stop slide change on button click
-                        }
-                    }
+            // ...existing code...
+
+const flowerSlider = new Swiper('.flower-slider', {
+    slidesPerView: 'auto',
+    spaceBetween: 30,
+    loop: <?php echo count($flowers) > 1 ? 'true' : 'false'; ?>,
+    pagination: { 
+        el: '.flower-slider .swiper-pagination', 
+        clickable: true, 
+        dynamicBullets: true 
+    },
+    navigation: { 
+        nextEl: '.flower-slider .swiper-button-next', 
+        prevEl: '.flower-slider .swiper-button-prev' 
+    },
+    breakpoints: {
+        576: { spaceBetween: 20 },
+        768: { spaceBetween: 30 },
+        1200: { spaceBetween: 40 },
+    },
+    // แก้ไขส่วนนี้
+    on: {
+        click: function (e) {
+            const target = e.target;
+            // ตรวจสอบว่า target มีค่าและมีเมธอด closest
+            if (target && typeof target.closest === 'function') {
+                if (target.closest('.btn') || target.closest('.add-to-cart-btn')) {
+                    e.preventDefault(); // หยุดการเลื่อนสไลด์เมื่อคลิกปุ่ม
                 }
-            });
+            }
+        }
+    }
+});
+
+// ...existing code...
         });
 
         // Add click event to all add-to-cart buttons

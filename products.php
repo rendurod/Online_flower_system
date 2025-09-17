@@ -2,75 +2,78 @@
 session_start();
 include('config/db.php');
 
-// ดึงหมวดหมู่ทั้งหมดสำหรับ filter
-$categories_query = "SELECT DISTINCT flower_category FROM tbl_flowers ORDER BY flower_category";
-$categories_stmt = $conn->prepare($categories_query);
-$categories_stmt->execute();
-$categories_result = $categories_stmt->fetchAll(PDO::FETCH_ASSOC);
+// ตรวจสอบว่าผู้ใช้ล็อกอินหรือไม่ ถ้าไม่ ให้ redirect ไปหน้า login
+if (!isset($_SESSION['user_login'])) {
+    header("location: login.php");
+    exit;
+}
 
-// จัดการการกรองสินค้า
-$where_clause = "WHERE 1=1";
+$user_id = $_SESSION['user_login'];
+
+// --- การสร้าง Query แบบไดนามิกสำหรับการค้นหาและกรอง ---
+
+// รับค่าจาก GET parameters
+$search_term = $_GET['search'] ?? '';
+$min_price = $_GET['min_price'] ?? '';
+$max_price = $_GET['max_price'] ?? '';
+$sort_by = $_GET['sort_by'] ?? 'newest';
+
+// เริ่มต้น query และ array สำหรับ parameters
+$sql = "SELECT ID, flower_name, flower_description, price, image, stock_quantity FROM tbl_flowers WHERE stock_quantity > 0";
 $params = [];
+$types = ''; // String สำหรับ bind_param types (ถ้าใช้ mysqli)
 
-if (isset($_GET['category']) && !empty($_GET['category'])) {
-    $where_clause .= " AND flower_category = :category";
-    $params[':category'] = $_GET['category'];
+// 1. กรองด้วยคำค้นหา (Search)
+if (!empty($search_term)) {
+    $sql .= " AND (flower_name LIKE ? OR flower_description LIKE ?)";
+    $like_term = "%" . $search_term . "%";
+    $params[] = $like_term;
+    $params[] = $like_term;
 }
 
-if (isset($_GET['min_price']) && !empty($_GET['min_price'])) {
-    $where_clause .= " AND price >= :min_price";
-    $params[':min_price'] = floatval($_GET['min_price']);
+// 2. กรองด้วยราคาขั้นต่ำ (Min Price)
+if (is_numeric($min_price) && $min_price >= 0) {
+    $sql .= " AND price >= ?";
+    $params[] = $min_price;
 }
 
-if (isset($_GET['max_price']) && !empty($_GET['max_price'])) {
-    $where_clause .= " AND price <= :max_price";
-    $params[':max_price'] = floatval($_GET['max_price']);
+// 3. กรองด้วยราคาขั้นสูง (Max Price)
+if (is_numeric($max_price) && $max_price > 0) {
+    $sql .= " AND price <= ?";
+    $params[] = $max_price;
 }
 
-if (isset($_GET['search']) && !empty($_GET['search'])) {
-    $where_clause .= " AND (flower_name LIKE :search OR flower_description LIKE :search_desc)";
-    $search_term = '%' . $_GET['search'] . '%';
-    $params[':search'] = $search_term;
-    $params[':search_desc'] = $search_term;
+// 4. จัดเรียงข้อมูล (Sort)
+switch ($sort_by) {
+    case 'price_asc':
+        $sql .= " ORDER BY price ASC";
+        break;
+    case 'price_desc':
+        $sql .= " ORDER BY price DESC";
+        break;
+    case 'name_asc':
+        $sql .= " ORDER BY flower_name ASC";
+        break;
+    case 'name_desc':
+        $sql .= " ORDER BY flower_name DESC";
+        break;
+    default: // newest
+        $sql .= " ORDER BY creation_date DESC";
+        break;
 }
 
-// จัดการการเรียงลำดับ
-$order_by = "ORDER BY creation_date DESC";
-if (isset($_GET['sort'])) {
-    switch ($_GET['sort']) {
-        case 'price_asc':
-            $order_by = "ORDER BY price ASC";
-            break;
-        case 'price_desc':
-            $order_by = "ORDER BY price DESC";
-            break;
-        case 'name_asc':
-            $order_by = "ORDER BY flower_name ASC";
-            break;
-        case 'name_desc':
-            $order_by = "ORDER BY flower_name DESC";
-            break;
-        case 'newest':
-            $order_by = "ORDER BY creation_date DESC";
-            break;
-        case 'oldest':
-            $order_by = "ORDER BY creation_date ASC";
-            break;
-    }
+// --- ดึงข้อมูลจากฐานข้อมูล ---
+$flowers = [];
+$message = '';
+$messageType = 'danger';
+
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $flowers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $message = "เกิดข้อผิดพลาดในการดึงข้อมูลสินค้า: " . htmlspecialchars($e->getMessage());
 }
-
-// ดึงข้อมูลสินค้า
-$query = "SELECT * FROM tbl_flowers $where_clause $order_by";
-$stmt = $conn->prepare($query);
-
-// Bind parameters
-foreach ($params as $key => $value) {
-    $paramType = is_float($value) ? PDO::PARAM_STR : PDO::PARAM_STR;
-    $stmt->bindValue($key, $value, $paramType);
-}
-
-$stmt->execute();
-$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -91,6 +94,7 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/productPHP.css">
+    <link rel="stylesheet" href="assets/css/flowerPHP.css"> <!-- ใช้ CSS ร่วมกับ user.php เพื่อสไตล์ที่สอดคล้องกัน -->
 
 </head>
 
@@ -103,7 +107,7 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <section class="products-hero">
         <div class="container">
             <div class="text-center">
-                <h1 class="heading mb-3">สินค้า<span>ดอกไม้</span></h1>
+                <h1 class="heading mb-3">สินค้า<span>ทั้งหมด</span></h1>
                 <p style="font-size: 1.8rem; color: var(--text-light); max-width: 600px; margin: 0 auto;">
                     ค้นพบความงามของดอกไม้สดใหม่ คัดสรรมาเป็นพิเศษเพื่อคุณ
                 </p>
@@ -112,163 +116,94 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </section>
     <!-- Hero Section Ends-->
 
-    <!-- Filter Section -->
-    <section class="container">
-        <div class="filter-section">
-            <form method="GET" action="">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label for="search">ค้นหาสินค้า</label>
-                        <input type="text"
-                            id="search"
-                            name="search"
-                            class="filter-input"
-                            placeholder="ชื่อดอกไม้ หรือคำอธิบาย..."
-                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+    <!-- Products Section -->
+    <section class="products-section py-5">
+        <div class="container">
+            <!-- Filter and Search Form -->
+            <form action="products.php" method="GET" class="filter-form mb-5 p-4 rounded-3 shadow-sm">
+                <div class="row g-3 align-items-end">
+                    <!-- Search Input -->
+                    <div class="col-lg-4 col-md-6">
+                        <label for="search" class="form-label">ค้นหาสินค้า</label>
+                        <input type="text" class="form-control" id="search" name="search" placeholder="ชื่อดอกไม้, รายละเอียด..." value="<?php echo htmlspecialchars($search_term); ?>">
                     </div>
-
-                    <div class="filter-group">
-                        <label for="category">หมวดหมู่</label>
-                        <select id="category" name="category" class="filter-input">
-                            <option value="">ทั้งหมด</option>
-                            <?php foreach ($categories_result as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category['flower_category']); ?>"
-                                    <?php echo (isset($_GET['category']) && $_GET['category'] == $category['flower_category']) ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($category['flower_category']); ?>
-                                </option>
-                            <?php endforeach; ?>
+                    <!-- Price Range -->
+                    <div class="col-lg-4 col-md-6">
+                        <label class="form-label">ช่วงราคา</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="min_price" placeholder="ต่ำสุด" min="0" value="<?php echo htmlspecialchars($min_price); ?>">
+                            <span class="input-group-text">-</span>
+                            <input type="number" class="form-control" name="max_price" placeholder="สูงสุด" min="0" value="<?php echo htmlspecialchars($max_price); ?>">
+                        </div>
+                    </div>
+                    <!-- Sort By -->
+                    <div class="col-lg-2 col-md-6">
+                        <label for="sort_by" class="form-label">จัดเรียงตาม</label>
+                        <select class="form-select" id="sort_by" name="sort_by">
+                            <option value="newest" <?php if ($sort_by == 'newest') echo 'selected'; ?>>มาใหม่ล่าสุด</option>
+                            <option value="price_asc" <?php if ($sort_by == 'price_asc') echo 'selected'; ?>>ราคา: น้อยไปมาก</option>
+                            <option value="price_desc" <?php if ($sort_by == 'price_desc') echo 'selected'; ?>>ราคา: มากไปน้อย</option>
+                            <option value="name_asc" <?php if ($sort_by == 'name_asc') echo 'selected'; ?>>ชื่อ: A-Z</option>
+                            <option value="name_desc" <?php if ($sort_by == 'name_desc') echo 'selected'; ?>>ชื่อ: Z-A</option>
                         </select>
                     </div>
-
-                    <div class="filter-group">
-                        <label for="min_price">ราคาต่ำสุด</label>
-                        <input type="number"
-                            id="min_price"
-                            name="min_price"
-                            class="filter-input"
-                            placeholder="0"
-                            min="0"
-                            step="0.01"
-                            value="<?php echo isset($_GET['min_price']) ? htmlspecialchars($_GET['min_price']) : ''; ?>">
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="max_price">ราคาสูงสุด</label>
-                        <input type="number"
-                            id="max_price"
-                            name="max_price"
-                            class="filter-input"
-                            placeholder="5000"
-                            min="0"
-                            step="0.01"
-                            value="<?php echo isset($_GET['max_price']) ? htmlspecialchars($_GET['max_price']) : ''; ?>">
-                    </div>
-
-                    <div class="filter-group">
-                        <button type="submit" class="filter-btn">
-                            <i class="fas fa-search"></i>
-                            ค้นหา
-                        </button>
-                    </div>
-
-                    <div class="filter-group">
-                        <a href="products.php" class="clear-btn">
-                            <i class="fas fa-times"></i>
-                            ล้างตัวกรอง
-                        </a>
+                    <!-- Submit Button -->
+                    <div class="col-lg-2 col-md-6 d-grid">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-2"></i>กรองข้อมูล</button>
                     </div>
                 </div>
             </form>
-        </div>
-    </section>
 
-    <!-- Products Section -->
-    <section class="container">
-        <?php
-        $total_products = count($result);
-        ?>
+            <!-- Display Messages -->
+            <?php if (!empty($message)) : ?>
+                <div class="alert alert-<?php echo $messageType; ?>" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i><?php echo $message; ?>
+                </div>
+            <?php endif; ?>
 
-        <div class="results-info">
-            <div class="results-count">
-                <strong><?php echo $total_products; ?></strong> สินค้าที่พบ
-            </div>
-
-            <div class="sort-section">
-                <form method="GET" style="display: inline;">
-                    <!-- เก็บ parameter เดิม -->
-                    <?php foreach ($_GET as $key => $value): ?>
-                        <?php if ($key !== 'sort'): ?>
-                            <input type="hidden" name="<?php echo htmlspecialchars($key); ?>" value="<?php echo htmlspecialchars($value); ?>">
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-
-                    <select name="sort" class="sort-select" onchange="this.form.submit()">
-                        <option value="newest" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'newest') ? 'selected' : ''; ?>>ใหม่ล่าสุด</option>
-                        <option value="oldest" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'oldest') ? 'selected' : ''; ?>>เก่าที่สุด</option>
-                        <option value="price_asc" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'price_asc') ? 'selected' : ''; ?>>ราคา: ต่ำ - สูง</option>
-                        <option value="price_desc" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'price_desc') ? 'selected' : ''; ?>>ราคา: สูง - ต่ำ</option>
-                        <option value="name_asc" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'name_asc') ? 'selected' : ''; ?>>ชื่อ: A - Z</option>
-                        <option value="name_desc" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'name_desc') ? 'selected' : ''; ?>>ชื่อ: Z - A</option>
-                    </select>
-                </form>
-            </div>
-        </div>
-
-        <?php if ($total_products > 0): ?>
-            <div class="products-grid">
-                <?php foreach ($result as $flower): ?>
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="<?php echo !empty($flower['image']) && file_exists("admin/uploads/flowers/" . $flower['image']) ? "admin/uploads/flowers/" . htmlspecialchars($flower['image']) : "assets/img/default-flower.jpg"; ?>"
-                                alt="<?php echo htmlspecialchars($flower['flower_name']); ?>">
-                        </div>
-
-                        <div class="product-info">
-                            <div class="product-category"><?php echo htmlspecialchars($flower['flower_category']); ?></div>
-                            <h3 class="product-name"><?php echo htmlspecialchars($flower['flower_name']); ?></h3>
-
-                            <?php if (!empty($flower['flower_description'])): ?>
-                                <p class="product-description">
-                                    <?php
-                                    $description = htmlspecialchars($flower['flower_description']);
-                                    echo strlen($description) > 50 ? substr($description, 0, 50) . '...' : $description;
-                                    ?>
-                                </p>
-                            <?php endif; ?>
-
-                            <div class="product-price">฿<?php echo number_format($flower['price'], 2); ?></div>
-
-                            <div class="product-actions">
-                                <?php if ($flower['stock_quantity'] > 0): ?>
-                                    <button class="select-btn" onclick="window.location.href='product-detail.php?id=<?php echo $flower['ID']; ?>'">
-                                        <i class="fas fa-shopping-cart"></i>
-                                        เลือกซื้อ
-                                    </button>
-
-                                    <?php if ($flower['stock_quantity'] <= 5): ?>
+            <!-- Product Grid -->
+            <div class="row g-4">
+                <?php if (!empty($flowers)) : ?>
+                    <?php foreach ($flowers as $flower) : ?>
+                        <div class="col-12 col-sm-6 col-lg-4 col-xl-3 d-flex align-items-stretch">
+                            <div class="flower-card w-100">
+                                <div class="flower-image">
+                                    <img src="<?php echo !empty($flower['image']) && file_exists("admin/uploads/flowers/" . $flower['image']) ? "admin/uploads/flowers/" . htmlspecialchars($flower['image']) : "assets/img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($flower['flower_name']); ?>" class="flower-image">
+                                </div>
+                                <div class="flower-content">
+                                    <div class="flower-id">A<?php echo htmlspecialchars($flower['ID']); ?></div>
+                                    <h3 class="flower-name"><?php echo htmlspecialchars($flower['flower_name']); ?></h3>
+                                    <p class="flower-description"><?php echo htmlspecialchars($flower['flower_description'] ?? 'ไม่มีรายละเอียด'); ?></p>
+                                    <div class="flower-price"><?php echo number_format($flower['price'], 2); ?> บาท</div>
+                                    <?php if ($flower['stock_quantity'] <= 5 && $flower['stock_quantity'] > 0) : ?>
                                         <span class="stock-status low-stock">เหลือน้อย</span>
-                                    <?php else: ?>
+                                    <?php elseif ($flower['stock_quantity'] > 5) : ?>
                                         <span class="stock-status in-stock">มีสินค้า</span>
                                     <?php endif; ?>
-                                <?php else: ?>
-                                    <button class="select-btn" disabled style="background: #bdc3c7; cursor: not-allowed;">
-                                        <i class="fas fa-times"></i>
-                                        สินค้าหมด
-                                    </button>
-                                    <span class="stock-status out-of-stock">หมดสต็อก</span>
-                                <?php endif; ?>
+                                    <div class="flower-buttons">
+                                        <a href="product-detail.php?id=<?php echo htmlspecialchars($flower['ID']); ?>" class="btn" aria-label="ดูสินค้า <?php echo htmlspecialchars($flower['flower_name']); ?>" title="ดูสินค้า">
+                                            <i class="fas fa-search me-2"></i> ดูสินค้า
+                                        </a>
+                                        <button class="btn add-to-cart-btn" data-id="<?php echo htmlspecialchars($flower['ID']); ?>" aria-label="เพิ่มลงตะกร้า <?php echo htmlspecialchars($flower['flower_name']); ?>" title="ตะกร้า">
+                                            <i class="fas fa-cart-plus me-2"></i> ตะกร้า
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <div class="col-12">
+                        <div class="no-data-message text-center p-5">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <h4>ไม่พบสินค้าที่ตรงกับเงื่อนไขของคุณ</h4>
+                            <p>ลองปรับเปลี่ยนคำค้นหาหรือตัวกรองของคุณ</p>
+                            <a href="products.php" class="btn btn-secondary mt-3">ล้างตัวกรองทั้งหมด</a>
+                        </div>
                     </div>
-                <?php endforeach; ?>
+                <?php endif; ?>
             </div>
-        <?php else: ?>
-            <div class="no-products">
-                <i class="fas fa-search"></i>
-                <h3>ไม่พบสินค้าที่ค้นหา</h3>
-                <p>ลองเปลี่ยนเงื่อนไขการค้นหาหรือ <a href="products.php">ดูสินค้าทั้งหมด</a></p>
-            </div>
-        <?php endif; ?>
+        </div>
     </section>
 
     <!-- footer -->
@@ -281,20 +216,75 @@ $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <script>
-        // การจัดการ responsive สำหรับ filter section
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.querySelector('form');
-            form.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
+            // SweetAlert2 สำหรับปุ่มเพิ่มลงตะกร้า
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
                     e.preventDefault();
-                    form.querySelector('.filter-btn').click();
-                }
+                    const flowerId = this.getAttribute('data-id');
+                    fetch('add_to_cart.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: `flower_id=${flowerId}&quantity=1`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                const cartCounter = document.querySelector('.cart-counter');
+                                if (cartCounter) {
+                                    cartCounter.innerText = data.cartCount;
+                                }
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'เพิ่มสินค้าสำเร็จ!',
+                                    text: data.message,
+                                    confirmButtonText: 'ตกลง',
+                                    timer: 2000,
+                                    timerProgressBar: true
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'ไม่สามารถเพิ่มสินค้าได้',
+                                    text: data.message,
+                                    confirmButtonText: 'ตกลง'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'เกิดข้อผิดพลาด',
+                                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                                confirmButtonText: 'ปิด'
+                            });
+                        });
+                });
             });
 
-            const sortSelect = document.querySelector('.sort-select');
-            sortSelect.addEventListener('change', function() {
-                this.form.submit();
+            // ปุ่มดูรายละเอียดสินค้า
+            document.querySelectorAll('.btn[href^="product-detail.php"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = this.getAttribute('href');
+                });
             });
+
+            // จัดการฟอร์มกรองข้อมูล: ไม่ส่งค่าว่างไปใน URL
+            const filterForm = document.querySelector('.filter-form');
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    const inputs = this.querySelectorAll('input, select');
+                    inputs.forEach(input => {
+                        if (input.value === '') {
+                            input.name = ''; // เอา name ออกเพื่อไม่ให้ส่งไปกับ URL
+                        }
+                    });
+                });
+            }
         });
     </script>
 </body>

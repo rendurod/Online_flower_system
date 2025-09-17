@@ -82,10 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1; // Default to 1 if quantity is not set
     $user_email = $user_data['EmailId'];
     $delivery_date = isset($_POST['delivery_date']) ? $_POST['delivery_date'] : null;
+    $total_amount = $flower['price'] * $quantity; // Calculate TotalAmount
 
     // Ensure quantity is at least 1
     if ($quantity < 1) {
         $quantity = 1;
+        $total_amount = $flower['price']; // Recalculate TotalAmount for quantity = 1
     }
 
     // Validate quantity against stock
@@ -132,22 +134,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $booking_number = rand(1000000000, 9999999999);
 
     // Insert order into tbl_orders
-    $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, FlowerId, Quantity, DeliveryDate, Image, Status, PostingDate) 
-                    VALUES (:booking_number, :user_email, :flower_id, :quantity, :delivery_date, :image, 0, NOW())";
-    $order_stmt = $conn->prepare($order_query);
-    $order_stmt->bindValue(':booking_number', $booking_number, PDO::PARAM_INT);
-    $order_stmt->bindValue(':user_email', $user_email, PDO::PARAM_STR);
-    $order_stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
-    $order_stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
-    $order_stmt->bindValue(':delivery_date', $delivery_date, PDO::PARAM_STR);
-    $order_stmt->bindValue(':image', $slip_image, PDO::PARAM_STR);
+    try {
+        $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, FlowerId, Quantity, DeliveryDate, Image, TotalAmount, Status, PostingDate) 
+                        VALUES (:booking_number, :user_email, :flower_id, :quantity, :delivery_date, :image, :total_amount, 0, NOW())";
+        $order_stmt = $conn->prepare($order_query);
+        $order_stmt->bindValue(':booking_number', $booking_number, PDO::PARAM_INT);
+        $order_stmt->bindValue(':user_email', $user_email, PDO::PARAM_STR);
+        $order_stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
+        $order_stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
+        $order_stmt->bindValue(':delivery_date', $delivery_date, PDO::PARAM_STR);
+        $order_stmt->bindValue(':image', $slip_image, PDO::PARAM_STR);
+        $order_stmt->bindValue(':total_amount', $total_amount, PDO::PARAM_STR);
 
-    if ($order_stmt->execute()) {
-        $_SESSION['success'] = "สั่งซื้อสำเร็จ! รอการยืนยันจากแอดมิน";
-        header("Location: product-finish.php");
-        exit();
-    } else {
-        $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ กรุณาลองใหม่";
+        if ($order_stmt->execute()) {
+            $_SESSION['success'] = "สั่งซื้อสำเร็จ! รอการยืนยันจากแอดมิน";
+            header("Location: product-finish.php");
+            exit();
+        } else {
+            $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ กรุณาลองใหม่";
+            header("Location: product-order.php?id=" . $flower_id);
+            exit();
+        }
+    } catch (PDOException $e) {
+        $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         header("Location: product-order.php?id=" . $flower_id);
         exit();
     }
@@ -311,10 +320,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="product-summary-item">
                     <h4>มูลค่าสินค้าทั้งหมด</h4>
                     <p id="total_item_price">฿<?php echo number_format($flower['price'], 2); ?></p>
-                </div>
-                <div class="product-summary-item">
-                    <h4>ค่าจัดส่ง</h4>
-                    <p>฿0.00</p>
                 </div>
                 <div class="total-price">
                     ราคาทั้งหมด: <span id="total_price">฿<?php echo number_format($flower['price'], 2); ?></span>
