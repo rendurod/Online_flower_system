@@ -291,7 +291,7 @@ try {
                                         </div>
                                         <div class="col-6 col-md-2 text-end d-flex align-items-center justify-content-end align-self-center mt-3 mt-md-0">
                                             <span class="price me-3">฿<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
-                                            <button class="remove-btn" data-id="<?php echo htmlspecialchars($item['flower_id']); ?>"><i class="fas fa-trash-alt"></i></button>
+                                            <button type="button" class="remove-btn" data-id="<?php echo htmlspecialchars($item['flower_id']); ?>"><i class="fas fa-trash-alt"></i></button>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -426,11 +426,19 @@ try {
                             text: data.message
                         });
                     }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+                    });
                 });
             }
 
             document.querySelectorAll('.remove-btn').forEach(button => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault(); // Prevent form submission
                     const flowerId = this.dataset.id;
                     Swal.fire({
                         icon: 'warning',
@@ -470,6 +478,13 @@ try {
                                         text: data.message
                                     });
                                 }
+                            })
+                            .catch(error => {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'เกิดข้อผิดพลาด',
+                                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์'
+                                });
                             });
                         }
                     });
