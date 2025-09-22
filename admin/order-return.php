@@ -41,6 +41,7 @@ if ($order_id <= 0) {
 
 // Fetch order details
 $order = [];
+$items = [];
 try {
     $stmt = $conn->prepare("
         SELECT o.*, 
@@ -50,7 +51,7 @@ try {
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
-        WHERE o.ID = :id AND o.Status = 6 AND o.Message NOT LIKE '%//RefundedByAdmin'
+        WHERE o.ID = :id AND o.Status = 4 AND o.Message NOT LIKE '%//RefundedByAdmin'
     ");
     $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
     $stmt->execute();
@@ -61,6 +62,44 @@ try {
         $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ถูกยกเลิกหรือโอนเงินคืนแล้ว";
         header("Location: order-cancel.php");
         exit();
+    }
+
+    // Fetch items from tbl_order_details
+    $items_stmt = $conn->prepare("
+        SELECT od.Quantity, od.Price, f.flower_name
+        FROM tbl_order_details od
+        JOIN tbl_flowers f ON od.FlowerId = f.ID
+        WHERE od.OrderId = :order_id
+    ");
+    $items_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+    $items_stmt->execute();
+    $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // If no items in tbl_order_details, use single-item data
+    if (empty($items) && $order['flower_name']) {
+        $items[] = [
+            'flower_name' => $order['flower_name'] ?? 'ไม่ระบุ',
+            'Quantity' => $order['Quantity'] ?? 1,
+            'Price' => $order['price'] ?? 0
+        ];
+    }
+
+    // Calculate and verify SumTotal
+    $calculated_total = 0;
+    foreach ($items as $item) {
+        $calculated_total += $item['Price'] * $item['Quantity'];
+    }
+    if (abs($calculated_total - $order['SumTotal']) > 0.01) {
+        try {
+            $update_stmt = $conn->prepare("UPDATE tbl_orders SET SumTotal = :total_amount WHERE ID = :order_id");
+            $update_stmt->bindValue(':total_amount', $calculated_total, PDO::PARAM_STR);
+            $update_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+            $update_stmt->execute();
+            $order['SumTotal'] = $calculated_total;
+        } catch (PDOException $e) {
+            error_log("Error updating total amount: " . $e->getMessage());
+            $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปเดตยอดรวม: " . htmlspecialchars($e->getMessage());
+        }
     }
 } catch (PDOException $e) {
     error_log("Error fetching order: " . $e->getMessage());
@@ -83,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
     $message .= ' //RefundedByAdmin';
 
     // Handle file upload
-    $image = null;
+    $image = $order['Image'];
     if (!empty($_FILES['image']['name'])) {
         $target_dir = "../Uploads/slips/";
         $imageFileType = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
@@ -108,13 +147,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
 
     try {
         $sql = "UPDATE tbl_orders SET Message = :message";
-        if ($image) {
+        if ($image !== $order['Image']) {
             $sql .= ", Image = :image";
         }
         $sql .= " WHERE ID = :id";
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':message', $message, PDO::PARAM_STR);
-        if ($image) {
+        if ($image !== $order['Image']) {
             $stmt->bindValue(':image', $image, PDO::PARAM_STR);
         }
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
@@ -154,6 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .order-detail-container {
             margin: 0 auto;
@@ -173,12 +213,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
             color: #4e73df;
         }
 
-        .order-image img {
-            max-width: 200px;
-            max-height: 200px;
+        .slip-image {
+            max-width: 300px;
+            max-height: 300px;
             object-fit: cover;
-            border-radius: inherit;
-            border: 2px solid rgba(232, 67, 147, 0.2);
+            border-radius: var(--border-radius);
         }
 
         .form-control:focus {
@@ -222,6 +261,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
             width: 40%;
             background-color: rgba(78, 115, 223, 0.1);
         }
+
+        .price-summary-card {
+            border-left: 4px solid #1cc88a;
+            margin-bottom: 2rem;
+        }
+
+        .price-summary-card .card-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: #1cc88a;
+        }
+
+        .price-summary-table th {
+            width: 40%;
+            background-color: rgba(28, 200, 138, 0.1);
+        }
+
+        .total-price {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #dc3545;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item-list li {
+            margin-bottom: 5px;
+        }
+
+        .badge-multi {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -233,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">อัปเดตการคืนเงิน: #<?php echo htmlspecialchars($order['BookingNumber']); ?></h1>
+                        <h1 class="h3 mb-0 text-gray-800">อัปเดตการคืนเงิน: #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($items) > 1): ?> <span class="badge badge-multi ms-2">หลายรายการ</span><?php endif; ?></h1>
                         <a href="order-cancel-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังรายละเอียดคำสั่งซื้อ
                         </a>
@@ -258,12 +338,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
                                     <tr>
                                         <th>สลิปการชำระเงิน</th>
                                         <td>
-                                            <?php if (!empty($order['Image'])): ?>
-                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip" style="max-width: 200px; border-radius: inherit; border: 2px solid rgba(232, 67, 147, 0.2);">
+                                            <?php if (!empty($order['Image']) && file_exists("../Uploads/slips/" . $order['Image'])): ?>
+                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip" class="slip-image">
                                             <?php else: ?>
                                                 ไม่มีสลิป
                                             <?php endif; ?>
                                         </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ตารางสรุปราคา -->
+                    <div class="card shadow mb-4 price-summary-card">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold">สรุปราคา</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-bordered price-summary-table">
+                                <tbody>
+                                    <tr>
+                                        <th>รายการสินค้า</th>
+                                        <td>
+                                            <?php if (count($items) > 1): ?>
+                                                <ul class="item-list">
+                                                    <?php foreach ($items as $item): ?>
+                                                        <li>
+                                                            <?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?> 
+                                                            (<?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น, ฿<?php echo number_format($item['Price'] * $item['Quantity'], 2); ?>)
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars($items[0]['flower_name'] ?? 'ไม่ระบุ'); ?>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>จำนวนรวม</th>
+                                        <td><?php echo array_sum(array_column($items, 'Quantity')); ?> ชิ้น</td>
+                                    </tr>
+                                    <tr>
+                                        <th>ยอดรวม</th>
+                                        <td class="total-price">฿<?php echo number_format($order['SumTotal'], 2); ?></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -276,7 +394,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
                             <h6 class="m-0 font-weight-bold text-primary">อัปเดตข้อมูลการคืนเงิน</h6>
                         </div>
                         <div class="card-body">
-                            <form method="POST" enctype="multipart/form-data">
+                            <form method="POST" enctype="multipart/form-data" id="refundForm">
                                 <input type="hidden" name="update_refund" value="1">
                                 <div class="mb-3">
                                     <label for="message" class="form-label">ข้อความการคืนเงิน <span class="text-danger">*</span></label>
@@ -313,29 +431,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_refund'])) {
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
     <script>
-        <?php if (isset($_SESSION['error'])): ?>
-            Swal.fire({
-                icon: 'error',
-                title: 'ข้อผิดพลาด',
-                text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
-                timer: 3000,
-                showConfirmButton: false
+        $(document).ready(function() {
+            // SweetAlert2 confirmation for refund update
+            $('#refundForm').on('submit', function(e) {
+                e.preventDefault();
+                const form = this;
+
+                Swal.fire({
+                    title: 'ยืนยันการอัปเดตการคืนเงิน',
+                    text: 'คุณแน่ใจหรือไม่ที่จะบันทึกข้อมูลการคืนเงินนี้?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
             });
-            <?php unset($_SESSION['error']); ?>
-        <?php endif; ?>
-        <?php if (isset($_SESSION['success'])): ?>
-            Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ',
-                text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            <?php unset($_SESSION['success']); ?>
-        <?php endif; ?>
+
+            // Handle success and error messages
+            <?php if (isset($_SESSION['error'])): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#dc3545'
+                });
+                <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
+            <?php if (isset($_SESSION['success'])): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#28a745'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'order-cancel-detail.php?order_id=<?php echo htmlspecialchars($order_id); ?>';
+                    }
+                });
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+        });
     </script>
 </body>
 

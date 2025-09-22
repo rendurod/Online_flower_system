@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Insert order into tbl_orders
     try {
         $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, FlowerId, Quantity, DeliveryDate, Image, SumTotal, Status, PostingDate) 
-                        VALUES (:booking_number, :user_email, :flower_id, :quantity, :delivery_date, :image, :total_amount, 0, NOW())";
+                VALUES (:booking_number, :user_email, :flower_id, :quantity, :delivery_date, :image, :total_amount, 0, NOW())";
         $order_stmt = $conn->prepare($order_query);
         $order_stmt->bindValue(':booking_number', $booking_number, PDO::PARAM_INT);
         $order_stmt->bindValue(':user_email', $user_email, PDO::PARAM_STR);
@@ -480,4 +480,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </script>
 </body>
+
 </html>

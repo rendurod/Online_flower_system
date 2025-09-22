@@ -60,28 +60,28 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span>1: คำสั่งซื้อสินค้าเข้ามาใหม่</span>
         </a>
     </li>
-    <li class="nav-item <?= ($currentPage == 'order-confirm.php') ? 'active' : '' ?>">
-        <a class="nav-link" href="order-confirm.php">
+    <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
+        <a class="nav-link" href="order-success.php">
             <i class="fas fa-fw fa-money-check-alt"></i>
-            <span>2: คำสั่งซื้อที่ชำระเงิน</span>
+            <span>2: คำสั่งซื้อที่ชำระเงินแล้ว</span>
         </a>
     </li>
-    <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
+    <!-- <li class="nav-item <?= ($currentPage == 'order-success.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-success.php">
             <i class="fas fa-fw fa-hourglass-half"></i>
             <span>3: คำสั่งซื้อที่รอจัดส่งสินค้า</span>
         </a>
-    </li>
+    </li> -->
     <li class="nav-item <?= ($currentPage == 'order-finish.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-finish.php">
             <i class="fas fa-fw fa-check-circle"></i>
-            <span>4: คำสั่งซื้อสำเร็จ</span>
+            <span>3: คำสั่งซื้อสำเร็จ</span>
         </a>
     </li>
     <li class="nav-item <?= ($currentPage == 'order-cancel.php') ? 'active' : '' ?>">
         <a class="nav-link" href="order-cancel.php">
             <i class="fas fa-fw fa-times-circle"></i>
-            <span>5: คำสั่งซื้อที่ยกเลิก</span>
+            <span>คำสั่งซื้อที่ยกเลิก</span>
         </a>
     </li>
 

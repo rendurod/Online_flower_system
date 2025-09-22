@@ -41,6 +41,7 @@ if ($order_id <= 0) {
 
 // Fetch order details
 $order = [];
+$items = [];
 try {
     $stmt = $conn->prepare("
         SELECT o.*, 
@@ -50,7 +51,7 @@ try {
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
-        WHERE o.ID = :id AND o.Status = 6
+        WHERE o.ID = :id AND o.Status = 4
     ");
     $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
     $stmt->execute();
@@ -61,6 +62,45 @@ try {
         $_SESSION['error'] = "ไม่พบคำสั่งซื้อที่ถูกยกเลิก";
         header("Location: order-cancel.php");
         exit();
+    }
+
+    // Fetch items from tbl_order_details
+    $items_stmt = $conn->prepare("
+        SELECT od.Quantity, od.Price, f.flower_name, f.image
+        FROM tbl_order_details od
+        JOIN tbl_flowers f ON od.FlowerId = f.ID
+        WHERE od.OrderId = :order_id
+    ");
+    $items_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+    $items_stmt->execute();
+    $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // If no items in tbl_order_details, use single-item data
+    if (empty($items) && $order['flower_name']) {
+        $items[] = [
+            'flower_name' => $order['flower_name'] ?? 'ไม่ระบุ',
+            'Quantity' => $order['Quantity'] ?? 1,
+            'Price' => $order['price'] ?? 0,
+            'image' => $order['image'] ?? 'default-flower.jpg'
+        ];
+    }
+
+    // Calculate and verify SumTotal
+    $calculated_total = 0;
+    foreach ($items as $item) {
+        $calculated_total += $item['Price'] * $item['Quantity'];
+    }
+    if (abs($calculated_total - $order['SumTotal']) > 0.01) {
+        try {
+            $update_stmt = $conn->prepare("UPDATE tbl_orders SET SumTotal = :total_amount WHERE ID = :order_id");
+            $update_stmt->bindValue(':total_amount', $calculated_total, PDO::PARAM_STR);
+            $update_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+            $update_stmt->execute();
+            $order['SumTotal'] = $calculated_total;
+        } catch (PDOException $e) {
+            error_log("Error updating total amount: " . $e->getMessage());
+            $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปเดตยอดรวม: " . htmlspecialchars($e->getMessage());
+        }
     }
 } catch (PDOException $e) {
     error_log("Error fetching order: " . $e->getMessage());
@@ -86,6 +126,7 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .order-detail-container {
             margin: 0 auto;
@@ -113,6 +154,13 @@ try {
             border: 2px solid rgba(232, 67, 147, 0.2);
         }
 
+        .slip-image {
+            max-width: 300px;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+        }
+
         .status-label {
             display: inline-block;
             padding: 6px 12px;
@@ -136,7 +184,6 @@ try {
             color: #fff;
         }
 
-        /* สไตล์สำหรับตารางข้อมูลบัญชี */
         .account-info-card {
             border-left: 4px solid #4e73df;
             margin-bottom: 2rem;
@@ -154,7 +201,6 @@ try {
             background-color: rgba(78, 115, 223, 0.1);
         }
 
-        /* สไตล์สำหรับตารางราคา */
         .price-summary-card {
             border-left: 4px solid #1cc88a;
             margin-bottom: 2rem;
@@ -197,6 +243,24 @@ try {
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
         }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item-list li {
+            margin-bottom: 5px;
+        }
+
+        .badge-multi {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -208,7 +272,7 @@ try {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อที่ยกเลิก: #<?php echo htmlspecialchars($order['BookingNumber']); ?></h1>
+                        <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อที่ยกเลิก: #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($items) > 1): ?> <span class="badge badge-multi ms-2">หลายรายการ</span><?php endif; ?></h1>
                         <div>
                             <?php if (strpos($order['Message'], '//RefundedByAdmin') === false): ?>
                                 <a href="order-return.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-return mr-2">
@@ -240,8 +304,8 @@ try {
                                     <tr>
                                         <th>สลิปการชำระเงิน/คืนเงิน</th>
                                         <td>
-                                            <?php if (!empty($order['Image'])): ?>
-                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Slip" style="max-width: 200px; border-radius: inherit; border: 2px solid rgba(232, 67, 147, 0.2);">
+                                            <?php if (!empty($order['Image']) && file_exists("../Uploads/slips/" . $order['Image'])): ?>
+                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Slip" class="slip-image">
                                             <?php else: ?>
                                                 ไม่มีสลิป
                                             <?php endif; ?>
@@ -261,20 +325,29 @@ try {
                             <table class="table table-bordered price-summary-table">
                                 <tbody>
                                     <tr>
-                                        <th>ชื่อสินค้า</th>
-                                        <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
+                                        <th>รายการสินค้า</th>
+                                        <td>
+                                            <?php if (count($items) > 1): ?>
+                                                <ul class="item-list">
+                                                    <?php foreach ($items as $item): ?>
+                                                        <li>
+                                                            <?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?> 
+                                                            (<?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น, ฿<?php echo number_format($item['Price'] * $item['Quantity'], 2); ?>)
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars($items[0]['flower_name'] ?? 'ไม่ระบุ'); ?>
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <th>จำนวน</th>
-                                        <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
+                                        <th>จำนวนรวม</th>
+                                        <td><?php echo array_sum(array_column($items, 'Quantity')); ?> ชิ้น</td>
                                     </tr>
                                     <tr>
-                                        <th>ราคาต่อชิ้น</th>
-                                        <td>฿<?php echo number_format($order['price'] ?? 0, 2); ?></td>
-                                    </tr>
-                                    <tr>
-                                        <th>ราคารวม</th>
-                                        <td class="total-price">฿<?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?></td>
+                                        <th>ยอดรวม</th>
+                                        <td class="total-price">฿<?php echo number_format($order['SumTotal'], 2); ?></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -334,7 +407,7 @@ try {
                                                 </span>
                                             <?php else: ?>
                                                 <span class="status-label status-not-refunded">
-                                                    <i class="fas fa-times-circle me-1"></i>ยังไม่โอนเงินคืน
+                                                    <i class="fas fa-times-circle me-1"></i>ยังไม่คืนเงิน
                                                 </span>
                                             <?php endif; ?>
                                         </td>
@@ -342,7 +415,15 @@ try {
                                     <tr>
                                         <th>รูปภาพสินค้า</th>
                                         <td class="order-image">
-                                            <img src="<?php echo !empty($order['image']) && file_exists("Uploads/flowers/" . $order['image']) ? "Uploads/flowers/" . htmlspecialchars($order['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                            <?php if (count($items) > 1): ?>
+                                                <div class="d-flex flex-wrap">
+                                                    <?php foreach ($items as $item): ?>
+                                                        <img src="<?php echo !empty($item['image']) && file_exists("Uploads/flowers/" . $item['image']) ? "Uploads/flowers/" . htmlspecialchars($item['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($item['flower_name']); ?>" class="me-2 mb-2">
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <img src="<?php echo !empty($items[0]['image']) && file_exists("Uploads/flowers/" . $items[0]['image']) ? "Uploads/flowers/" . htmlspecialchars($items[0]['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($items[0]['flower_name']); ?>">
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -364,16 +445,17 @@ try {
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
     <script>
+        // Handle error messages
         <?php if (isset($_SESSION['error'])): ?>
             Swal.fire({
                 icon: 'error',
                 title: 'ข้อผิดพลาด',
                 text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
-                timer: 3000,
-                showConfirmButton: false
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#dc3545'
             });
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>

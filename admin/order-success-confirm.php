@@ -2,32 +2,26 @@
 session_start();
 require_once 'config/db.php';
 
-// ตรวจสอบว่า admin login
+// Check if admin is logged in
 if (!isset($_SESSION['adminid'])) {
     header("Location: login.php");
     exit();
 }
 
-// ดึงข้อมูล admin
+// Fetch admin username
 $admin_id = $_SESSION['adminid'];
 try {
     $stmt = $conn->prepare("SELECT UserName FROM admin WHERE id = :id");
     $stmt->bindParam(':id', $admin_id, PDO::PARAM_INT);
     $stmt->execute();
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$admin) {
-        $_SESSION['error'] = "ไม่พบข้อมูลผู้ดูแลระบบ";
-        header("Location: login.php");
-        exit();
-    }
 } catch (PDOException $e) {
-    $_SESSION['error'] = "เกิดข้อผิดพลาด: " . htmlspecialchars($e->getMessage());
+    $_SESSION['error'] = "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ดูแลระบบ: " . htmlspecialchars($e->getMessage());
     header("Location: login.php");
     exit();
 }
 
-// ดึง order_id จาก query string
+// Get order_id from query string
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : 0;
 
 if ($order_id <= 0) {
@@ -36,19 +30,19 @@ if ($order_id <= 0) {
     exit();
 }
 
-// ดึงข้อมูลคำสั่งซื้อพร้อมล็อก
+// Fetch order details
 $order = [];
+$items = [];
 try {
+    // Fetch base order details
     $stmt = $conn->prepare("
         SELECT o.*, 
                CONCAT(m.FirstName, ' ', m.LastName) AS CustomerName,
-               m.Address AS CustomerAddress,
-               f.flower_name, f.price, f.stock_quantity
+               f.flower_name, f.price, f.image
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
         WHERE o.ID = :id
-        FOR UPDATE
     ");
     $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
     $stmt->execute();
@@ -59,68 +53,63 @@ try {
         header("Location: order-success.php");
         exit();
     }
+
+    // Fetch items from tbl_order_details
+    $items_stmt = $conn->prepare("
+        SELECT od.Quantity, od.Price, f.flower_name, f.image
+        FROM tbl_order_details od
+        JOIN tbl_flowers f ON od.FlowerId = f.ID
+        WHERE od.OrderId = :order_id
+    ");
+    $items_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+    $items_stmt->execute();
+    $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // If no items in tbl_order_details, use single-item data
+    if (empty($items) && $order['FlowerId']) {
+        $items[] = [
+            'flower_name' => $order['flower_name'] ?? 'ไม่ระบุ',
+            'Quantity' => $order['Quantity'] ?? 1,
+            'Price' => $order['price'] ?? 0,
+            'image' => $order['image'] ?? 'default-flower.jpg'
+        ];
+    }
+
+    // Calculate and verify SumTotal
+    $calculated_total = 0;
+    foreach ($items as $item) {
+        $calculated_total += $item['Price'] * $item['Quantity'];
+    }
+    if (abs($calculated_total - $order['SumTotal']) > 0.01) {
+        try {
+            $update_stmt = $conn->prepare("UPDATE tbl_orders SET SumTotal = :total_amount WHERE ID = :order_id");
+            $update_stmt->bindValue(':total_amount', $calculated_total, PDO::PARAM_STR);
+            $update_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+            $update_stmt->execute();
+            $order['SumTotal'] = $calculated_total;
+        } catch (PDOException $e) {
+            error_log("Error updating total amount: " . $e->getMessage());
+            $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปเดตยอดรวม: " . htmlspecialchars($e->getMessage());
+        }
+    }
 } catch (PDOException $e) {
     $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
     header("Location: order-success.php");
     exit();
 }
 
-// จัดการอัปเดตสถานะ
+// Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     $new_status = intval($_POST['status']);
-    $order_quantity = $order['Quantity'];
-    $flower_id = $order['FlowerId'];
-    $current_status = $order['Status'];
 
-    // ตรวจสอบสถานะใหม่
-    $valid_statuses = [1, 3]; // จำกัดเฉพาะสถานะ 1 (ชำระเงินสำเร็จ), 3 (กำลังจัดส่ง)
-    if (!in_array($new_status, $valid_statuses)) {
+    if (!in_array($new_status, [0, 1, 2])) {
         $_SESSION['error'] = 'สถานะที่เลือกไม่ถูกต้อง';
-        header("Location: order-success-confirm.php?order_id=" . $order_id);
+        header("Location: order-payment-confirm.php?order_id=" . $order_id);
         exit();
     }
 
     try {
         $conn->beginTransaction();
-
-        // ดึงสต็อกปัจจุบันพร้อมล็อก
-        $stmt = $conn->prepare("SELECT stock_quantity FROM tbl_flowers WHERE ID = :flower_id FOR UPDATE");
-        $stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
-        $stmt->execute();
-        $current_stock = $stmt->fetchColumn();
-
-        if ($current_stock === false) {
-            $conn->rollBack();
-            $_SESSION['error'] = 'ไม่พบข้อมูลสต็อกสินค้า';
-            header("Location: order-success-confirm.php?order_id=" . $order_id);
-            exit();
-        }
-
-        // กรณีเปลี่ยนจากสถานะอื่นเป็นสถานะ 3 (กำลังจัดส่ง)
-        if ($new_status == 3 && $current_status != 3) {
-            if ($current_stock >= $order_quantity) {
-                $new_stock = $current_stock - $order_quantity;
-                $stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id");
-                $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
-                $stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
-                $stmt->execute();
-            } else {
-                $conn->rollBack();
-                $_SESSION['error'] = "สต็อกไม่เพียงพอ: คงเหลือ $current_stock ชิ้น, ต้องการ $order_quantity ชิ้น";
-                header("Location: order-success-confirm.php?order_id=" . $order_id);
-                exit();
-            }
-        }
-        // กรณีเปลี่ยนจากสถานะ 3 (กำลังจัดส่ง) กลับไปสถานะ 1 (ชำระเงินสำเร็จ)
-        elseif ($new_status == 1 && $current_status == 3) {
-            $new_stock = $current_stock + $order_quantity;
-            $stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = :stock WHERE ID = :flower_id");
-            $stmt->bindValue(':stock', $new_stock, PDO::PARAM_INT);
-            $stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
-            $stmt->execute();
-        }
-
-        // อัปเดตสถานะของคำสั่งซื้อ
         $stmt = $conn->prepare("
             UPDATE tbl_orders 
             SET Status = :status, LastupdateDate = CURRENT_TIMESTAMP 
@@ -129,24 +118,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
         $stmt->execute();
-
         $conn->commit();
 
-        // ตั้งข้อความแจ้งเตือนตามสถานะ
-        $success_message = 'อัปเดตสถานะและสต็อกเรียบร้อยแล้ว';
-        if ($new_status == 1 && $current_status == 3) {
-            $success_message .= " และคืนสต็อกจำนวน $order_quantity ชิ้น";
-        } elseif ($new_status == 3 && $current_status != 3) {
-            $success_message .= " และลดสต็อกจำนวน $order_quantity ชิ้น";
-        }
-
-        $_SESSION['success'] = $success_message;
-        header("Location: order-success.php");
-        exit();
+        $_SESSION['success'] = 'อัปเดตสถานะคำสั่งซื้อเรียบร้อยแล้ว';
     } catch (PDOException $e) {
         $conn->rollBack();
         $_SESSION['error'] = 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' . htmlspecialchars($e->getMessage());
-        header("Location: order-success-confirm.php?order_id=" . $order_id);
+        header("Location: order-payment-confirm.php?order_id=" . $order_id);
         exit();
     }
 }
@@ -159,27 +137,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>ยืนยันคำสั่งซื้อที่รอดำเนินการ - FlowerShop</title>
-
-    <!-- LOGO -->
+    <title>ยืนยันการชำระเงิน - FlowerShop</title>
     <link rel="icon" href="img/LOGO_FlowerShopp.png" type="image/x-icon">
-    <!-- Custom fonts for this template -->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
-
-    <!-- Custom styles for this template -->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .order-detail-container {
             margin: 0 auto;
             padding: 2rem;
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
             vertical-align: middle;
             font-size: 1.4rem;
         }
@@ -189,6 +161,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             background-color: #f8f9fa;
             font-weight: bold;
             color: #4e73df;
+        }
+
+        .slip-image {
+            max-width: 300px;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+        }
+
+        .order-image img {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: inherit;
+            border: 2px solid rgba(232, 67, 147, 0.2);
         }
 
         .status-select {
@@ -214,17 +201,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
             font-weight: 500;
         }
 
-        .status-paid { background-color: #2ecc71; color: #fff; }
-        .status-processing { background-color: #f1c40f; color: #fff; }
-
-        .stock-highlight {
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 1.6rem;
+        .status-awaiting {
+            background-color: #95a5a6;
+            color: #fff;
         }
 
-        .status-option-1 { background-color: #2ecc71; color: #fff; }
-        .status-option-3 { background-color: #f1c40f; color: #fff; }
+        .status-paid {
+            background-color: #2ecc71;
+            color: #fff;
+        }
+
+        .status-delivering {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .status-option-awaiting {
+            background-color: #aaa;
+            color: #fff;
+        }
+
+        .status-option-paid {
+            background-color: #aaa;
+            color: #fff;
+        }
+
+        .status-option-delivering {
+            background-color: #aaa;
+            color: #fff;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item-list li {
+            margin-bottom: 5px;
+        }
+
+        .badge-multi {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -236,9 +259,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">ยืนยันคำสั่งซื้อ: #<?php echo htmlspecialchars($order['BookingNumber']); ?></h1>
+                        <h1 class="h3 mb-0 text-gray-800">ยืนยันการชำระเงิน: #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($items) > 1): ?> <span class="badge badge-multi ms-2">หลายรายการ</span><?php endif; ?></h1>
                         <a href="order-success.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
-                            <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังคำสั่งซื้อที่รอดำเนินการ
+                            <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังคำสั่งซื้อที่รอการยืนยัน
                         </a>
                     </div>
 
@@ -254,47 +277,83 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                         <td><?php echo htmlspecialchars($order['CustomerName'] ?? 'ไม่ระบุ'); ?></td>
                                     </tr>
                                     <tr>
-                                        <th>ที่อยู่จัดส่ง</th>
-                                        <td><?php echo htmlspecialchars($order['CustomerAddress'] ?? 'ไม่ระบุ'); ?></td>
-                                    </tr>
-                                    <tr>
                                         <th>วันที่สั่งซื้อ</th>
                                         <td><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></td>
                                     </tr>
                                     <tr>
-                                        <th>ชื่อสินค้า</th>
-                                        <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
+                                        <th>รายการสินค้า</th>
+                                        <td>
+                                            <?php if (count($items) > 1): ?>
+                                                <ul class="item-list">
+                                                    <?php foreach ($items as $item): ?>
+                                                        <li>
+                                                            <?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?> 
+                                                            (<?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น, ฿<?php echo number_format($item['Price'] * $item['Quantity'], 2); ?>)
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars($items[0]['flower_name'] ?? 'ไม่ระบุ'); ?>
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <th>จำนวน</th>
-                                        <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
+                                        <th>จำนวนรวม</th>
+                                        <td><?php echo array_sum(array_column($items, 'Quantity')); ?> ชิ้น</td>
                                     </tr>
                                     <tr>
                                         <th>ราคารวม</th>
-                                        <td>฿<?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?></td>
+                                        <td>฿<?php echo number_format($order['SumTotal'], 2); ?></td>
                                     </tr>
                                     <tr>
                                         <th>วันที่จัดส่ง</th>
                                         <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
                                     </tr>
                                     <tr>
-                                        <th>สต็อกคงเหลือ</th>
-                                        <td class="stock-highlight"><?php echo htmlspecialchars($order['stock_quantity'] ?? 'ไม่ระบุ'); ?> ชิ้น</td>
+                                        <th>สลิปการชำระเงิน</th>
+                                        <td>
+                                            <?php if (!empty($order['Image']) && file_exists("../Uploads/slips/" . $order['Image'])): ?>
+                                                <img src="../Uploads/slips/<?php echo htmlspecialchars($order['Image']); ?>" alt="Payment Slip" class="slip-image">
+                                            <?php else: ?>
+                                                ไม่มีสลิป
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
+                                    <tr>
+                                        <th>รูปภาพสินค้า</th>
+                                        <td class="order-image">
+                                            <?php if (count($items) > 1): ?>
+                                                <div class="d-flex flex-wrap">
+                                                    <?php foreach ($items as $item): ?>
+                                                        <img src="<?php echo !empty($item['image']) && file_exists("uploads/flowers/" . $item['image']) ? "uploads/flowers/" . htmlspecialchars($item['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($item['flower_name']); ?>" class="me-2 mb-2">
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <img src="<?php echo !empty($items[0]['image']) && file_exists("uploads/flowers/" . $items[0]['image']) ? "uploads/flowers/" . htmlspecialchars($items[0]['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($items[0]['flower_name']); ?>">
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php if (!empty($order['Message'])): ?>
+                                        <tr>
+                                            <th>ข้อความจากแอดมิน</th>
+                                            <td><?php echo htmlspecialchars($order['Message']); ?></td>
+                                        </tr>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
 
-                            <form method="POST" id="updateStatusForm" action="order-success-confirm.php?order_id=<?php echo $order_id; ?>">
+                            <form method="POST" id="updateStatusForm">
                                 <div class="form-group">
                                     <label for="status" class="font-weight-bold text-gray-700">
                                         <i class="fas fa-info-circle text-pink mr-2"></i>สถานะคำสั่งซื้อ
                                     </label>
                                     <?php
                                     $statusOptions = [
-                                        1 => ['text' => 'การชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid', 'option_class' => 'status-option-1'],
-                                        3 => ['text' => 'กำลังจัดส่งสินค้า', 'icon' => 'fa-truck', 'class' => 'status-processing', 'option_class' => 'status-option-3']
+                                        0 => ['text' => 'รอดำเนินการ', 'icon' => 'fa-clock', 'class' => 'status-awaiting', 'option_class' => 'status-option-awaiting'],
+                                        1 => ['text' => 'ชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid', 'option_class' => 'status-option-paid'],
+                                        2 => ['text' => 'จัดส่งสินค้า', 'icon' => 'fa-truck', 'class' => 'status-delivering', 'option_class' => 'status-option-delivering']
                                     ];
-                                    $currentStatus = isset($statusOptions[$order['Status']]) ? $order['Status'] : 1;
+                                    $currentStatus = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
                                     ?>
                                     <p class="status-label <?php echo $statusOptions[$currentStatus]['class']; ?>">
                                         <i class="fas <?php echo $statusOptions[$currentStatus]['icon']; ?> me-1"></i>
@@ -302,15 +361,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
                                     </p>
                                     <select name="status" id="status" class="status-select" required>
                                         <?php foreach ($statusOptions as $status => $details): ?>
-                                            <option value="<?php echo $status; ?>" class="<?php echo $details['option_class']; ?>" <?php echo $status == $currentStatus ? 'selected' : ''; ?>>
-                                                <?php echo $details['text']; ?>
+                                            <option value="<?php echo $status; ?>" class="<?php echo $details['option_class']; ?>" <?php echo $status == $currentStatus ? 'selected disabled' : ''; ?>>
+                                                <?php echo htmlspecialchars($details['text']); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
 
                                 <div class="form-group d-flex justify-content-end">
-                                    <button type="submit" name="update_status" class="btn btn-pink mr-2">
+                                    <button type="submit" class="btn btn-pink mr-2">
                                         <i class="fas fa-save mr-2"></i>บันทึก
                                     </button>
                                     <a href="order-success.php" class="btn btn-secondary">
@@ -330,68 +389,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status'])) {
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Scripts -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.12.4/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
     <script>
-        // SweetAlert2 confirmation before updating status
-        document.getElementById('updateStatusForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const form = this;
-            const selectedStatus = document.getElementById('status').value;
-            const statusText = document.getElementById('status').options[document.getElementById('status').selectedIndex].text.trim();
-            let confirmMessage = `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`;
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('updateStatusForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const form = this;
+                const selectedStatus = document.getElementById('status').value;
+                const statusText = document.getElementById('status').options[document.getElementById('status').selectedIndex].text;
 
-            if (selectedStatus === '3') {
-                confirmMessage += `\nสต็อกสินค้าจะถูกลดลงตามจำนวนที่สั่งซื้อ (${<?php echo htmlspecialchars($order['Quantity']); ?>} ชิ้น)`;
-            } else if (selectedStatus === '1' && '<?php echo $order['Status']; ?>' === '3') {
-                confirmMessage += `\nสต็อกสินค้าจะถูกคืนจำนวน ${<?php echo htmlspecialchars($order['Quantity']); ?>} ชิ้น`;
-            }
-
-            Swal.fire({
-                title: 'ยืนยันการเปลี่ยนสถานะ',
-                text: confirmMessage,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#e84393',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
+                Swal.fire({
+                    title: 'ยืนยันการเปลี่ยนสถานะ',
+                    text: `คุณแน่ใจหรือไม่ที่จะเปลี่ยนสถานะเป็น "${statusText}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e84393',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
             });
+
+            // Handle success and error messages
+            <?php if (isset($_SESSION['success'])): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#e84393'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'order-success.php';
+                    }
+                });
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
+
+            <?php if (isset($_SESSION['error'])): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#d33'
+                });
+                <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
         });
-
-        <?php if (isset($_SESSION['success'])): ?>
-            Swal.fire({
-                icon: 'success',
-                title: 'สำเร็จ',
-                text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
-                timer: 3000,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = 'order-success.php';
-            });
-            <?php unset($_SESSION['success']); ?>
-        <?php endif; ?>
-
-        <?php if (isset($_SESSION['error'])): ?>
-            Swal.fire({
-                icon: 'error',
-                title: 'ข้อผิดพลาด',
-                text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            <?php unset($_SESSION['error']); ?>
-        <?php endif; ?>
     </script>
 </body>
 

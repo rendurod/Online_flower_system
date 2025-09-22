@@ -12,7 +12,7 @@ $userId = $_SESSION['user_login'];
 $message = '';
 $messageType = '';
 
-// Handle order cancellation (from old code)
+// Handle order cancellation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     $orderId = filter_input(INPUT_POST, 'order_id', FILTER_VALIDATE_INT);
     $reason = trim(htmlspecialchars($_POST['reason'] ?? '', ENT_QUOTES, 'UTF-8'));
@@ -37,10 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             $messageType = "danger";
         } elseif ($orderId && $reason && $accountName && $accountNumber) {
             try {
+                $conn->beginTransaction();
+
+                // Update order status to canceled
                 $stmt = $conn->prepare("
                     UPDATE tbl_orders 
-                    SET Status = 6, Message = :reason, AccountName = :account_name, AccountNumber = :account_number 
-                    WHERE ID = :order_id AND UserEmail = :email AND Status IN (0, 1, 2, 3, 5)
+                    SET Status = 4, Message = :reason, AccountName = :account_name, AccountNumber = :account_number 
+                    WHERE ID = :order_id AND UserEmail = :email AND Status = 0
                 ");
                 $stmt->bindValue(':reason', $reason, PDO::PARAM_STR);
                 $stmt->bindValue(':account_name', $accountName, PDO::PARAM_STR);
@@ -50,13 +53,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                 $stmt->execute();
 
                 if ($stmt->rowCount() > 0) {
-                    $message = "ยกเลิกคำสั่งซื้อสำเร็จ";
+                    // Fetch order items to restore stock
+                    $items_stmt = $conn->prepare("
+                        SELECT FlowerId, Quantity
+                        FROM tbl_order_details
+                        WHERE OrderId = :order_id
+                    ");
+                    $items_stmt->bindValue(':order_id', $orderId, PDO::PARAM_INT);
+                    $items_stmt->execute();
+                    $order_items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    // If no items in tbl_order_details, check tbl_orders for single-item order
+                    if (empty($order_items)) {
+                        $single_item_stmt = $conn->prepare("
+                            SELECT FlowerId, Quantity
+                            FROM tbl_orders
+                            WHERE ID = :order_id AND FlowerId IS NOT NULL
+                        ");
+                        $single_item_stmt->bindValue(':order_id', $orderId, PDO::PARAM_INT);
+                        $single_item_stmt->execute();
+                        $order_items = $single_item_stmt->fetchAll(PDO::FETCH_ASSOC);
+                    }
+
+                    // Restore stock for each item
+                    foreach ($order_items as $item) {
+                        $stock_stmt = $conn->prepare("
+                            UPDATE tbl_flowers 
+                            SET stock_quantity = stock_quantity + :quantity 
+                            WHERE ID = :flower_id
+                        ");
+                        $stock_stmt->bindValue(':quantity', $item['Quantity'], PDO::PARAM_INT);
+                        $stock_stmt->bindValue(':flower_id', $item['FlowerId'], PDO::PARAM_INT);
+                        $stock_stmt->execute();
+                    }
+
+                    $conn->commit();
+                    $message = "ยกเลิกคำสั่งซื้อสำเร็จ สต็อกสินค้าถูกคืนเรียบร้อยแล้ว";
                     $messageType = "success";
                 } else {
+                    $conn->rollBack();
                     $message = "ไม่สามารถยกเลิกคำสั่งซื้อได้ อาจเนื่องจากสถานะไม่ถูกต้องหรือคำสั่งซื้อไม่พบ";
                     $messageType = "danger";
                 }
             } catch (PDOException $e) {
+                $conn->rollBack();
                 $message = "เกิดข้อผิดพลาดในการยกเลิกคำสั่งซื้อ: " . htmlspecialchars($e->getMessage());
                 $messageType = "danger";
             }
@@ -175,19 +215,19 @@ try {
 
 // Calculate order counts for each tab
 $processingCount = count(array_filter($orders, function ($order) {
-    return in_array($order['Status'], [0, 2, 5]);
+    return $order['Status'] == 0;
 }));
 $paidCount = count(array_filter($orders, function ($order) {
     return $order['Status'] == 1;
 }));
 $shippingCount = count(array_filter($orders, function ($order) {
-    return $order['Status'] == 3;
+    return $order['Status'] == 2;
 }));
 $completedCount = count(array_filter($orders, function ($order) {
-    return $order['Status'] == 4;
+    return $order['Status'] == 3;
 }));
 $cancelledCount = count(array_filter($orders, function ($order) {
-    return $order['Status'] == 6;
+    return $order['Status'] == 4;
 }));
 ?>
 
@@ -210,7 +250,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
 <body class="profile">
     <?php include("includes/navbar.php"); ?>
 
-    <div class="profile-container">
+    <div class="profile-container mt-5">
         <div class="profile-card">
             <!-- Navigation Tabs -->
             <div class="nav-tabs">
@@ -226,7 +266,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
             <div class="status-tabs">
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'processing' ? 'active' : ''); ?>" href="user-order.php?tab=processing">
-                        <i class="fas fa-clock me-1"></i> ดำเนินการ
+                        <i class="fas fa-clock me-1"></i> รอแจ้งชำระเงิน
                         <?php if ($processingCount > 0): ?>
                             <span class="badge-count"><?php echo $processingCount; ?></span>
                         <?php endif; ?>
@@ -250,7 +290,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                 </div>
                 <div class="status-tab-item">
                     <a class="status-tab-link <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'completed' ? 'active' : ''); ?>" href="user-order.php?tab=completed">
-                        <i class="fas fa-check-circle me-1"></i> จัดส่งสำเร็จ
+                        <i class="fas fa-check-circle me-1"></i> คำสั่งซื้อสำเร็จ
                         <?php if ($completedCount > 0): ?>
                             <span class="badge-count"><?php echo $completedCount; ?></span>
                         <?php endif; ?>
@@ -288,62 +328,50 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                     </div>
                 <?php endif; ?>
 
-                <!-- Processing Tab (Status 0, 2, 5) -->
+                <!-- Processing Tab (Status 0) -->
                 <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'processing' ? 'active' : (!isset($_GET['tab']) ? 'active' : '')); ?>" id="processing">
-                    <h4 class="tab-title">ดำเนินการ</h4>
+                    <h4 class="tab-title">รอแจ้งชำระเงิน</h4>
                     <?php if ($orders): ?>
                         <?php $processingOrders = array_filter($orders, function ($order) {
-                            return in_array($order['Status'], [0, 2, 5]);
+                            return $order['Status'] == 0;
                         }); ?>
                         <?php if (!empty($processingOrders)): ?>
                             <?php foreach ($processingOrders as $order_id => $order): ?>
-                                <div class="order-item <?php echo in_array($order['Status'], [2, 5]) ? 'urgent' : ''; ?>">
+                                <div class="order-item">
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
-                                            <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber'] ?? 'ไม่ระบุ'); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
+                                            <span class="order-date"><?php echo $order['PostingDate'] ? date('d/m/Y H:i', strtotime($order['PostingDate'])) : 'ไม่ระบุ'; ?></span>
                                         </div>
                                         <div class="order-details">
-                                            <?php if (count($order['Items']) > 1): ?>
-                                                <h5>รายการสินค้า:</h5>
-                                                <ul class="item-list">
-                                                    <?php foreach ($order['Items'] as $item): ?>
-                                                        <li>
-                                                            <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
-                                                            <span>จำนวน: <?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น</span>
-                                                            <span>ราคา: <?php echo number_format($item['Quantity'] * ($item['Price'] ?? 0), 2); ?> บาท</span>
-                                                        </li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                            <?php if (!empty($order['Items'])): ?>
+                                                <?php if (count($order['Items']) > 1): ?>
+                                                    <h5>รายการสินค้า:</h5>
+                                                    <ul class="item-list">
+                                                        <?php foreach ($order['Items'] as $item): ?>
+                                                            <li>
+                                                                <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
+                                                                <span>จำนวน: <?php echo htmlspecialchars($item['Quantity'] ?? 1); ?> ชิ้น</span>
+                                                                <span>ราคา: <?php echo number_format(($item['Price'] ?? 0) * ($item['Quantity'] ?? 1), 2); ?> บาท</span>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php else: ?>
+                                                    <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
+                                                    <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity'] ?? 1); ?> ชิ้น</p>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
-                                                <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity']); ?> ชิ้น</p>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                                <p>ไม่มีรายการสินค้า</p>
                                             <?php endif; ?>
                                             <p><strong>วันที่เลือกจัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong>
-                                                <span class="status-label <?php echo $order['Status'] == 0 ? 'status-awaiting' : ($order['Status'] == 2 ? 'status-edited' : 'status-new-slip'); ?>">
-                                                    <i class="fas <?php echo $order['Status'] == 0 ? 'fa-clock' : ($order['Status'] == 2 ? 'fa-edit' : 'fa-upload'); ?> me-1"></i>
-                                                    <?php
-                                                    $statusText = [
-                                                        0 => 'รอแจ้งชำระเงิน',
-                                                        2 => 'แก้ไขการชำระเงิน',
-                                                        5 => 'แนบสลิปใหม่'
-                                                    ];
-                                                    echo $statusText[$order['Status']] ?? 'ไม่ระบุ';
-                                                    ?>
+                                                <span class="status-label status-awaiting">
+                                                    <i class="fas fa-clock me-1"></i>รอแจ้งชำระเงิน
                                                 </span>
                                             </p>
-                                            <?php if (!empty($order['Message']) && in_array($order['Status'], [2, 5])): ?>
-                                                <p class="message-admin"><strong>ข้อความจากแอดมิน:</strong> <?php echo htmlspecialchars($order['Message']); ?></p>
-                                            <?php endif; ?>
-                                            <?php if ($order['Status'] == 2): ?>
-                                                <a href="user-slip.php?order_id=<?php echo htmlspecialchars($order_id); ?>" class="btn-details">
-                                                    <i class="fas fa-upload me-1"></i>อัปโหลดสลิปใหม่
-                                                </a>
-                                            <?php endif; ?>
-                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" data-order-id="<?php echo htmlspecialchars($order_id); ?>" data-booking-number="<?php echo htmlspecialchars($order['BookingNumber']); ?>">ยกเลิกคำสั่งซื้อ</button>
+                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" data-order-id="<?php echo htmlspecialchars($order_id); ?>" data-booking-number="<?php echo htmlspecialchars($order['BookingNumber'] ?? 'ไม่ระบุ'); ?>">ยกเลิกคำสั่งซื้อ</button>
                                             <div class="order-details-footer">
                                                 <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order_id); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                             </div>
@@ -352,10 +380,10 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="no-data-alert">ไม่มีคำสั่งซื้อที่อยู่ในขั้นตอนดำเนินการ</div>
+                            <div class="no-data-alert">ไม่มีคำสั่งซื้อที่รอแจ้งชำระเงิน</div>
                         <?php endif; ?>
                     <?php else: ?>
-                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่อยู่ในขั้นตอนดำเนินการ</div>
+                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่รอแจ้งชำระเงิน</div>
                     <?php endif; ?>
                 </div>
 
@@ -371,30 +399,33 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                 <div class="order-item">
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
-                                            <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber'] ?? 'ไม่ระบุ'); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
+                                            <span class="order-date"><?php echo $order['PostingDate'] ? date('d/m/Y H:i', strtotime($order['PostingDate'])) : 'ไม่ระบุ'; ?></span>
                                         </div>
                                         <div class="order-details">
-                                            <?php if (count($order['Items']) > 1): ?>
-                                                <h5>รายการสินค้า:</h5>
-                                                <ul class="item-list">
-                                                    <?php foreach ($order['Items'] as $item): ?>
-                                                        <li>
-                                                            <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
-                                                            <span>จำนวน: <?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น</span>
-                                                            <span>ราคา: <?php echo number_format($item['Quantity'] * ($item['Price'] ?? 0), 2); ?> บาท</span>
-                                                        </li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                            <?php if (!empty($order['Items'])): ?>
+                                                <?php if (count($order['Items']) > 1): ?>
+                                                    <h5>รายการสินค้า:</h5>
+                                                    <ul class="item-list">
+                                                        <?php foreach ($order['Items'] as $item): ?>
+                                                            <li>
+                                                                <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
+                                                                <span>จำนวน: <?php echo htmlspecialchars($item['Quantity'] ?? 1); ?> ชิ้น</span>
+                                                                <span>ราคา: <?php echo number_format(($item['Price'] ?? 0) * ($item['Quantity'] ?? 1), 2); ?> บาท</span>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php else: ?>
+                                                    <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
+                                                    <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity'] ?? 1); ?> ชิ้น</p>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
-                                                <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity']); ?> ชิ้น</p>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                                <p>ไม่มีรายการสินค้า</p>
                                             <?php endif; ?>
                                             <p><strong>วันที่เลือกจัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-paid"><i class="fas fa-check me-1"></i>ชำระเงินสำเร็จ</span></p>
-                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" data-order-id="<?php echo htmlspecialchars($order_id); ?>" data-booking-number="<?php echo htmlspecialchars($order['BookingNumber']); ?>">ยกเลิกคำสั่งซื้อ</button>
                                             <div class="order-details-footer">
                                                 <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order_id); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                             </div>
@@ -410,42 +441,45 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                     <?php endif; ?>
                 </div>
 
-                <!-- Shipping Tab (Status 3) -->
+                <!-- Shipping Tab (Status 2) -->
                 <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'shipping' ? 'active' : ''); ?>" id="shipping">
                     <h4 class="tab-title">กำลังจัดส่งสินค้า</h4>
                     <?php if ($orders): ?>
                         <?php $shippingOrders = array_filter($orders, function ($order) {
-                            return $order['Status'] == 3;
+                            return $order['Status'] == 2;
                         }); ?>
                         <?php if (!empty($shippingOrders)): ?>
                             <?php foreach ($shippingOrders as $order_id => $order): ?>
                                 <div class="order-item">
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
-                                            <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber'] ?? 'ไม่ระบุ'); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
+                                            <span class="order-date"><?php echo $order['PostingDate'] ? date('d/m/Y H:i', strtotime($order['PostingDate'])) : 'ไม่ระบุ'; ?></span>
                                         </div>
                                         <div class="order-details">
-                                            <?php if (count($order['Items']) > 1): ?>
-                                                <h5>รายการสินค้า:</h5>
-                                                <ul class="item-list">
-                                                    <?php foreach ($order['Items'] as $item): ?>
-                                                        <li>
-                                                            <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
-                                                            <span>จำนวน: <?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น</span>
-                                                            <span>ราคา: <?php echo number_format($item['Quantity'] * ($item['Price'] ?? 0), 2); ?> บาท</span>
-                                                        </li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                            <?php if (!empty($order['Items'])): ?>
+                                                <?php if (count($order['Items']) > 1): ?>
+                                                    <h5>รายการสินค้า:</h5>
+                                                    <ul class="item-list">
+                                                        <?php foreach ($order['Items'] as $item): ?>
+                                                            <li>
+                                                                <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
+                                                                <span>จำนวน: <?php echo htmlspecialchars($item['Quantity'] ?? 1); ?> ชิ้น</span>
+                                                                <span>ราคา: <?php echo number_format(($item['Price'] ?? 0) * ($item['Quantity'] ?? 1), 2); ?> บาท</span>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php else: ?>
+                                                    <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
+                                                    <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity'] ?? 1); ?> ชิ้น</p>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
-                                                <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity']); ?> ชิ้น</p>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                                <p>ไม่มีรายการสินค้า</p>
                                             <?php endif; ?>
                                             <p><strong>วันที่เลือกจัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-processing"><i class="fas fa-truck me-1"></i>กำลังจัดส่งสินค้า</span></p>
-                                            <button class="btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal" data-order-id="<?php echo htmlspecialchars($order_id); ?>" data-booking-number="<?php echo htmlspecialchars($order['BookingNumber']); ?>">ยกเลิกคำสั่งซื้อ</button>
                                             <div class="order-details-footer">
                                                 <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order_id); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                             </div>
@@ -461,41 +495,45 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                     <?php endif; ?>
                 </div>
 
-                <!-- Completed Tab (Status 4) -->
+                <!-- Completed Tab (Status 3) -->
                 <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'completed' ? 'active' : ''); ?>" id="completed">
-                    <h4 class="tab-title">จัดส่งสำเร็จ</h4>
+                    <h4 class="tab-title">คำสั่งซื้อสำเร็จ</h4>
                     <?php if ($orders): ?>
                         <?php $completedOrders = array_filter($orders, function ($order) {
-                            return $order['Status'] == 4;
+                            return $order['Status'] == 3;
                         }); ?>
                         <?php if (!empty($completedOrders)): ?>
                             <?php foreach ($completedOrders as $order_id => $order): ?>
                                 <div class="order-item">
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
-                                            <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber'] ?? 'ไม่ระบุ'); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
+                                            <span class="order-date"><?php echo $order['PostingDate'] ? date('d/m/Y H:i', strtotime($order['PostingDate'])) : 'ไม่ระบุ'; ?></span>
                                         </div>
                                         <div class="order-details">
-                                            <?php if (count($order['Items']) > 1): ?>
-                                                <h5>รายการสินค้า:</h5>
-                                                <ul class="item-list">
-                                                    <?php foreach ($order['Items'] as $item): ?>
-                                                        <li>
-                                                            <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
-                                                            <span>จำนวน: <?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น</span>
-                                                            <span>ราคา: <?php echo number_format($item['Quantity'] * ($item['Price'] ?? 0), 2); ?> บาท</span>
-                                                        </li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                            <?php if (!empty($order['Items'])): ?>
+                                                <?php if (count($order['Items']) > 1): ?>
+                                                    <h5>รายการสินค้า:</h5>
+                                                    <ul class="item-list">
+                                                        <?php foreach ($order['Items'] as $item): ?>
+                                                            <li>
+                                                                <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
+                                                                <span>จำนวน: <?php echo htmlspecialchars($item['Quantity'] ?? 1); ?> ชิ้น</span>
+                                                                <span>ราคา: <?php echo number_format(($item['Price'] ?? 0) * ($item['Quantity'] ?? 1), 2); ?> บาท</span>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php else: ?>
+                                                    <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
+                                                    <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity'] ?? 1); ?> ชิ้น</p>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
-                                                <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity']); ?> ชิ้น</p>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                                <p>ไม่มีรายการสินค้า</p>
                                             <?php endif; ?>
                                             <p><strong>วันที่เลือกจัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
-                                            <p><strong>สถานะ:</strong> <span class="status-label status-completed"><i class="fas fa-check-circle me-1"></i>จัดส่งสำเร็จ</span></p>
+                                            <p><strong>สถานะ:</strong> <span class="status-label status-completed"><i class="fas fa-check-circle me-1"></i>คำสั่งซื้อสำเร็จ</span></p>
                                             <div class="order-details-footer">
                                                 <a href="user-order-detail.php?order_id=<?php echo htmlspecialchars($order_id); ?>" class="btn-details"><i class="fas fa-info-circle me-1"></i>ดูรายละเอียด</a>
                                             </div>
@@ -504,64 +542,76 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="no-data-alert">ไม่มีคำสั่งซื้อที่จัดส่งสำเร็จ</div>
+                            <div class="no-data-alert">ไม่มีคำสั่งซื้อที่สำเร็จ</div>
                         <?php endif; ?>
                     <?php else: ?>
-                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่จัดส่งสำเร็จ</div>
+                        <div class="no-data-alert">ไม่มีคำสั่งซื้อที่สำเร็จ</div>
                     <?php endif; ?>
                 </div>
 
-                <!-- Cancelled Tab (Status 6) -->
+                <!-- Cancelled Tab (Status 4) -->
                 <div class="tab-pane <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'cancelled' ? 'active' : ''); ?>" id="cancelled">
-                    <h4 class="tab-title">รายการยกเลิกสำเร็จ</h4>
+                    <h4 class="tab-title">ยกเลิกคำสั่งซื้อ</h4>
                     <?php if ($orders): ?>
                         <?php $cancelledOrders = array_filter($orders, function ($order) {
-                            return $order['Status'] == 6;
+                            return $order['Status'] == 4;
                         }); ?>
                         <?php if (!empty($cancelledOrders)): ?>
                             <?php foreach ($cancelledOrders as $order_id => $order): ?>
                                 <div class="order-item">
                                     <div class="order-info">
                                         <div class="order-header">
-                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
-                                            <span class="order-date"><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></span>
+                                            <span class="order-number">Order #<?php echo htmlspecialchars($order['BookingNumber'] ?? 'ไม่ระบุ'); ?><?php if (count($order['Items']) > 1): ?> <span class="badge bg-primary ms-2">คำสั่งซื้อหลายรายการ</span><?php endif; ?></span>
+                                            <span class="order-date"><?php echo $order['PostingDate'] ? date('d/m/Y H:i', strtotime($order['PostingDate'])) : 'ไม่ระบุ'; ?></span>
                                         </div>
                                         <div class="order-details">
-                                            <?php if (count($order['Items']) > 1): ?>
-                                                <h5>รายการสินค้า:</h5>
-                                                <ul class="item-list">
-                                                    <?php foreach ($order['Items'] as $item): ?>
-                                                        <li>
-                                                            <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
-                                                            <span>จำนวน: <?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น</span>
-                                                            <span>ราคา: <?php echo number_format($item['Quantity'] * ($item['Price'] ?? 0), 2); ?> บาท</span>
-                                                        </li>
-                                                    <?php endforeach; ?>
-                                                </ul>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                            <?php if (!empty($order['Items'])): ?>
+                                                <?php if (count($order['Items']) > 1): ?>
+                                                    <h5>รายการสินค้า:</h5>
+                                                    <ul class="item-list">
+                                                        <?php foreach ($order['Items'] as $item): ?>
+                                                            <li>
+                                                                <strong><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?></strong>
+                                                                <span>จำนวน: <?php echo htmlspecialchars($item['Quantity'] ?? 1); ?> ชิ้น</span>
+                                                                <span>ราคา: <?php echo number_format(($item['Price'] ?? 0) * ($item['Quantity'] ?? 1), 2); ?> บาท</span>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php else: ?>
+                                                    <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
+                                                    <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity'] ?? 1); ?> ชิ้น</p>
+                                                    <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'] ?? 0, 2); ?> บาท</p>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                <p><strong>ชื่อสินค้า:</strong> <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?></p>
-                                                <p><strong>จำนวน:</strong> <?php echo htmlspecialchars($order['Items'][0]['Quantity']); ?> ชิ้น</p>
-                                                <p><strong>ยอดรวมทั้งหมด:</strong> <?php echo number_format($order['SumTotal'], 2); ?> บาท</p>
+                                                <p>ไม่มีรายการสินค้า</p>
                                             <?php endif; ?>
                                             <p><strong>วันที่เลือกจัดส่ง:</strong> <?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></p>
                                             <p><strong>สถานะ:</strong> <span class="status-label status-cancelled"><i class="fas fa-times-circle me-1"></i>ยกเลิกคำสั่งซื้อ</span></p>
                                             <?php if (!empty($order['Message'])): ?>
                                                 <?php
-                                                $messageParts = explode('//RefundedByAdmin', $order['Message']);
-                                                $cancelReason = trim($messageParts[0]);
+                                                $messageParts = explode('//RefundedByAdmin', $order['Message'] ?? '');
+                                                $cancelReason = trim($messageParts[0] ?? 'ไม่ระบุ');
                                                 $refundMessage = isset($messageParts[1]) ? trim($messageParts[1]) : '';
                                                 ?>
-                                                <p class="message-admin"><strong>เหตุผลการยกเลิก:</strong> <?php echo htmlspecialchars($cancelReason ?: 'ไม่ระบุ'); ?></p>
+                                                <p class="message-admin"><strong>เหตุผลการยกเลิก:</strong> <?php echo htmlspecialchars($cancelReason); ?></p>
+                                                <?php if (!empty($refundMessage)): ?>
+                                                    <p class="message-admin"><strong>ข้อมูลการคืนเงิน:</strong> <?php echo htmlspecialchars($refundMessage); ?></p>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <p class="message-admin"><strong>เหตุผลการยกเลิก:</strong> ไม่ระบุ</p>
                                             <?php endif; ?>
                                             <?php if (!empty($order['AccountName']) && !empty($order['AccountNumber'])): ?>
                                                 <p><strong>ชื่อบัญชี:</strong> <?php echo htmlspecialchars($order['AccountName']); ?></p>
                                                 <p><strong>เลขที่บัญชี:</strong> <?php echo htmlspecialchars($order['AccountNumber']); ?></p>
+                                            <?php else: ?>
+                                                <p><strong>ชื่อบัญชี:</strong> ไม่ระบุ</p>
+                                                <p><strong>เลขที่บัญชี:</strong> ไม่ระบุ</p>
                                             <?php endif; ?>
                                             <p><strong>สถานะการคืนเงิน:</strong>
-                                                <span class="refund-status <?php echo strpos($order['Message'], '//RefundedByAdmin') !== false ? 'status-refunded' : 'status-not-refunded'; ?>">
-                                                    <i class="fas fa-<?php echo strpos($order['Message'], '//RefundedByAdmin') !== false ? 'check-circle' : 'times-circle'; ?> me-1"></i>
-                                                    <?php echo strpos($order['Message'], '//RefundedByAdmin') !== false ? 'โอนเงินคืนแล้ว' : 'รอการโอนเงินคืน'; ?>
+                                                <span class="refund-status <?php echo strpos($order['Message'] ?? '', '//RefundedByAdmin') !== false ? 'status-refunded' : 'status-not-refunded'; ?>">
+                                                    <i class="fas fa-<?php echo strpos($order['Message'] ?? '', '//RefundedByAdmin') !== false ? 'check-circle' : 'times-circle'; ?> me-1"></i>
+                                                    <?php echo strpos($order['Message'] ?? '', '//RefundedByAdmin') !== false ? 'โอนเงินคืนแล้ว' : 'รอการโอนเงินคืน'; ?>
                                                 </span>
                                             </p>
                                             <div class="order-details-footer">
@@ -582,7 +632,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
         </div>
     </div>
 
-    <!-- Cancel Order Modal (from old code) -->
+    <!-- Cancel Order Modal -->
     <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -613,7 +663,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
                                 <option value="อื่น ๆ">อื่น ๆ</option>
                             </select>
                         </div>
-                        <div class="mb-3" id="custom_bank_container">
+                        <div class="mb-3" id="custom_bank_container" style="display: none;">
                             <label for="custom_bank" class="form-label">ชื่อธนาคารอื่น ๆ <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="custom_bank" name="custom_bank" placeholder="กรุณาระบุชื่อธนาคาร">
                         </div>
@@ -671,7 +721,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
             }, 500); // Simulate loading for 0.5 seconds
         });
 
-        // Function to set order ID in modal (from old code)
+        // Function to set order ID in modal
         document.querySelectorAll('.btn-cancel').forEach(button => {
             button.addEventListener('click', function() {
                 const orderId = this.getAttribute('data-order-id');
@@ -684,7 +734,7 @@ $cancelledCount = count(array_filter($orders, function ($order) {
             });
         });
 
-        // Show/hide custom bank input based on dropdown selection (from old code)
+        // Show/hide custom bank input based on dropdown selection
         document.getElementById('bank_select').addEventListener('change', function() {
             const customBankContainer = document.getElementById('custom_bank_container');
             const customBankInput = document.getElementById('custom_bank');

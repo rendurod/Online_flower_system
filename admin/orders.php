@@ -30,10 +30,11 @@ try {
 // Fetch orders with status 0 (Awaiting Payment)
 $orders = [];
 try {
+    // Fetch base order details
     $stmt = $conn->prepare("
-        SELECT o.ID, o.BookingNumber, o.Quantity, o.DeliveryDate, o.Status, o.PostingDate,
+        SELECT o.ID, o.BookingNumber, o.DeliveryDate, o.Status, o.PostingDate, o.SumTotal,
                CONCAT(m.FirstName, ' ', m.LastName) AS CustomerName,
-               f.flower_name
+               f.flower_name, f.price
         FROM tbl_orders o
         LEFT JOIN tbl_members m ON o.UserEmail = m.EmailId
         LEFT JOIN tbl_flowers f ON o.FlowerId = f.ID
@@ -41,7 +42,65 @@ try {
         ORDER BY o.PostingDate DESC
     ");
     $stmt->execute();
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $raw_orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Group orders and fetch items from tbl_order_details
+    foreach ($raw_orders as $order) {
+        $order_id = $order['ID'];
+        $items = [];
+
+        // Fetch items from tbl_order_details
+        $items_stmt = $conn->prepare("
+            SELECT od.Quantity, od.Price, f.flower_name
+            FROM tbl_order_details od
+            JOIN tbl_flowers f ON od.FlowerId = f.ID
+            WHERE od.OrderId = :order_id
+        ");
+        $items_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+        $items_stmt->execute();
+        $order_items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Calculate total from items
+        $calculated_total = 0;
+        if (!empty($order_items)) {
+            // Multi-item order
+            $items = $order_items;
+            foreach ($items as $item) {
+                $calculated_total += $item['Price'] * $item['Quantity'];
+            }
+        } else {
+            // Single-item order
+            $items[] = [
+                'flower_name' => $order['flower_name'] ?? 'ไม่ระบุ',
+                'Quantity' => $order['Quantity'] ?? 1,
+                'Price' => $order['price'] ?? 0
+            ];
+            $calculated_total = ($order['price'] ?? 0) * ($order['Quantity'] ?? 1);
+        }
+
+        // Update SumTotal if mismatched
+        if (abs($calculated_total - $order['SumTotal']) > 0.01) {
+            try {
+                $update_stmt = $conn->prepare("UPDATE tbl_orders SET SumTotal = :total_amount WHERE ID = :order_id");
+                $update_stmt->bindValue(':total_amount', $calculated_total, PDO::PARAM_STR);
+                $update_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+                $update_stmt->execute();
+            } catch (PDOException $e) {
+                $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปเดตยอดรวม: " . htmlspecialchars($e->getMessage());
+            }
+            $order['SumTotal'] = $calculated_total;
+        }
+
+        $orders[$order_id] = [
+            'BookingNumber' => $order['BookingNumber'],
+            'CustomerName' => $order['CustomerName'],
+            'DeliveryDate' => $order['DeliveryDate'],
+            'Status' => $order['Status'],
+            'PostingDate' => $order['PostingDate'],
+            'SumTotal' => $order['SumTotal'],
+            'Items' => $items
+        ];
+    }
 } catch (PDOException $e) {
     $_SESSION['error'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
 }
@@ -84,6 +143,24 @@ try {
             vertical-align: middle;
             font-size: 1rem;
         }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item-list li {
+            margin-bottom: 5px;
+        }
+
+        .badge-multi {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -95,10 +172,10 @@ try {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อใหม่</h1>
-                        <p class="d-none d-sm-inline-block btn btn-sm btn-pink shadow-sm">
+                        <h1 class="h3 mb-0 text-gray-800">คำสั่งซื้อที่เข้ามาใหม่</h1>
+                        <!-- <p class="d-none d-sm-inline-block btn btn-sm btn-pink shadow-sm">
                             <i class="fas fa-search fa-sm text-white"></i> ค้นหาจากหมายเลขคำสั่งซื้อ
-                        </p>
+                        </p> -->
                     </div>
 
                     <div class="card shadow mb-4">
@@ -114,30 +191,42 @@ try {
                                             <th>หมายเลขคำสั่งซื้อ</th>
                                             <th>ชื่อลูกค้า</th>
                                             <th>สินค้าที่เลือก</th>
-                                            <th>จำนวนที่สั่ง</th>
+                                            <th>จำนวนรวม</th>
+                                            <th>ยอดรวม</th>
                                             <th>วันที่ต้องจัดส่ง</th>
-                                            <th>สถานะ</th>
+                                            <th class="text-center">สถานะ</th>
                                             <th class="no-sort text-center">จัดการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (!empty($orders)): ?>
                                             <?php $index = 1; ?>
-                                            <?php foreach ($orders as $order): ?>
+                                            <?php foreach ($orders as $order_id => $order): ?>
                                                 <tr>
                                                     <td><?php echo $index++; ?></td>
-                                                    <td><?php echo htmlspecialchars($order['BookingNumber']); ?></td>
+                                                    <td><?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($order['Items']) > 1): ?> <span class="badge badge-multi ms-2">หลายรายการ</span><?php endif; ?></td>
                                                     <td><?php echo htmlspecialchars($order['CustomerName'] ?? 'ไม่ระบุ'); ?></td>
-                                                    <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
-                                                    <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
-                                                    <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
                                                     <td>
+                                                        <?php if (count($order['Items']) > 1): ?>
+                                                            <ul class="item-list">
+                                                                <?php foreach ($order['Items'] as $item): ?>
+                                                                    <li><?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?> (<?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น)</li>
+                                                                <?php endforeach; ?>
+                                                            </ul>
+                                                        <?php else: ?>
+                                                            <?php echo htmlspecialchars($order['Items'][0]['flower_name'] ?? 'ไม่ระบุ'); ?>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td><?php echo array_sum(array_column($order['Items'], 'Quantity')); ?> ชิ้น</td>
+                                                    <td class="text-danger">฿<?php echo number_format($order['SumTotal'], 2); ?></td>
+                                                    <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
+                                                    <td class="text-center">
                                                         <span class="status-label status-awaiting">
                                                             <i class="fas fa-clock me-1"></i> รอแจ้งชำระเงิน
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <a href="order-detail.php?order_id=<?php echo htmlspecialchars($order['ID']); ?>" class="btn btn-pink">
+                                                        <a href="order-detail.php?order_id=<?php echo htmlspecialchars($order_id); ?>" class="btn btn-pink">
                                                             <i class="fas fa-eye me-1"></i> ดูรายละเอียด
                                                         </a>
                                                     </td>
@@ -145,7 +234,7 @@ try {
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="8" class="text-center">ไม่มีคำสั่งซื้อใหม่</td>
+                                                <td colspan="9" class="text-center">ไม่มีคำสั่งซื้อใหม่</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>

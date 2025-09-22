@@ -57,9 +57,9 @@ try {
 
         foreach ($cart_items as &$item) {
             if ($item['quantity'] > $item['stock_quantity']) {
-                $item['quantity'] = $item['stock_quantity'];
-                $update_stmt = $conn->prepare("UPDATE tbl_cart SET quantity = ? WHERE user_id = ? AND flower_id = ?");
-                $update_stmt->execute([$item['quantity'], $user_id, $item['flower_id']]);
+                $_SESSION['error'] = "จำนวนสินค้าเกินสต็อก: " . htmlspecialchars($item['flower_name']);
+                header("Location: cart.php");
+                exit();
             }
             if ($item['quantity'] > 0) {
                 $total += $item['price'] * $item['quantity'];
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Validate stock
+    // Validate stock (already checked in fetch, but re-validate)
     $valid_items = [];
     $total_amount = 0;
     foreach ($cart_items as $item) {
@@ -153,9 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $conn->beginTransaction();
 
-        // Insert into tbl_orders
         $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, DeliveryDate, Image, SumTotal, Status, PostingDate) 
-                        VALUES (:booking_number, :user_email, :delivery_date, :image, :total_amount, 0, NOW())";
+                VALUES (:booking_number, :user_email, :delivery_date, :image, :total_amount, 0, NOW())";
         $order_stmt = $conn->prepare($order_query);
         $order_stmt->bindValue(':booking_number', $booking_number, PDO::PARAM_INT);
         $order_stmt->bindValue(':user_email', $user_data['EmailId'], PDO::PARAM_STR);
@@ -183,14 +182,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $delete_params = array_merge([$user_id], $selected_items);
         $delete_stmt->execute($delete_params);
 
-        // Update stock quantities
+        // Update stock quantities (ลดสต็อกทันที)
         foreach ($valid_items as $flower_id => $item) {
-            $stock_stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = stock_quantity - ? WHERE ID = ?");
-            $stock_stmt->execute([$item['quantity'], $flower_id]);
+            $stock_stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = stock_quantity - :quantity WHERE ID = :flower_id");
+            $stock_stmt->bindValue(':quantity', $item['quantity'], PDO::PARAM_INT);
+            $stock_stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
+            $stock_stmt->execute();
         }
 
         $conn->commit();
-        $_SESSION['success'] = "สั่งซื้อสำเร็จ! รอการยืนยันจากแอดมิน";
+        $_SESSION['success'] = "สั่งซื้อสำเร็จ! สต็อกสินค้าถูกลดลงแล้ว รอการยืนยันจากแอดมิน";
         header("Location: cart-finish.php?order_id=$order_id");
         exit();
     } catch (PDOException $e) {
@@ -418,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Swal.fire({
                 icon: 'question',
                 title: 'ยืนยันการสั่งซื้อ',
-                text: 'กรุณาตรวจสอบข้อมูลให้ครบถ้วนก่อนยืนยันการสั่งซื้อ',
+                text: 'กรุณาตรวจสอบข้อมูลให้ครบถ้วนก่อนยืนยันการสั่งซื้อ สต็อกจะถูกลดลงทันที',
                 showCancelButton: true,
                 confirmButtonText: 'ยืนยัน',
                 cancelButtonText: 'ยกเลิก'
@@ -429,7 +430,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const paymentSlipInput = document.getElementById('payment_slip');
             if (paymentSlipInput) {
                 paymentSlipInput.addEventListener('change', function(e) {

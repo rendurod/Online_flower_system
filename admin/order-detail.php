@@ -41,7 +41,9 @@ if ($order_id <= 0) {
 
 // Fetch order details
 $order = [];
+$items = [];
 try {
+    // Fetch base order details
     $stmt = $conn->prepare("
         SELECT o.*, 
                CONCAT(m.FirstName, ' ', m.LastName) AS CustomerName,
@@ -61,6 +63,45 @@ try {
         header("Location: orders.php");
         exit();
     }
+
+    // Fetch items from tbl_order_details
+    $items_stmt = $conn->prepare("
+        SELECT od.Quantity, od.Price, f.flower_name, f.image
+        FROM tbl_order_details od
+        JOIN tbl_flowers f ON od.FlowerId = f.ID
+        WHERE od.OrderId = :order_id
+    ");
+    $items_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+    $items_stmt->execute();
+    $items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // If no items in tbl_order_details, use single-item data
+    if (empty($items) && $order['FlowerId']) {
+        $items[] = [
+            'flower_name' => $order['flower_name'] ?? 'ไม่ระบุ',
+            'Quantity' => $order['Quantity'] ?? 1,
+            'Price' => $order['price'] ?? 0,
+            'image' => $order['image'] ?? 'default-flower.jpg'
+        ];
+    }
+
+    // Calculate and verify SumTotal
+    $calculated_total = 0;
+    foreach ($items as $item) {
+        $calculated_total += $item['Price'] * $item['Quantity'];
+    }
+    if (abs($calculated_total - $order['SumTotal']) > 0.01) {
+        try {
+            $update_stmt = $conn->prepare("UPDATE tbl_orders SET SumTotal = :total_amount WHERE ID = :order_id");
+            $update_stmt->bindValue(':total_amount', $calculated_total, PDO::PARAM_STR);
+            $update_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+            $update_stmt->execute();
+            $order['SumTotal'] = $calculated_total;
+        } catch (PDOException $e) {
+            error_log("Error updating total amount: " . $e->getMessage());
+            $_SESSION['error_message'] = "เกิดข้อผิดพลาดในการอัปเดตยอดรวม: " . htmlspecialchars($e->getMessage());
+        }
+    }
 } catch (PDOException $e) {
     error_log("Error fetching order: " . $e->getMessage());
     $_SESSION['error_message'] = 'เกิดข้อผิดพลาดในการดึงข้อมูลคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
@@ -71,10 +112,9 @@ try {
 // Handle status update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $new_status = isset($_POST['status']) ? intval($_POST['status']) : 0;
-    $message = isset($_POST['message']) ? trim(htmlspecialchars($_POST['message'], ENT_QUOTES, 'UTF-8')) : null;
-    error_log("Received POST data: status=$new_status, message=" . ($message ?? 'NULL') . ", order_id=$order_id");
+    error_log("Received POST data: status=$new_status, order_id=$order_id");
 
-    $valid_statuses = [1, 2];
+    $valid_statuses = [1];
     if (!in_array($new_status, $valid_statuses)) {
         error_log("Invalid status: $new_status");
         $_SESSION['error_message'] = 'สถานะที่เลือกไม่ถูกต้อง';
@@ -82,18 +122,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         exit();
     }
 
-    if ($new_status == 2 && empty($message)) {
-        error_log("Missing message for status 2");
-        $_SESSION['error_message'] = 'กรุณาระบุข้อความสำหรับการแก้ไขการชำระเงิน';
-        header("Location: order-detail.php?order_id=$order_id");
-        exit();
-    }
-
     try {
-        $sql = "UPDATE tbl_orders SET Status = :status, Message = :message WHERE ID = :id";
+        $sql = "UPDATE tbl_orders SET Status = :status WHERE ID = :id";
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':status', $new_status, PDO::PARAM_INT);
-        $stmt->bindValue(':message', $message, PDO::PARAM_STR);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -102,8 +134,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
         if ($row_count > 0) {
             error_log("Status updated successfully for order_id: $order_id, new_status: $new_status");
             $_SESSION['success_message'] = 'อัปเดตสถานะเรียบร้อยแล้ว';
-            header("Location: order-confirm.php");
-            exit();
         } else {
             error_log("No rows updated for order_id: $order_id");
             $_SESSION['error_message'] = 'ไม่มีการเปลี่ยนแปลงสถานะ';
@@ -130,9 +160,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     }
 
     try {
+        $conn->beginTransaction();
+
         // Append suffix to cancellation reason
-        $reason_with_suffix = $reason . ' //จากFlowerTeam';
-        $sql = "UPDATE tbl_orders SET Status = 6, Message = :message WHERE ID = :id";
+        $reason_with_suffix = $reason . ' //จากAdmin';
+        $sql = "UPDATE tbl_orders SET Status = 4, Message = :message WHERE ID = :id";
         $stmt = $conn->prepare($sql);
         $stmt->bindValue(':message', $reason_with_suffix, PDO::PARAM_STR);
         $stmt->bindValue(':id', $order_id, PDO::PARAM_INT);
@@ -141,17 +173,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         $row_count = $stmt->rowCount();
         error_log("Cancellation query executed for order_id: $order_id, rows affected: $row_count");
         if ($row_count > 0) {
+            // Fetch order items to restore stock
+            $items_stmt = $conn->prepare("
+                SELECT FlowerId, Quantity
+                FROM tbl_order_details
+                WHERE OrderId = :order_id
+            ");
+            $items_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+            $items_stmt->execute();
+            $order_items = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // If no items in tbl_order_details, check tbl_orders for single-item order
+            if (empty($order_items)) {
+                $single_item_stmt = $conn->prepare("
+                    SELECT FlowerId, Quantity
+                    FROM tbl_orders
+                    WHERE ID = :order_id AND FlowerId IS NOT NULL
+                ");
+                $single_item_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+                $single_item_stmt->execute();
+                $order_items = $single_item_stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            // Restore stock for each item
+            foreach ($order_items as $item) {
+                $stock_stmt = $conn->prepare("
+                    UPDATE tbl_flowers 
+                    SET stock_quantity = stock_quantity + :quantity 
+                    WHERE ID = :flower_id
+                ");
+                $stock_stmt->bindValue(':quantity', $item['Quantity'], PDO::PARAM_INT);
+                $stock_stmt->bindValue(':flower_id', $item['FlowerId'], PDO::PARAM_INT);
+                $stock_stmt->execute();
+            }
+
+            $conn->commit();
             error_log("Order cancelled successfully for order_id: $order_id");
-            $_SESSION['success_message'] = 'ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว';
+            $_SESSION['success_message'] = 'ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว สต็อกสินค้าถูกคืนเรียบร้อยแล้ว';
             header("Location: order-cancel.php");
             exit();
         } else {
+            $conn->rollBack();
             error_log("No rows updated for order_id: $order_id");
             $_SESSION['error_message'] = 'ไม่สามารถยกเลิกคำสั่งซื้อได้';
             header("Location: order-detail.php?order_id=$order_id");
             exit();
         }
     } catch (PDOException $e) {
+        $conn->rollBack();
         $error_info = $stmt->errorInfo();
         error_log("Error cancelling order: " . $e->getMessage() . " | SQLSTATE: " . $error_info[0] . " | Driver Error: " . $error_info[1] . " | Message: " . $error_info[2]);
         $_SESSION['error_message'] = 'เกิดข้อผิดพลาดในการยกเลิกคำสั่งซื้อ: ' . htmlspecialchars($e->getMessage());
@@ -177,6 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .order-detail-container {
             margin: 0 auto;
@@ -236,8 +306,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             color: #fff;
         }
 
-        .status-edited {
-            background-color: #e74c3c;
+        .status-cancelled {
+            background-color: #dc3545;
             color: #fff;
         }
 
@@ -249,27 +319,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
         .status-option-1 {
             background-color: #2ecc71;
             color: #fff;
-        }
-
-        .status-option-2 {
-            background-color: #e74c3c;
-            color: #fff;
-        }
-
-        #message-input {
-            display: none;
-            width: 100%;
-            padding: 0.5rem;
-            font-size: 1.2rem;
-            border: 2px solid rgba(232, 67, 147, 0.2);
-            border-radius: inherit;
-            margin-top: 0.5rem;
-        }
-
-        #message-input:focus {
-            outline: none;
-            border-color: var(--primary-pink);
-            box-shadow: 0 0 0 3px rgba(232, 147, 147, 0.1);
         }
 
         .btn-cancel-order {
@@ -292,6 +341,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
         }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .item-list li {
+            margin-bottom: 5px;
+        }
+
+        .badge-multi {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -303,7 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                 <?php include("includes/header.php"); ?>
                 <div class="container-fluid">
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อ: #<?php echo htmlspecialchars($order['BookingNumber']); ?></h1>
+                        <h1 class="h3 mb-0 text-gray-800">รายละเอียดคำสั่งซื้อ: #<?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($items) > 1): ?> <span class="badge badge-multi ms-2">หลายรายการ</span><?php endif; ?></h1>
                         <a href="orders.php" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
                             <i class="fas fa-arrow-left fa-sm text-white"></i> กลับไปยังรายการคำสั่งซื้อ
                         </a>
@@ -325,16 +392,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                                         <td><?php echo date('d/m/Y H:i', strtotime($order['PostingDate'])); ?></td>
                                     </tr>
                                     <tr>
-                                        <th>ชื่อสินค้า</th>
-                                        <td><?php echo htmlspecialchars($order['flower_name'] ?? 'ไม่ระบุ'); ?></td>
+                                        <th>รายการสินค้า</th>
+                                        <td>
+                                            <?php if (count($items) > 1): ?>
+                                                <ul class="item-list">
+                                                    <?php foreach ($items as $item): ?>
+                                                        <li>
+                                                            <?php echo htmlspecialchars($item['flower_name'] ?? 'ไม่ระบุ'); ?> 
+                                                            (<?php echo htmlspecialchars($item['Quantity']); ?> ชิ้น, ฿<?php echo number_format($item['Price'] * $item['Quantity'], 2); ?>)
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else: ?>
+                                                <?php echo htmlspecialchars($items[0]['flower_name'] ?? 'ไม่ระบุ'); ?>
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <th>จำนวน</th>
-                                        <td><?php echo htmlspecialchars($order['Quantity']); ?> ชิ้น</td>
+                                        <th>จำนวนรวม</th>
+                                        <td><?php echo array_sum(array_column($items, 'Quantity')); ?> ชิ้น</td>
                                     </tr>
                                     <tr>
                                         <th>ราคารวม</th>
-                                        <td>฿<?php echo number_format($order['Quantity'] * ($order['price'] ?? 0), 2); ?></td>
+                                        <td class="text-danger">฿<?php echo number_format($order['SumTotal'], 2); ?></td>
                                     </tr>
                                     <tr>
                                         <th>วันที่จัดส่ง</th>
@@ -351,7 +431,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                                     <tr>
                                         <th>รูปภาพสินค้า</th>
                                         <td class="order-image">
-                                            <img src="<?php echo !empty($order['image']) && file_exists("uploads/flowers/" . $order['image']) ? "uploads/flowers/" . htmlspecialchars($order['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($order['flower_name']); ?>">
+                                            <?php if (count($items) > 1): ?>
+                                                <div class="d-flex flex-wrap">
+                                                    <?php foreach ($items as $item): ?>
+                                                        <img src="<?php echo !empty($item['image']) && file_exists("uploads/flowers/" . $item['image']) ? "uploads/flowers/" . htmlspecialchars($item['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($item['flower_name']); ?>" class="me-2 mb-2">
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php else: ?>
+                                                <img src="<?php echo !empty($items[0]['image']) && file_exists("uploads/flowers/" . $items[0]['image']) ? "uploads/flowers/" . htmlspecialchars($items[0]['image']) : "img/default-flower.jpg"; ?>" alt="<?php echo htmlspecialchars($items[0]['flower_name']); ?>">
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <tr>
@@ -381,8 +469,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                                     <?php
                                     $status_options = [
                                         0 => ['text' => 'รอดำเนินการ', 'icon' => 'fa-clock', 'class' => 'status-awaiting', 'option_class' => 'status-option-0'],
-                                        1 => ['text' => 'การชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid', 'option_class' => 'status-option-1'],
-                                        2 => ['text' => 'แก้ไขการชำระเงิน', 'icon' => 'fa-edit', 'class' => 'status-edited', 'option_class' => 'status-option-2']
+                                        1 => ['text' => 'ชำระเงินสำเร็จ', 'icon' => 'fa-check', 'class' => 'status-paid', 'option_class' => 'status-option-1'],
+                                        4 => ['text' => 'ยกเลิกคำสั่งซื้อ', 'icon' => 'fa-times-circle', 'class' => 'status-cancelled', 'option_class' => 'status-cancelled'],
                                     ];
                                     $current_status = isset($status_options[$order['Status']]) ? $order['Status'] : 0;
                                     ?>
@@ -390,26 +478,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
                                         <i class="fas <?php echo $status_options[$current_status]['icon']; ?> me-1"></i>
                                         <?php echo $status_options[$current_status]['text']; ?>
                                     </p>
-                                    <select name="status" id="status" class="status-select" required>
-                                        <?php foreach ($status_options as $status => $details): ?>
-                                            <option value="<?php echo $status; ?>" class="<?php echo $details['option_class']; ?>" <?php echo $status == $current_status ? 'selected' : ''; ?> <?php echo $status == 0 ? 'disabled' : ''; ?>>
-                                                <?php echo htmlspecialchars($details['text']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <input type="text" name="message" id="message-input" placeholder="กรุณาระบุเหตุผลสำหรับการแก้ไขการชำระเงิน" value="<?php echo htmlspecialchars($order['Message'] ?? ''); ?>">
+                                    <?php if ($current_status != 4): ?>
+                                        <select name="status" id="status" class="status-select" required>
+                                            <?php foreach ($status_options as $status => $details): ?>
+                                                <?php if ($status != 4): ?>
+                                                    <option value="<?php echo $status; ?>" class="<?php echo $details['option_class']; ?>" <?php echo $status == $current_status ? 'selected disabled' : ''; ?>>
+                                                        <?php echo htmlspecialchars($details['text']); ?>
+                                                    </option>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="form-group d-flex justify-content-start align-items-center">
-                                    <button type="submit" name="update_status" class="btn btn-primary mr-2">
-                                        <i class="fas fa-save mr-2"></i>บันทึก
-                                    </button>
+                                    <?php if ($current_status != 4): ?>
+                                        <button type="submit" name="update_status" class="btn btn-primary mr-2">
+                                            <i class="fas fa-save mr-2"></i>บันทึก
+                                        </button>
+                                    <?php endif; ?>
                                     <a href="orders.php" class="btn btn-secondary mr-2">
                                         <i class="fas fa-times mr-2"></i>ยกเลิก
                                     </a>
-                                    <!-- New Cancel Order Button -->
-                                    <button type="button" class="btn btn-cancel-order" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
-                                        <i class="fas fa-times-circle mr-2"></i>ยกเลิกคำสั่งซื้อ
-                                    </button>
+                                    <?php if ($current_status != 4): ?>
+                                        <button type="button" class="btn btn-cancel-order" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                                            <i class="fas fa-times-circle mr-2"></i>ยกเลิกคำสั่งซื้อ
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </form>
 
@@ -454,29 +548,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_order'])) {
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
     <script>
-        const statusSelect = document.getElementById('status');
-        const messageInput = document.getElementById('message-input');
-        if (statusSelect && messageInput) {
-            statusSelect.addEventListener('change', function() {
-                if (this.value === '2') {
-                    messageInput.style.display = 'block';
-                    messageInput.required = true;
-                } else {
-                    messageInput.style.display = 'none';
-                    messageInput.required = false;
-                    messageInput.value = '';
-                }
-            });
-
-            if (statusSelect.value === '2') {
-                messageInput.style.display = 'block';
-                messageInput.required = true;
-            } else {
-                messageInput.style.display = 'none';
-                messageInput.required = false;
-            }
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_SESSION['success_message'])): ?>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: '<?php echo htmlspecialchars($_SESSION['success_message']); ?>',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#3085d6'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'order-success.php';
+                    }
+                });
+                <?php unset($_SESSION['success_message']); ?>
+            <?php endif; ?>
+            <?php if (isset($_SESSION['error_message'])): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: '<?php echo htmlspecialchars($_SESSION['error_message']); ?>',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#d33'
+                });
+                <?php unset($_SESSION['error_message']); ?>
+            <?php endif; ?>
+        });
     </script>
 </body>
 

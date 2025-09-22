@@ -14,20 +14,9 @@ $message = '';
 $messageType = '';
 
 try {
-    $stmt = $conn->prepare("SELECT ID, flower_name, flower_description, price, image, stock_quantity FROM tbl_flowers WHERE stock_quantity > 0 ORDER BY creation_date DESC");
+    $stmt = $conn->prepare("SELECT ID, flower_name, flower_description, price, image, stock_quantity FROM tbl_flowers WHERE stock_quantity > 0 ORDER BY stock_quantity DESC LIMIT 5");
     $stmt->execute();
-    $allFlowers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // สุ่มเลือก 6 รายการจากทั้งหมด
-    if (count($allFlowers) > 0) {
-        $randomKeys = array_rand($allFlowers, min(6, count($allFlowers)));
-        if (!is_array($randomKeys)) {
-            $randomKeys = [$randomKeys]; // กรณีมีรายการเดียว
-        }
-        foreach ($randomKeys as $key) {
-            $flowers[] = $allFlowers[$key];
-        }
-    }
+    $flowers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $message = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
     $messageType = "danger";
@@ -55,8 +44,7 @@ try {
     <section class="home" id="home">
         <div class="swiper home-slider">
             <div class="swiper-wrapper">
-                <div class="swiper-slide" style="background-image: url('assets/img/flower22.jpg');"></div>
-                <div class="swiper-slide" style="background-image: url('assets/img/flower33.jpg');"></div>
+                <div class="swiper-slide" style="background-image: url('assets/img/flower4.jpg');"></div>
                 <div class="swiper-slide" style="background-image: url('assets/img/flower5.jpg');"></div>
             </div>
             <div class="swiper-pagination"></div>

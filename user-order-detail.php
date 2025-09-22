@@ -161,12 +161,10 @@ try {
 // Status options for icon and text
 $statusOptions = [
     0 => ['text' => 'รอแจ้งชำระเงิน', 'class' => 'status-awaiting', 'icon' => 'fa-clock', 'icon_color' => 'text-secondary'],
-    1 => ['text' => 'การชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check', 'icon_color' => 'text-success'],
-    2 => ['text' => 'แก้ไขการชำระเงิน', 'class' => 'status-edited', 'icon' => 'fa-edit', 'icon_color' => 'text-warning'],
-    3 => ['text' => 'กำลังจัดส่งสินค้า', 'class' => 'status-processing', 'icon' => 'fa-truck', 'icon_color' => 'text-warning'],
-    4 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle', 'icon_color' => 'text-success'],
-    5 => ['text' => 'แนบสลิปใหม่', 'class' => 'status-new-slip', 'icon' => 'fa-upload', 'icon_color' => 'text-info'],
-    6 => ['text' => 'ยกเลิกคำสั่งซื้อ', 'class' => 'status-cancel', 'icon' => 'fa-times-circle', 'icon_color' => 'text-danger']
+    1 => ['text' => 'ชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check', 'icon_color' => 'text-success'],
+    2 => ['text' => 'กำลังจัดส่งสินค้า', 'class' => 'status-processing', 'icon' => 'fa-truck', 'icon_color' => 'text-warning'],
+    3 => ['text' => 'คำสั่งซื้อสำเร็จ', 'class' => 'status-completed', 'icon' => 'fa-check-circle', 'icon_color' => 'text-success'],
+    4 => ['text' => 'ยกเลิกคำสั่งซื้อ', 'class' => 'status-cancel', 'icon' => 'fa-times-circle', 'icon_color' => 'text-danger']
 ];
 $status = isset($statusOptions[$order['Status']]) ? $order['Status'] : 0;
 
@@ -184,7 +182,7 @@ if (is_string($order['Message']) && !empty($order['Message'])) {
 }
 
 // Check if slip image file exists
-$imagePath = !empty($order['Image']) ? 'uploads/slips/' . htmlspecialchars($order['Image'], ENT_QUOTES, 'UTF-8') : '';
+$imagePath = !empty($order['Image']) ? 'admin/Uploads/slips/' . htmlspecialchars($order['Image'], ENT_QUOTES, 'UTF-8') : '';
 $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Image-not-found.png';
 ?>
 
@@ -195,15 +193,10 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายละเอียดคำสั่งซื้อ - FlowerShop</title>
-    <!-- LOGO -->
     <link rel="icon" href="assets/img/LOGO_FlowerShopp.png" type="image/x-icon">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/productFinish.css">
     <style>
@@ -251,8 +244,8 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
 
         .payment-slip img,
         .refund-slip img {
-            max-width: 200px;
-            max-height: 200px;
+            max-width: 300px;
+            max-height: 300px;
             object-fit: cover;
             border-radius: 8px;
             border: 2px solid rgba(232, 67, 147, 0.2);
@@ -279,7 +272,8 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
         .cancel-details,
         .payment-details,
         .refund-details,
-        .order-summary {
+        .order-summary,
+        .shipping-details {
             border-left: 4px solid #4e73df;
             padding-left: 10px;
             margin-bottom: 1.5rem;
@@ -288,7 +282,8 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
         .cancel-details h4,
         .payment-details h4,
         .refund-details h4,
-        .order-summary h4 {
+        .order-summary h4,
+        .shipping-details h4 {
             color: #4e73df;
         }
 
@@ -343,14 +338,23 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
         }
 
         .status-incorrect {
-            background-color: #ffc107;
-            color: #000;
+            background-color: #6f42c1;
+            color: #fff;
         }
 
         .status-incorrect-text {
             color: #dc3545;
             font-size: 0.9rem;
             margin-top: 0.5rem;
+        }
+
+        .badge-multi {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
         }
     </style>
 </head>
@@ -362,7 +366,7 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
 
     <!-- Order Detail Section -->
     <section class="order-finish-section">
-        <div class="order-finish-container">
+        <div class="order-finish-container container">
             <!-- Back Button -->
             <a href="user-order.php" class="back-button">
                 <i class="fas fa-arrow-left me-1"></i> ย้อนกลับ
@@ -373,7 +377,12 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
                 <i class="fas <?php echo htmlspecialchars($statusOptions[$status]['icon'], ENT_QUOTES, 'UTF-8'); ?> <?php echo htmlspecialchars($statusOptions[$status]['icon_color'], ENT_QUOTES, 'UTF-8'); ?>"></i>
             </div>
             <!-- Status Title -->
-            <h1 class="success-title status-title"><?php echo htmlspecialchars($statusOptions[$status]['text'], ENT_QUOTES, 'UTF-8'); ?></h1>
+            <h1 class="success-title status-title">
+                <?php echo htmlspecialchars($statusOptions[$status]['text'], ENT_QUOTES, 'UTF-8'); ?>
+                <?php if ($is_multi_item): ?>
+                    <span class="badge badge-multi">หลายรายการ</span>
+                <?php endif; ?>
+            </h1>
             <!-- Status Message -->
             <p class="success-message">ขอบคุณที่สั่งซื้อกับเรา คำสั่งซื้อของคุณอยู่ในสถานะ: <?php echo htmlspecialchars($statusOptions[$status]['text'], ENT_QUOTES, 'UTF-8'); ?></p>
 
@@ -392,7 +401,7 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
                     <span>วันที่จัดส่ง</span>
                     <span><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></span>
                 </div>
-                <?php if ($order['Status'] == 6): ?>
+                <?php if ($order['Status'] == 4): ?>
                     <div class="order-summary-item">
                         <span>วันที่ยกเลิก</span>
                         <span><?php echo $order['LastupdateDate'] ? date('d/m/Y H:i', strtotime($order['LastupdateDate'])) : 'ไม่ระบุ'; ?></span>
@@ -401,8 +410,8 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
                 <h5>รายการสินค้า</h5>
                 <?php foreach ($items as $item): ?>
                     <div class="order-item">
-                        <img src="<?php echo !empty($item['image']) && file_exists("admin/uploads/flowers/" . $item['image'])
-                                        ? "admin/uploads/flowers/" . htmlspecialchars($item['image'], ENT_QUOTES, 'UTF-8')
+                        <img src="<?php echo !empty($item['image']) && file_exists("admin/Uploads/flowers/" . $item['image'])
+                                        ? "admin/Uploads/flowers/" . htmlspecialchars($item['image'], ENT_QUOTES, 'UTF-8')
                                         : "assets/img/default-flower.jpg"; ?>" 
                              alt="<?php echo htmlspecialchars($item['flower_name'], ENT_QUOTES, 'UTF-8'); ?>">
                         <div>
@@ -481,16 +490,16 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
             </div>
 
             <!-- Payment Details -->
-            <!-- <div class="payment-details">
+            <div class="payment-details">
                 <h4>รายการชำระเงิน</h4>
                 <div class="payment-slip">
                     <span>สลิปการชำระเงิน</span>
                     <img src="<?php echo $slipImage; ?>" alt="Payment Slip">
                 </div>
-            </div> -->
+            </div>
 
             <!-- Refund and Cancel Details -->
-            <?php if ($order['Status'] == 6): ?>
+            <?php if ($order['Status'] == 4): ?>
                 <div class="cancel-details">
                     <h4>ข้อมูลการยกเลิกและการคืนเงิน</h4>
                     <div class="order-details-item">
@@ -518,6 +527,17 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
                             <span><?php echo htmlspecialchars($order['AccountNumber'], ENT_QUOTES, 'UTF-8'); ?></span>
                         </div>
                     <?php endif; ?>
+                    <?php if (strpos($order['Message'], '//จากFlowerTeam') !== false): ?>
+                        <div class="order-details-item">
+                            <span>ผู้ยกเลิก</span>
+                            <span>แอดมิน</span>
+                        </div>
+                    <?php elseif (!empty($order['AccountName']) && !empty($order['AccountNumber'])): ?>
+                        <div class="order-details-item">
+                            <span>ผู้ยกเลิก</span>
+                            <span>ลูกค้า</span>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <?php if ($refundStatus === 'โอนเงินคืนแล้ว'): ?>
@@ -543,33 +563,22 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
     <?php include("includes/footer.php"); ?>
     <!-- footer ends -->
 
-    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Sweetalert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
-    <?php if (isset($_SESSION['error'])): ?>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const toastEl = document.createElement('div');
-                toastEl.className = 'toast-container position-fixed top-0 end-0';
-                toastEl.innerHTML = `
-                    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <?php echo htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); ?>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(toastEl);
-                const toast = new bootstrap.Toast(document.getElementById('errorToast'));
-                toast.show();
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (isset($_SESSION['error'])): ?>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: '<?php echo htmlspecialchars($_SESSION['error'], ENT_QUOTES, 'UTF-8'); ?>',
+                    confirmButtonText: 'ตกลง',
+                    confirmButtonColor: '#dc3545'
+                });
                 <?php unset($_SESSION['error']); ?>
-            });
-        </script>
-    <?php endif; ?>
+            <?php endif; ?>
+        });
+    </script>
 </body>
 
 </html>
