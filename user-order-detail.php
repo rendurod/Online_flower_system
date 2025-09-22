@@ -54,7 +54,7 @@ try {
 // Fetch order details
 try {
     $order_query = "SELECT BookingNumber, Quantity, DeliveryDate, Image, PostingDate, LastupdateDate, Status, Message, 
-                    AccountName, AccountNumber, TotalAmount, FlowerId
+                    AccountName, AccountNumber, SumTotal, FlowerId
                     FROM tbl_orders 
                     WHERE ID = :order_id AND UserEmail = :email";
     $order_stmt = $conn->prepare($order_query);
@@ -117,15 +117,15 @@ try {
         }
     }
 
-    // Verify and update TotalAmount if necessary
-    if (abs($calculated_total - $order['TotalAmount']) > 0.01) {
+    // Verify and update SumTotal if necessary
+    if (abs($calculated_total - $order['SumTotal']) > 0.01) {
         try {
-            $update_query = "UPDATE tbl_orders SET TotalAmount = :total_amount WHERE ID = :order_id";
+            $update_query = "UPDATE tbl_orders SET SumTotal = :total_amount WHERE ID = :order_id";
             $update_stmt = $conn->prepare($update_query);
             $update_stmt->bindValue(':total_amount', $calculated_total, PDO::PARAM_STR);
             $update_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
             $update_stmt->execute();
-            $order['TotalAmount'] = $calculated_total;
+            $order['SumTotal'] = $calculated_total;
         } catch (PDOException $e) {
             $_SESSION['error'] = "เกิดข้อผิดพลาดในการอัปเดตยอดรวม: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         }
@@ -184,7 +184,7 @@ if (is_string($order['Message']) && !empty($order['Message'])) {
 }
 
 // Check if slip image file exists
-$imagePath = !empty($order['Image']) ? 'ploads/slips/' . htmlspecialchars($order['Image'], ENT_QUOTES, 'UTF-8') : '';
+$imagePath = !empty($order['Image']) ? 'uploads/slips/' . htmlspecialchars($order['Image'], ENT_QUOTES, 'UTF-8') : '';
 $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Image-not-found.png';
 ?>
 
@@ -415,7 +415,7 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
                 <?php endforeach; ?>
                 <div class="order-summary-item">
                     <span><strong>ยอดรวมทั้งหมด</strong></span>
-                    <span><strong>฿<?php echo number_format($order['TotalAmount'], 2); ?></strong></span>
+                    <span><strong>฿<?php echo number_format($order['SumTotal'], 2); ?></strong></span>
                 </div>
             </div>
 
@@ -481,13 +481,13 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
             </div>
 
             <!-- Payment Details -->
-            <div class="payment-details">
+            <!-- <div class="payment-details">
                 <h4>รายการชำระเงิน</h4>
                 <div class="payment-slip">
                     <span>สลิปการชำระเงิน</span>
                     <img src="<?php echo $slipImage; ?>" alt="Payment Slip">
                 </div>
-            </div>
+            </div> -->
 
             <!-- Refund and Cancel Details -->
             <?php if ($order['Status'] == 6): ?>

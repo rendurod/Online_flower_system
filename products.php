@@ -265,7 +265,7 @@ try {
                     <!-- Requirement 6: Product Count -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="product-count-display">
-                            ผลการค้นหา: <span><?php echo $total_items; ?></span> รายการ
+                            ทั้งหมด: <span><?php echo $total_items; ?></span> รายการ
                         </div>
                     </div>
 

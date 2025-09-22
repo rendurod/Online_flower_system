@@ -32,7 +32,7 @@ if (!$user_data) {
 }
 
 // Fetch order details
-$order_query = "SELECT BookingNumber, DeliveryDate, Image, TotalAmount, Status, PostingDate 
+$order_query = "SELECT BookingNumber, DeliveryDate, Image, SumTotal, Status, PostingDate 
                 FROM tbl_orders WHERE ID = :order_id AND UserEmail = :email";
 $order_stmt = $conn->prepare($order_query);
 $order_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
@@ -62,14 +62,14 @@ foreach ($order_items as $item) {
     $calculated_total += $item['Price'] * $item['Quantity'];
 }
 
-// Compare with TotalAmount from tbl_orders
-$total_amount = $order['TotalAmount'];
+// Compare with SumTotal from tbl_orders
+$total_amount = $order['SumTotal'];
 if (abs($calculated_total - $total_amount) > 0.01) {
     // If there's a discrepancy (likely due to 50 Baht shipping), use calculated total
     $total_amount = $calculated_total;
-    // Optionally update tbl_orders to fix TotalAmount
+    // Optionally update tbl_orders to fix SumTotal
     try {
-        $update_query = "UPDATE tbl_orders SET TotalAmount = :total_amount WHERE ID = :order_id";
+        $update_query = "UPDATE tbl_orders SET SumTotal = :total_amount WHERE ID = :order_id";
         $update_stmt = $conn->prepare($update_query);
         $update_stmt->bindValue(':total_amount', $total_amount, PDO::PARAM_STR);
         $update_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);

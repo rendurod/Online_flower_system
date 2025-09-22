@@ -82,12 +82,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1; // Default to 1 if quantity is not set
     $user_email = $user_data['EmailId'];
     $delivery_date = isset($_POST['delivery_date']) ? $_POST['delivery_date'] : null;
-    $total_amount = $flower['price'] * $quantity; // Calculate TotalAmount
+    $total_amount = $flower['price'] * $quantity; // Calculate SumTotal
 
     // Ensure quantity is at least 1
     if ($quantity < 1) {
         $quantity = 1;
-        $total_amount = $flower['price']; // Recalculate TotalAmount for quantity = 1
+        $total_amount = $flower['price']; // Recalculate SumTotal for quantity = 1
     }
 
     // Validate quantity against stock
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Insert order into tbl_orders
     try {
-        $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, FlowerId, Quantity, DeliveryDate, Image, TotalAmount, Status, PostingDate) 
+        $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, FlowerId, Quantity, DeliveryDate, Image, SumTotal, Status, PostingDate) 
                         VALUES (:booking_number, :user_email, :flower_id, :quantity, :delivery_date, :image, :total_amount, 0, NOW())";
         $order_stmt = $conn->prepare($order_query);
         $order_stmt->bindValue(':booking_number', $booking_number, PDO::PARAM_INT);

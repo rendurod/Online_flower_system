@@ -57,7 +57,6 @@ try {
             <div class="swiper-wrapper">
                 <div class="swiper-slide" style="background-image: url('assets/img/flower22.jpg');"></div>
                 <div class="swiper-slide" style="background-image: url('assets/img/flower33.jpg');"></div>
-                <div class="swiper-slide" style="background-image: url('assets/img/flower4.jpg');"></div>
                 <div class="swiper-slide" style="background-image: url('assets/img/flower5.jpg');"></div>
             </div>
             <div class="swiper-pagination"></div>

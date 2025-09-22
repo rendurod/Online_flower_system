@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             // Fetch order details
             $order_query = "SELECT BookingNumber, Quantity, DeliveryDate, Image, PostingDate, LastupdateDate, Status, Message, 
-                            AccountName, AccountNumber, TotalAmount, FlowerId, UserEmail
+                            AccountName, AccountNumber, SumTotal, FlowerId, UserEmail
                             FROM tbl_orders 
                             WHERE BookingNumber = :booking_number";
             $order_stmt = $conn->prepare($order_query);
@@ -90,16 +90,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
-                    // Verify and update TotalAmount if necessary
-                    if (abs($calculated_total - $order['TotalAmount']) > 0.01) {
+                    // Verify and update SumTotal if necessary
+                    if (abs($calculated_total - $order['SumTotal']) > 0.01) {
                         try {
-                            $update_query = "UPDATE tbl_orders SET TotalAmount = :total_amount 
+                            $update_query = "UPDATE tbl_orders SET SumTotal = :total_amount 
                                             WHERE BookingNumber = :booking_number";
                             $update_stmt = $conn->prepare($update_query);
                             $update_stmt->bindValue(':total_amount', $calculated_total, PDO::PARAM_STR);
                             $update_stmt->bindValue(':booking_number', $bookingNumber, PDO::PARAM_STR);
                             $update_stmt->execute();
-                            $order['TotalAmount'] = $calculated_total;
+                            $order['SumTotal'] = $calculated_total;
                         } catch (PDOException $e) {
                             $message = "เกิดข้อผิดพลาดในการอัปเดตยอดรวม: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
                             $messageType = 'error';
@@ -459,7 +459,7 @@ $slipImage = !empty($order['Image']) && file_exists('Uploads/slips/' . $order['I
                         </div>
                     </div>
                 <?php endforeach; ?>
-                <p><strong>ยอดรวมทั้งหมด:</strong> ฿<?php echo number_format($order['TotalAmount'], 2); ?></p>
+                <p><strong>ยอดรวมทั้งหมด:</strong> ฿<?php echo number_format($order['SumTotal'], 2); ?></p>
             </div>
 
             <!-- Shipping Details -->

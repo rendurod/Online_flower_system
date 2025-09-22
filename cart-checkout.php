@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->beginTransaction();
 
         // Insert into tbl_orders
-        $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, DeliveryDate, Image, TotalAmount, Status, PostingDate) 
+        $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, DeliveryDate, Image, SumTotal, Status, PostingDate) 
                         VALUES (:booking_number, :user_email, :delivery_date, :image, :total_amount, 0, NOW())";
         $order_stmt = $conn->prepare($order_query);
         $order_stmt->bindValue(':booking_number', $booking_number, PDO::PARAM_INT);
