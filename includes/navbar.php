@@ -9,14 +9,15 @@ include_once 'config/db.php'; // Ensure database connection is included
 $cart_count = 0;
 if (isset($_SESSION['user_login'])) {
     try {
-        $user_id = $_SESSION['user_login'];
-        $stmt = $conn->prepare("SELECT SUM(quantity) as total FROM tbl_cart WHERE user_id = ?");
-        $stmt->execute([$user_id]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $cart_count = $result['total'] ?? 0;
+        $cart_user_id = $_SESSION['user_login'];
+        $cart_stmt = $conn->prepare("SELECT COUNT(*) as total FROM tbl_cart WHERE user_id = ?");
+        $cart_stmt->execute([$cart_user_id]);
+        $cart_result = $cart_stmt->fetch(PDO::FETCH_ASSOC);
+        $cart_count = $cart_result['total'] ?? 0;
+        $cart_stmt = null; // ปิด statement
     } catch (PDOException $e) {
         // Log error if needed, but don't disrupt the page
-        error_log("Cart count error: " . $e->getMessage());
+        $cart_count = 0;
     }
 }
 ?>
@@ -66,28 +67,34 @@ if (isset($_SESSION['user_login'])) {
     <div class="icons">
         <?php if (isset($_SESSION['user_login'])): ?>
             <?php
+            // Initialize user array to prevent undefined variable errors
+            $navbar_user = [];
             try {
-                $userId = $_SESSION['user_login'];
-                $stmt = $conn->prepare("SELECT FirstName, LastName, EmailId, Image FROM tbl_members WHERE ID = ?");
-                $stmt->execute([$userId]);
-                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                $navbar_userId = $_SESSION['user_login'];
+                $navbar_stmt = $conn->prepare("SELECT FirstName, LastName, EmailId, Image FROM tbl_members WHERE ID = ?");
+                $navbar_stmt->execute([$navbar_userId]);
+                $navbar_userResult = $navbar_stmt->fetch(PDO::FETCH_ASSOC);
+                if ($navbar_userResult) {
+                    $navbar_user = $navbar_userResult;
+                }
+                $navbar_stmt = null; // ปิด statement
             } catch (PDOException $e) {
-                $user = []; // Define user as empty array if query fails
-                error_log("User fetch error: " . $e->getMessage());
+                // Keep user as empty array if query fails
+                $navbar_user = [];
             }
             ?>
             <div class="profile-dropdown">
                 <div class="profile-btn" onclick="toggleProfileDropdown()">
                     <div class="profile-avatar">
-                        <?php if (!empty($user['Image']) && file_exists("Uploads/imgprofile/" . $user['Image'])): ?>
-                            <img src="Uploads/imgprofile/<?php echo htmlspecialchars($user['Image']); ?>" alt="Current Profile" class="current-image">
+                        <?php if (!empty($navbar_user['Image']) && file_exists("Uploads/imgprofile/" . $navbar_user['Image'])): ?>
+                            <img src="Uploads/imgprofile/<?php echo htmlspecialchars($navbar_user['Image']); ?>" alt="Current Profile" class="current-image">
                         <?php else: ?>
                             <img src="assets/img/account.png" alt="Default Profile" class="current-image">
                         <?php endif; ?>
                         <div class="online-indicator"></div>
                     </div>
                     <div class="profile-info d-none d-md-block">
-                        <span class="profile-name"><?php echo htmlspecialchars($user['FirstName'] ?? 'ผู้ใช้'); ?></span>
+                        <span class="profile-name"><?php echo htmlspecialchars($navbar_user['FirstName'] ?? 'ผู้ใช้'); ?></span>
                     </div>
                     <i class="fas fa-chevron-down dropdown-arrow"></i>
                 </div>
@@ -95,14 +102,14 @@ if (isset($_SESSION['user_login'])) {
                 <div class="profile-dropdown-menu">
                     <div class="dropdown-header">
                         <div class="user-info">
-                            <?php if (!empty($user['Image']) && file_exists("Uploads/imgprofile/" . $user['Image'])): ?>
-                                <img src="Uploads/imgprofile/<?php echo htmlspecialchars($user['Image']); ?>" alt="Current Profile" class="current-image">
+                            <?php if (!empty($navbar_user['Image']) && file_exists("Uploads/imgprofile/" . $navbar_user['Image'])): ?>
+                                <img src="Uploads/imgprofile/<?php echo htmlspecialchars($navbar_user['Image']); ?>" alt="Current Profile" class="current-image">
                             <?php else: ?>
                                 <img src="assets/img/account.png" alt="Default Profile" class="current-image">
                             <?php endif; ?>
                             <div>
-                                <div class="user-name"><?php echo htmlspecialchars($user['FirstName'] ?? 'ผู้ใช้'); ?> <?php echo htmlspecialchars($user['LastName'] ?? 'นามสกุล'); ?></div>
-                                <div class="user-email"><?php echo htmlspecialchars($user['EmailId'] ?? 'อีเมลผู้ใช้'); ?></div>
+                                <div class="user-name"><?php echo htmlspecialchars($navbar_user['FirstName'] ?? 'ผู้ใช้'); ?> <?php echo htmlspecialchars($navbar_user['LastName'] ?? 'นามสกุล'); ?></div>
+                                <div class="user-email"><?php echo htmlspecialchars($navbar_user['EmailId'] ?? 'อีเมลผู้ใช้'); ?></div>
                             </div>
                         </div>
                     </div>
