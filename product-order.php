@@ -2,9 +2,9 @@
 session_start();
 include('config/db.php');
 
-// ตรวจสอบว่าผู้ใช้ได้เข้าสู่ระบบแล้วหรือไม่
+// Check if user is logged in
 if (!isset($_SESSION['user_login'])) {
-    header("Location: login.php");
+    header("Location: login.php?return_to=product-order.php");
     exit();
 }
 
@@ -50,16 +50,11 @@ $user_stmt->bindValue(':id', $user_id, PDO::PARAM_INT);
 $user_stmt->execute();
 $user_data = $user_stmt->fetch(PDO::FETCH_ASSOC);
 
-// Fallback data if user is not found (for debugging)
+// Fallback data if user is not found
 if (!$user_data) {
-    $user_data = [
-        'FirstName' => 'ชื่อ (ไม่พบข้อมูล)',
-        'LastName' => 'นามสกุล (ไม่พบข้อมูล)',
-        'EmailId' => 'email@example.com (ไม่พบข้อมูล)',
-        'ContactNo' => '01234567890 (ไม่พบข้อมูล)',
-        'Address' => 'ที่อยู่ที่มีอยู่แล้ว (ไม่พบข้อมูล)',
-        'Validate' => 'ยังไม่ยืนยัน'
-    ];
+    $_SESSION['error'] = "ไม่พบข้อมูลผู้ใช้";
+    header("Location: login.php");
+    exit();
 }
 
 // Fetch payment details from tbl_payment
@@ -79,20 +74,20 @@ $bankAccountNumber = $payment_data ? htmlspecialchars($payment_data['BankAccount
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $flower_id = $flower['ID'];
-    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1; // Default to 1 if quantity is not set
+    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
     $user_email = $user_data['EmailId'];
     $delivery_date = isset($_POST['delivery_date']) ? $_POST['delivery_date'] : null;
-    $total_amount = $flower['price'] * $quantity; // Calculate SumTotal
+    $total_amount = $flower['price'] * $quantity;
 
     // Ensure quantity is at least 1
     if ($quantity < 1) {
         $quantity = 1;
-        $total_amount = $flower['price']; // Recalculate SumTotal for quantity = 1
+        $total_amount = $flower['price'];
     }
 
     // Validate quantity against stock
     if ($quantity > $flower['stock_quantity']) {
-        $_SESSION['error'] = "จำนวนสินค้าที่เลือกเกินกว่าที่มีอยู่ในสต๊อก";
+        $_SESSION['error'] = "จำนวนสินค้าที่เลือกเกินกว่าที่มีอยู่ในสต็อก";
         header("Location: product-order.php?id=" . $flower_id);
         exit();
     }
@@ -121,42 +116,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $file_name = uniqid() . '-' . basename($_FILES['payment_slip']['name']);
         $file_path = $upload_dir . $file_name;
 
-        if (move_uploaded_file($_FILES['payment_slip']['tmp_name'], $file_path)) {
-            $slip_image = $file_name;
-        } else {
+        if (!move_uploaded_file($_FILES['payment_slip']['tmp_name'], $file_path)) {
             $_SESSION['error'] = "ไม่สามารถอัพโหลดสลิปโอนเงินได้";
             header("Location: product-order.php?id=" . $flower_id);
             exit();
         }
+        $slip_image = $file_name;
+    } else {
+        $_SESSION['error'] = "กรุณาอัพโหลดสลิปโอนเงิน";
+        header("Location: product-order.php?id=" . $flower_id);
+        exit();
     }
 
-    // Generate BookingNumber (random 10-digit number)
+    // Generate BookingNumber
     $booking_number = rand(1000000000, 9999999999);
 
-    // Insert order into tbl_orders
+    // Begin transaction
     try {
-        $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, FlowerId, Quantity, DeliveryDate, Image, SumTotal, Status, PostingDate) 
-                VALUES (:booking_number, :user_email, :flower_id, :quantity, :delivery_date, :image, :total_amount, 0, NOW())";
+        $conn->beginTransaction();
+
+        // Insert order into tbl_orders
+        $order_query = "INSERT INTO tbl_orders (BookingNumber, UserEmail, DeliveryDate, Image, SumTotal, Status, PostingDate) 
+                        VALUES (:booking_number, :user_email, :delivery_date, :image, :total_amount, 0, NOW())";
         $order_stmt = $conn->prepare($order_query);
         $order_stmt->bindValue(':booking_number', $booking_number, PDO::PARAM_INT);
         $order_stmt->bindValue(':user_email', $user_email, PDO::PARAM_STR);
-        $order_stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
-        $order_stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
         $order_stmt->bindValue(':delivery_date', $delivery_date, PDO::PARAM_STR);
         $order_stmt->bindValue(':image', $slip_image, PDO::PARAM_STR);
         $order_stmt->bindValue(':total_amount', $total_amount, PDO::PARAM_STR);
+        $order_stmt->execute();
 
-        if ($order_stmt->execute()) {
-            $_SESSION['success'] = "สั่งซื้อสำเร็จ! รอการยืนยันจากแอดมิน";
-            header("Location: product-finish.php");
-            exit();
-        } else {
-            $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ กรุณาลองใหม่";
-            header("Location: product-order.php?id=" . $flower_id);
-            exit();
-        }
+        $order_id = $conn->lastInsertId();
+
+        // Insert into tbl_order_details
+        $detail_query = "INSERT INTO tbl_order_details (OrderId, FlowerId, Quantity, Price) 
+                         VALUES (:order_id, :flower_id, :quantity, :price)";
+        $detail_stmt = $conn->prepare($detail_query);
+        $detail_stmt->bindValue(':order_id', $order_id, PDO::PARAM_INT);
+        $detail_stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
+        $detail_stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
+        $detail_stmt->bindValue(':price', $flower['price'], PDO::PARAM_STR);
+        $detail_stmt->execute();
+
+        // Update stock quantity
+        $stock_stmt = $conn->prepare("UPDATE tbl_flowers SET stock_quantity = stock_quantity - :quantity WHERE ID = :flower_id");
+        $stock_stmt->bindValue(':quantity', $quantity, PDO::PARAM_INT);
+        $stock_stmt->bindValue(':flower_id', $flower_id, PDO::PARAM_INT);
+        $stock_stmt->execute();
+
+        $conn->commit();
+        $_SESSION['success'] = "สั่งซื้อสำเร็จ! สต็อกสินค้าถูกลดลงแล้ว รอการยืนยันจากแอดมิน";
+        header("Location: product-finish.php?order_id=$order_id");
+        exit();
     } catch (PDOException $e) {
-        $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        $conn->rollBack();
+        $_SESSION['error'] = "เกิดข้อผิดพลาดในการสั่งซื้อ: " . htmlspecialchars($e->getMessage());
         header("Location: product-order.php?id=" . $flower_id);
         exit();
     }
@@ -170,29 +184,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ซื้อสินค้า - <?php echo htmlspecialchars($flower['flower_name']); ?> - FlowerShop</title>
-    <!-- LOGO -->
     <link rel="icon" href="assets/img/LOGO_FlowerShopp.png" type="image/x-icon">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- SweetAlert2 CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Swiper Slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/productPHP.css">
     <link rel="stylesheet" href="assets/css/productDetail.css">
     <link rel="stylesheet" href="assets/css/productOrder.css">
+    <style>
+        .copy-btn {
+            background-color: #4CAF50;
+            color: #ffffff;
+            border: 1px solid #4CAF50;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: #45a049;
+            border-color: #45a049;
+        }
+
+        .copy-btn:active {
+            background-color: #3d8b40;
+            border-color: #3d8b40;
+        }
+    </style>
 </head>
 
 <body>
-    <!-- header section starts -->
     <?php include("includes/navbar.php"); ?>
-    <!-- header section ends -->
 
-    <!-- Product Order Section -->
     <section class="order-form-section">
         <div class="step-container">
             <div class="step">
@@ -211,23 +237,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
         <div class="order-form-container">
-            <!-- Left: Form Section -->
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" enctype="multipart/form-data" id="order-form">
                 <div class="order-form-left">
-                    <!-- 1. ข้อมูลผู้รับ -->
                     <div class="order-form-group">
                         <h3>1. ข้อมูลผู้รับ</h3>
-                        <div class="data-display-box" id="existing_info_display">
+                        <div class="data-display-box">
                             ชื่อ: <?php echo htmlspecialchars($user_data['FirstName'] . ' ' . $user_data['LastName']); ?><br>
                             Email: <?php echo htmlspecialchars($user_data['EmailId']); ?><br>
                             โทร: <?php echo htmlspecialchars($user_data['ContactNo']); ?>
                         </div>
                     </div>
 
-                    <!-- 2. ข้อมูลจัดส่ง -->
                     <div class="order-form-group">
                         <h3>2. ข้อมูลจัดส่ง</h3>
-                        <div class="data-display-box" id="existing_address_display">
+                        <div class="data-display-box">
                             ที่อยู่: <?php echo htmlspecialchars($user_data['Address']) ?: 'ยังไม่ได้ระบุที่อยู่'; ?>
                         </div>
                         <?php
@@ -262,7 +285,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endif; ?>
                     </div>
 
-                    <!-- 3. เลือกวันที่จัดส่ง -->
                     <div class="order-form-group">
                         <h3>3. เลือกวันที่จัดส่ง</h3>
                         <div class="delivery-date-section">
@@ -270,7 +292,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <!-- 4. ชำระเงิน -->
                     <div class="order-form-group">
                         <h3>4. ชำระเงิน</h3>
                         <div class="payment-section">
@@ -283,19 +304,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="payment_slip" class="upload-btn">
                                     <i class="fas fa-upload"></i> อัพโหลดสลิปโอนเงิน
                                 </label>
-                                <input type="file" id="payment_slip" name="payment_slip" accept="image/*" style="display: none;">
+                                <input type="file" id="payment_slip" name="payment_slip" accept="image/*" style="display: none;" required>
                                 <div class="slip-preview-container">
-                                    <img id="slip_preview" class="slip-preview" src="#" alt="Slip Preview">
+                                    <img id="slip_preview" class="slip-preview" src="#" alt="Slip Preview" style="display: none;">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Hidden input for quantity -->
-                    <input type="hidden" name="quantity" id="quantity_hidden" value="1"> <!-- Set default value to 1 -->
+                    <input type="hidden" name="quantity" id="quantity_hidden" value="1">
                 </div>
             </form>
 
-            <!-- Right: Product Summary -->
             <div class="order-form-right">
                 <div class="product-summary">
                     <img src="<?php echo !empty($flower['image']) && file_exists("admin/uploads/flowers/" . $flower['image']) ? "admin/uploads/flowers/" . htmlspecialchars($flower['image']) : "assets/img/default-flower.jpg"; ?>"
@@ -324,36 +343,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="total-price">
                     ราคาทั้งหมด: <span id="total_price">฿<?php echo number_format($flower['price'], 2); ?></span>
                 </div>
-                <!-- Proceed Button -->
                 <button type="button" class="proceed-btn" onclick="validateOrder()">ดำเนินการสั่งซื้อ</button>
             </div>
         </div>
     </section>
 
-    <!-- footer -->
     <?php include("includes/footer.php"); ?>
-    <!-- footer ends -->
 
-    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Swiper Slider -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <!-- Custom JS -->
     <script>
         const pricePerItem = <?php echo $flower['price']; ?>;
         const maxQuantity = <?php echo $flower['stock_quantity']; ?>;
-        const userAddress = "<?php echo $user_data['Address']; ?>";
-        const addressValidate = "<?php echo $user_data['Validate']; ?>";
+        const userAddress = "<?php echo addslashes($user_data['Address']); ?>";
+        const addressValidate = "<?php echo addslashes($user_data['Validate']); ?>";
 
-        // Initialize quantity_hidden on page load
-        document.getElementById('quantity_hidden').value = 1; // Ensure hidden input starts at 1
-        document.getElementById('selected_quantity').textContent = 1; // Ensure display starts at 1
-        document.getElementById('total_item_price').textContent = `฿${pricePerItem.toFixed(2)}`; // Initialize total price
-        document.getElementById('total_price').textContent = `฿${pricePerItem.toFixed(2)}`; // Initialize total price
+        document.getElementById('quantity_hidden').value = 1;
+        document.getElementById('selected_quantity').textContent = 1;
+        document.getElementById('total_item_price').textContent = `฿${pricePerItem.toFixed(2)}`;
+        document.getElementById('total_price').textContent = `฿${pricePerItem.toFixed(2)}`;
 
-        // Update total price and selected quantity display
         document.getElementById('quantity').addEventListener('input', function() {
             let quantity = parseInt(this.value) || 1;
             if (quantity < 1) quantity = 1;
@@ -364,10 +374,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('selected_quantity').textContent = quantity;
             document.getElementById('total_item_price').textContent = `฿${total.toFixed(2)}`;
             document.getElementById('total_price').textContent = `฿${total.toFixed(2)}`;
-            document.getElementById('quantity_hidden').value = quantity; // Update hidden input
+            document.getElementById('quantity_hidden').value = quantity;
         });
 
-        // Image preview for payment slip
         document.getElementById('payment_slip').addEventListener('change', function(e) {
             const file = e.target.files[0];
             const preview = document.getElementById('slip_preview');
@@ -384,7 +393,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         });
 
-        // Copy text function
         function copyText(text) {
             navigator.clipboard.writeText(text).then(() => {
                 Swal.fire({
@@ -394,12 +402,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     timer: 1500,
                     showConfirmButton: false
                 });
+            }).catch(err => {
+                console.error('Copy text failed:', err);
             });
         }
 
-        // Validate order before proceeding
         function validateOrder() {
-            // Check quantity against stock
             const quantity = parseInt(document.getElementById('quantity').value);
             if (quantity > maxQuantity) {
                 Swal.fire({
@@ -410,7 +418,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
 
-            // Check delivery date
             const deliveryDate = document.getElementById('delivery_date').value;
             if (!deliveryDate) {
                 Swal.fire({
@@ -421,7 +428,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
 
-            // Check address and validation status
             if (!userAddress || userAddress === '' || addressValidate !== 'ที่อยู่ถูกต้อง') {
                 let errorMessage = 'ที่อยู่ของคุณยังไม่ได้รับการยืนยัน กรุณาอัปเดตที่อยู่ในหน้าโปรไฟล์และรอการอนุมัติจากแอดมิน';
                 if (addressValidate && addressValidate !== 'ยังไม่ยืนยัน' && addressValidate !== 'ที่อยู่ถูกต้อง') {
@@ -442,7 +448,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
 
-            // Check if payment slip is uploaded
             const paymentSlip = document.getElementById('payment_slip');
             if (!paymentSlip.files.length) {
                 Swal.fire({
@@ -453,7 +458,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
 
-            // Validate file type (must be an image)
             const file = paymentSlip.files[0];
             if (!file.type.startsWith('image/')) {
                 Swal.fire({
@@ -464,20 +468,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return;
             }
 
-            // Show confirmation dialog
             Swal.fire({
                 icon: 'question',
                 title: 'ยืนยันการสั่งซื้อ',
-                text: 'กรุณาตรวจสอบข้อมูลให้ครบถ้วนก่อนยืนยันการสั่งซื้อ',
+                text: 'กรุณาตรวจสอบข้อมูลให้ครบถ้วนก่อนยืนยันการสั่งซื้อ สต็อกจะถูกลดลงทันที',
                 showCancelButton: true,
                 confirmButtonText: 'ยืนยัน',
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.querySelector('form').submit(); // Submit the form
+                    document.getElementById('order-form').submit();
                 }
             });
         }
+
+        <?php if (isset($_SESSION['error'])): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: '<?php echo htmlspecialchars($_SESSION['error']); ?>',
+                confirmButtonText: 'ตกลง'
+            });
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['success'])): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'สั่งซื้อสำเร็จ',
+                text: '<?php echo htmlspecialchars($_SESSION['success']); ?>',
+                confirmButtonText: 'ตกลง'
+            });
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
     </script>
 </body>
 

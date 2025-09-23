@@ -252,7 +252,7 @@ try {
                                             <th>จำนวนรวม</th>
                                             <th>ยอดรวม</th>
                                             <th>วันที่ต้องจัดส่ง</th>
-                                            <th>สถานะ</th>
+                                            <th class="text-center">สถานะ</th>
                                             <th class="no-sort text-center">จัดการ</th>
                                         </tr>
                                     </thead>
@@ -290,7 +290,7 @@ try {
                                                         }
                                                         ?>
                                                     </td>
-                                                    <td>
+                                                    <td class="text-center">
                                                         <?php
                                                         $statusOptions = [
                                                             2 => ['text' => 'จัดส่งสินค้า', 'class' => 'status-delivering', 'icon' => 'fa-truck'],

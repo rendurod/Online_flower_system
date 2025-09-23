@@ -218,6 +218,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/css/productPHP.css">
     <link rel="stylesheet" href="assets/css/productDetail.css">
     <link rel="stylesheet" href="assets/css/productOrder.css">
+    <style>
+        .copy-btn {
+            background-color: #4CAF50;
+            color: #ffffff;
+            border: 1px solid #4CAF50;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: #45a049;
+            border-color: #45a049;
+        }
+
+        .copy-btn:active {
+            background-color: #3d8b40;
+            border-color: #3d8b40;
+        }
+    </style>
 </head>
 
 <body>

@@ -228,7 +228,7 @@ try {
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
                                             <div class="text-md font-weight-bold text-success text-uppercase mb-1">
-                                                ดอกไม้ทั้งหมด</div>
+                                                สินค้าทั้งหมด</div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($total_flowers); ?></div>
                                         </div>
                                         <div class="col-auto">
@@ -313,7 +313,7 @@ try {
                                             <thead>
                                                 <tr>
                                                     <th>รูปภาพ</th>
-                                                    <th>ชื่อดอกไม้</th>
+                                                    <th>ชื่อสินค้า</th>
                                                     <th>สต็อก</th>
                                                 </tr>
                                             </thead>

@@ -256,7 +256,7 @@ try {
                                             <th>วันที่ยกเลิก</th>
                                             <th>เหตุผล</th>
                                             <th>ผู้ยกเลิก</th>
-                                            <th>คืนเงิน</th>
+                                            <th class="text-center">คืนเงิน</th>
                                             <th class="no-sort text-center">เพิ่มเติม</th>
                                         </tr>
                                     </thead>

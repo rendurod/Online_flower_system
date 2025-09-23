@@ -200,7 +200,7 @@ try {
                                             <th>จำนวนรวม</th>
                                             <th>ยอดรวม</th>
                                             <th>วันที่ต้องจัดส่ง</th>
-                                            <th>สถานะ</th>
+                                            <th class="text-center">สถานะ</th>
                                             <th class="no-sort text-center">จัดการ</th>
                                         </tr>
                                     </thead>
@@ -226,7 +226,7 @@ try {
                                                     <td><?php echo array_sum(array_column($order['Items'], 'Quantity')); ?> ชิ้น</td>
                                                     <td class="text-danger">฿<?php echo number_format($order['SumTotal'], 2); ?></td>
                                                     <td><?php echo $order['DeliveryDate'] ? date('d/m/Y', strtotime($order['DeliveryDate'])) : 'ไม่ระบุ'; ?></td>
-                                                    <td>
+                                                    <td class="text-center">
                                                         <?php
                                                         $statusOptions = [
                                                             1 => ['text' => 'ชำระเงินสำเร็จ', 'class' => 'status-paid', 'icon' => 'fa-check'],
