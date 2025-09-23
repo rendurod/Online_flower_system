@@ -46,7 +46,6 @@ try {
     $message = "เกิดข้อผิดพลาดในการดึงข้อมูล: " . htmlspecialchars($e->getMessage());
     $messageType = "danger";
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -457,19 +456,16 @@ try {
                             .then(response => response.json())
                             .then(data => {
                                 if (data.status === 'success') {
-                                    document.querySelector(`.cart-item-row[data-id="${flowerId}"]`).remove();
                                     const cartCounter = document.querySelector('.cart-counter');
                                     if (cartCounter) cartCounter.innerText = data.cartCount;
-                                    updateCartSummary();
-                                    if (document.querySelectorAll('.cart-item-row').length === 0) {
-                                        window.location.reload();
-                                    }
                                     Swal.fire({
                                         icon: 'success',
                                         title: 'ลบสำเร็จ',
                                         text: 'สินค้าถูกลบออกจากตะกร้าแล้ว',
                                         showConfirmButton: false,
                                         timer: 1500
+                                    }).then(() => {
+                                        window.location.reload(); // Refresh page after successful removal
                                     });
                                 } else {
                                     Swal.fire({
@@ -508,5 +504,4 @@ try {
         });
     </script>
 </body>
-
 </html>

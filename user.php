@@ -81,7 +81,7 @@ try {
     <!-- Flower Section -->
     <section class="flower-section" id="flower">
         <div class="container">
-            <h2 class="section-title text-center mb-4">ดอกไม้แนะนำ</h2>
+            <h2 class="section-title text-center mb-4">สินค้าแนะนำ</h2>
 
             <?php if (!empty($message)): ?>
                 <div class="alert alert-<?php echo $messageType; ?>" role="alert">

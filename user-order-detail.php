@@ -182,7 +182,7 @@ if (is_string($order['Message']) && !empty($order['Message'])) {
 }
 
 // Check if slip image file exists
-$imagePath = !empty($order['Image']) ? 'admin/Uploads/slips/' . htmlspecialchars($order['Image'], ENT_QUOTES, 'UTF-8') : '';
+$imagePath = !empty($order['Image']) ? 'Uploads/slips/' . htmlspecialchars($order['Image'], ENT_QUOTES, 'UTF-8') : '';
 $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Image-not-found.png';
 ?>
 
@@ -490,13 +490,13 @@ $slipImage = $imagePath && file_exists($imagePath) ? $imagePath : 'assets/img/Im
             </div>
 
             <!-- Payment Details -->
-            <div class="payment-details">
+            <!-- <div class="payment-details">
                 <h4>รายการชำระเงิน</h4>
                 <div class="payment-slip">
                     <span>สลิปการชำระเงิน</span>
                     <img src="<?php echo $slipImage; ?>" alt="Payment Slip">
                 </div>
-            </div>
+            </div> -->
 
             <!-- Refund and Cancel Details -->
             <?php if ($order['Status'] == 4): ?>

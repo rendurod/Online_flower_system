@@ -42,10 +42,7 @@ switch ($stock_status) {
         $where_conditions[] = "stock_quantity > 5";
         break;
     case 'low_stock':
-        $where_conditions[] = "stock_quantity BETWEEN 1 AND 5";
-        break;
-    case 'out_of_stock':
-        $where_conditions[] = "stock_quantity <= 0";
+        $where_conditions[] = "stock_quantity <= 5";
         break;
     default:
         // ถ้าไม่ได้เลือกสถานะ ให้แสดงเฉพาะสินค้าที่มีในสต็อก (ค่าเริ่มต้น)
@@ -58,7 +55,7 @@ if (!empty($where_conditions)) {
     $base_sql .= " WHERE " . implode(" AND ", $where_conditions);
 }
 
-// --- ดึงจำนวนสินค้าทั้งหมดสำหรับ Pagination (Requirement 6) ---
+// --- ดึงจำนวนสินค้าทั้งหมดสำหรับ Pagination ---
 $total_items = 0;
 try {
     $total_stmt = $conn->prepare("SELECT COUNT(ID) " . $base_sql);
@@ -69,7 +66,7 @@ try {
 }
 $total_pages = ceil($total_items / $items_per_page);
 
-// --- จัดเรียงข้อมูล (Sort) (Requirement 3) ---
+// --- จัดเรียงข้อมูล (Sort) ---
 $sql_order_by = '';
 switch ($sort_by) {
     case 'price_desc':
@@ -106,6 +103,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -118,7 +116,7 @@ try {
     <link rel="stylesheet" href="assets/css/productPHP.css">
     <link rel="stylesheet" href="assets/css/flowerPHP.css">
 
-    <!-- CSS สำหรับ Layout และ Filter ใหม่ (Requirement 1, 5) -->
+    <!-- CSS สำหรับ Layout และ Filter ใหม่ -->
     <style>
         .filter-sidebar {
             background-color: #f8f9fa;
@@ -126,9 +124,11 @@ try {
             border-radius: 8px;
             border: 1px solid #dee2e6;
         }
+
         .filter-group {
             margin-bottom: 2rem;
         }
+
         .filter-group-title {
             font-size: 1.1rem;
             font-weight: 600;
@@ -137,21 +137,26 @@ try {
             padding-bottom: 0.5rem;
             border-bottom: 2px solid var(--pink);
         }
+
         .form-check-label {
             cursor: pointer;
         }
+
         .form-check-input:checked {
             background-color: var(--pink);
             border-color: var(--pink);
         }
+
         .product-count-display {
             font-size: 1.2rem;
             font-weight: 500;
         }
+
         .product-count-display span {
             color: var(--pink);
             font-weight: 700;
         }
+
         /* Custom Pagination Styling */
         .custom-pagination .page-item .page-link {
             color: var(--pink);
@@ -164,16 +169,19 @@ try {
             align-items: center;
             justify-content: center;
         }
+
         .custom-pagination .page-item.active .page-link {
             background-color: var(--pink);
             color: #fff;
             border-color: var(--pink);
         }
+
         .custom-pagination .page-item.disabled .page-link {
             color: #6c757d;
             background-color: #fff;
             border-color: #dee2e6;
         }
+
         .custom-pagination .page-item .page-link:hover {
             background-color: #f8d7da;
         }
@@ -198,12 +206,12 @@ try {
         <div class="container">
             <div class="row">
 
-                <!-- Requirement 1: Filter Sidebar (Left) -->
+                <!-- Filter Sidebar -->
                 <aside class="col-lg-3">
                     <form action="products.php" method="GET" id="filter-form">
                         <div class="filter-sidebar">
-                            
-                            <!-- Requirement 2: Category Filter -->
+
+                            <!-- Category Filter -->
                             <div class="filter-group">
                                 <h5 class="filter-group-title">หมวดหมู่สินค้า</h5>
                                 <div class="form-check">
@@ -218,51 +226,47 @@ try {
                                 <?php endforeach; ?>
                             </div>
 
-                            <!-- Requirement 3: Price Filter (Sort) -->
-                             <div class="filter-group">
+                            <!-- Price Filter (Sort) -->
+                            <div class="filter-group">
                                 <h5 class="filter-group-title">เรียงตามราคา</h5>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="sort_by" id="sort-asc" value="price_asc" <?php if ($sort_by == 'price_asc') echo 'checked'; ?>>
                                     <label class="form-check-label" for="sort-asc">ราคาน้อยที่สุด (ค่าเริ่มต้น)</label>
                                 </div>
-                                 <div class="form-check">
+                                <div class="form-check">
                                     <input class="form-check-input" type="radio" name="sort_by" id="sort-desc" value="price_desc" <?php if ($sort_by == 'price_desc') echo 'checked'; ?>>
                                     <label class="form-check-label" for="sort-desc">ราคามากที่สุด</label>
                                 </div>
                             </div>
-                            
-                            <!-- Requirement 4: Stock Filter -->
+
+                            <!-- Stock Filter (Updated to Two Statuses) -->
                             <div class="filter-group">
                                 <h5 class="filter-group-title">สถานะสินค้า</h5>
-                                 <div class="form-check">
+                                <div class="form-check">
                                     <input class="form-check-input" type="radio" name="stock_status" id="stock-all" value="" <?php if (empty($stock_status)) echo 'checked'; ?>>
                                     <label class="form-check-label" for="stock-all">สินค้าพร้อมส่ง</label>
                                 </div>
-                                <div class="form-check">
+                                <!-- <div class="form-check">
                                     <input class="form-check-input" type="radio" name="stock_status" id="stock-in" value="in_stock" <?php if ($stock_status == 'in_stock') echo 'checked'; ?>>
-                                    <label class="form-check-label" for="stock-in">มีสินค้า (มากกว่า 5)</label>
-                                </div>
-                                 <div class="form-check">
+                                    <label class="form-check-label" for="stock-in">สินค้าพร้อมส่ง (มากกว่า 5)</label>
+                                </div> -->
+                                <div class="form-check">
                                     <input class="form-check-input" type="radio" name="stock_status" id="stock-low" value="low_stock" <?php if ($stock_status == 'low_stock') echo 'checked'; ?>>
-                                    <label class="form-check-label" for="stock-low">สินค้าน้อย (1-5)</label>
-                                </div>
-                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="stock_status" id="stock-out" value="out_of_stock" <?php if ($stock_status == 'out_of_stock') echo 'checked'; ?>>
-                                    <label class="form-check-label" for="stock-out">สินค้าหมด</label>
+                                    <label class="form-check-label" for="stock-low">สินค้าใกล้หมด</label>
                                 </div>
                             </div>
 
-                            <div class="d-grid gap-2">
+                            <!-- <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-2"></i>ใช้ตัวกรอง</button>
                                 <a href="products.php" class="btn btn-outline-secondary">ล้างค่าทั้งหมด</a>
-                            </div>
+                            </div> -->
                         </div>
                     </form>
                 </aside>
 
-                <!-- Requirement 1: Product Listing (Right) -->
+                <!-- Product Listing -->
                 <main class="col-lg-9">
-                    <!-- Requirement 6: Product Count -->
+                    <!-- Product Count -->
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div class="product-count-display">
                             ทั้งหมด: <span><?php echo $total_items; ?></span> รายการ
@@ -282,12 +286,12 @@ try {
                                             <h3 class="flower-name"><?php echo htmlspecialchars($flower['flower_name']); ?></h3>
                                             <p class="flower-description"><?php echo htmlspecialchars($flower['flower_description'] ?? 'ไม่มีรายละเอียด'); ?></p>
                                             <div class="flower-price"><?php echo number_format($flower['price'], 2); ?> บาท</div>
-                                            <?php if ($flower['stock_quantity'] <= 0): ?>
-                                                <span class="stock-status out-of-stock">สินค้าหมด</span>
-                                            <?php elseif ($flower['stock_quantity'] <= 5): ?>
-                                                <span class="stock-status low-stock">เหลือน้อย</span>
+                                            <?php if ($flower['stock_quantity'] > 5): ?>
+                                                <span class="stock-status in-stock">สินค้าพร้อมส่ง</span>
+                                            <?php elseif ($flower['stock_quantity'] > 0 && $flower['stock_quantity'] <= 5): ?>
+                                                <span class="stock-status low-stock">สินค้าใกล้หมด</span>
                                             <?php else: ?>
-                                                <span class="stock-status in-stock">มีสินค้า</span>
+                                                <span class="stock-status out-of-stock">สินค้าหมดสต๊อก</span>
                                             <?php endif; ?>
                                             <div class="flower-buttons">
                                                 <a href="product-detail.php?id=<?php echo htmlspecialchars($flower['ID']); ?>" class="btn">
@@ -312,13 +316,14 @@ try {
                             </div>
                         <?php endif; ?>
                     </div>
-                    
-                    <!-- Requirement 5: Styled Pagination -->
+
+                    <!-- Styled Pagination -->
                     <?php if ($total_pages > 1) : ?>
                         <nav aria-label="Page navigation" class="mt-5">
                             <ul class="pagination custom-pagination justify-content-center">
                                 <?php
-                                $query_params = $_GET; unset($query_params['page']);
+                                $query_params = $_GET;
+                                unset($query_params['page']);
                                 $query_string = http_build_query($query_params);
                                 ?>
                                 <li class="page-item <?php if ($page <= 1) echo 'disabled'; ?>">
@@ -360,7 +365,9 @@ try {
                     if (isLoggedIn) {
                         fetch('add_to_cart.php', {
                                 method: 'POST',
-                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
                                 body: `flower_id=${flowerId}&quantity=1`
                             })
                             .then(response => response.json())
@@ -388,8 +395,8 @@ try {
                             title: 'กรุณาล็อกอิน',
                             text: 'คุณต้องเข้าสู่ระบบก่อน จึงจะสามารถเพิ่มสินค้าลงตะกร้าได้',
                             confirmButtonText: 'ไปที่หน้าล็อกอิน',
-                            showCancelButton: true,
-                            cancelButtonText: 'ยกเลิก'
+                            showCancelButton: false,
+                            // cancelButtonText: 'ยกเลิก'
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 window.location.href = 'login.php?return_url=' + encodeURIComponent(window.location.href);
@@ -408,5 +415,5 @@ try {
         });
     </script>
 </body>
-</html>
 
+</html>
