@@ -254,7 +254,7 @@ try {
                                             <th>จำนวนรวม</th>
                                             <th>ยอดรวม</th>
                                             <th>วันที่ยกเลิก</th>
-                                            <th>เหตุผล</th>
+                                            <th class="col col-2">เหตุผล</th>
                                             <th>ผู้ยกเลิก</th>
                                             <th class="text-center">คืนเงิน</th>
                                             <th class="no-sort text-center">เพิ่มเติม</th>
@@ -266,7 +266,7 @@ try {
                                             <?php foreach ($orders as $order_id => $order): ?>
                                                 <tr>
                                                     <td><?php echo $index++; ?></td>
-                                                    <td>
+                                                    <td class="col col-1">
                                                         <a href="order-cancel-detail.php?order_id=<?php echo htmlspecialchars($order_id); ?>" class="text-primary">
                                                             <?php echo htmlspecialchars($order['BookingNumber']); ?><?php if (count($order['Items']) > 1): ?> <span class="badge badge-multi ms-2">หลายรายการ</span><?php endif; ?>
                                                         </a>
@@ -296,7 +296,7 @@ try {
                                                     <td><?php echo array_sum(array_column($order['Items'], 'Quantity')); ?> ชิ้น</td>
                                                     <td class="text-danger">฿<?php echo number_format($order['SumTotal'], 2); ?></td>
                                                     <td><?php echo date('d/m/Y H:i', strtotime($order['LastupdateDate'])); ?></td>
-                                                    <td class="col col-2"><?php echo htmlspecialchars($order['Message'] ?? 'ไม่ระบุ'); ?></td>
+                                                    <td class="col col-1"><?php echo htmlspecialchars($order['Message'] ?? 'ไม่ระบุ'); ?></td>
                                                     <td class="text-center">
                                                         <?php if (strpos($order['Message'], '//จากFlowerTeam') !== false): ?>
                                                             <span class="badge bg-danger text-white">
@@ -311,11 +311,11 @@ try {
                                                     <td class="text-center">
                                                         <?php if (strpos($order['Message'], '//RefundedByAdmin') !== false): ?>
                                                             <span class="status-label status-refunded">
-                                                                <i class="fas fa-check-circle me-1"></i>คืนเงินแล้ว
+                                                                <i class="fas fa-check-circle me-1"></i>
                                                             </span>
                                                         <?php else: ?>
                                                             <span class="status-label status-not-refunded">
-                                                                <i class="fas fa-times-circle me-1"></i>ยังไม่คืน
+                                                                <i class="fas fa-times-circle me-1"></i>
                                                             </span>
                                                         <?php endif; ?>
                                                     </td>
